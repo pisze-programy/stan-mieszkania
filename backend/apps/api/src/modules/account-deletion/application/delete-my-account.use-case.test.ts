@@ -1,9 +1,12 @@
-import { days, isErr, isOk } from '@stanmieszkania/shared';
+import { days, err, isErr, isOk, ok } from '@stanmieszkania/shared';
 import { FixedClock, RecordingLogger } from '@stanmieszkania/testing';
 import { describe, expect, it } from 'vitest';
 import { ORPHAN_APARTMENT_RETENTION_DAYS } from '../../apartments';
 import { DELETED_USER_DISPLAY_NAME } from '../../identity';
-import { ACCOUNT_DELETION_ERROR_CODES } from '../domain/account-deletion.errors';
+import {
+  ACCOUNT_DELETION_ERROR_CODES,
+  externalAuthCleanupFailedError,
+} from '../domain/account-deletion.errors';
 import {
   InMemoryAccountDeletionRepository,
   RecordingAppleTokenRevoker,
@@ -15,7 +18,6 @@ import { createDeleteMyAccountUseCase } from './delete-my-account.use-case';
 describe('createDeleteMyAccountUseCase', () => {
   it('handles private hard-delete, shared transfer, orphan scheduling, contributor leave, and external cleanup', async () => {
     const clock = new FixedClock('2026-11-18T12:00:00.000Z');
-    const logger = new RecordingLogger();
     const repo = new InMemoryAccountDeletionRepository({
       'user-1': [
         {
@@ -67,14 +69,13 @@ describe('createDeleteMyAccountUseCase', () => {
     const mediaCleanup = new RecordingMediaCleanup();
     const appleRevoker = new RecordingAppleTokenRevoker();
     const providerDeleter = new RecordingIdentityProviderDeleter();
-
     const useCase = createDeleteMyAccountUseCase({
       accountDeletionRepository: repo,
       mediaCleanup,
       appleTokenRevoker: appleRevoker,
       identityProviderDeleter: providerDeleter,
       clock,
-      logger,
+      logger: new RecordingLogger(),
     });
 
     const result = await useCase.execute({
@@ -83,59 +84,90 @@ describe('createDeleteMyAccountUseCase', () => {
       appleAuthorizationCode: '  apple-auth-code-xyz  ',
     });
 
-    const expectedDeletedAt = clock.nowIso();
-    const expectedOrphanAt = new Date(
+    const deletedAt = clock.nowIso();
+    const orphanDeleteAfter = new Date(
       clock.nowMs() + days(ORPHAN_APARTMENT_RETENTION_DAYS),
     ).toISOString();
 
-    expect(isOk(result)).toBe(true);
-    if (isOk(result)) {
-      expect(result.value).toEqual({
-        deletedAt: expectedDeletedAt,
+    expect(result).toEqual(
+      ok({
+        deletedAt,
         hardDeletedApartmentIds: ['apt-private'],
         transferredApartmentIds: ['apt-shared-transfer'],
         orphanScheduledApartmentIds: ['apt-shared-orphan'],
         leftAsContributorApartmentIds: ['apt-contrib-active'],
         deletedR2Keys: ['apt-private/m1.jpg', 'apt-private/m2.jpg'],
-      });
-    }
-
+      }),
+    );
     expect(repo.hardDeletedApartmentIds).toEqual(['apt-private']);
     expect(repo.transfers).toEqual([
       {
         apartmentId: 'apt-shared-transfer',
         previousOwnerId: 'user-1',
         newOwnerId: 'user-early-a',
-        leftAt: expectedDeletedAt,
+        leftAt: deletedAt,
       },
     ]);
     expect(repo.orphanSchedules).toEqual([
-      {
-        apartmentId: 'apt-shared-orphan',
-        ownerId: 'user-1',
-        orphanDeleteAfter: expectedOrphanAt,
-        leftAt: expectedDeletedAt,
-      },
+      { apartmentId: 'apt-shared-orphan', ownerId: 'user-1', orphanDeleteAfter, leftAt: deletedAt },
     ]);
     expect(repo.contributorDepartures).toEqual([
-      {
-        apartmentId: 'apt-contrib-active',
-        userId: 'user-1',
-        leftAt: expectedDeletedAt,
-      },
+      { apartmentId: 'apt-contrib-active', userId: 'user-1', leftAt: deletedAt },
     ]);
     expect(repo.anonymizedUsers).toEqual([
-      {
-        userId: 'user-1',
-        displayName: DELETED_USER_DISPLAY_NAME,
-        deletedAt: expectedDeletedAt,
-      },
+      { userId: 'user-1', displayName: DELETED_USER_DISPLAY_NAME, deletedAt },
     ]);
     expect(mediaCleanup.batches).toEqual([
       { userId: 'user-1', r2Keys: ['apt-private/m1.jpg', 'apt-private/m2.jpg'] },
     ]);
     expect(appleRevoker.revokedCodes).toEqual(['apple-auth-code-xyz']);
     expect(providerDeleter.deletedFirebaseUids).toEqual(['fb-uid-1']);
+  });
+
+  it('aborts before destructive D1/R2 writes when external auth cleanup fails and allows retry', async () => {
+    const repo = new InMemoryAccountDeletionRepository({
+      'user-1': [
+        {
+          apartmentId: 'apt-private',
+          role: 'owner',
+          isActiveMembership: true,
+          activeContributors: [],
+          hasSharedHistory: false,
+          mediaR2Keys: ['apt-private/m1.jpg'],
+        },
+      ],
+    });
+    const mediaCleanup = new RecordingMediaCleanup();
+    let failExternal = true;
+    const useCase = createDeleteMyAccountUseCase({
+      accountDeletionRepository: repo,
+      mediaCleanup,
+      appleTokenRevoker: {
+        revokeAuthorizationCode: () =>
+          Promise.resolve(
+            failExternal ? err(externalAuthCleanupFailedError('Apple outage')) : ok(),
+          ),
+      },
+      identityProviderDeleter: new RecordingIdentityProviderDeleter(),
+      clock: new FixedClock(),
+      logger: new RecordingLogger(),
+    });
+
+    const cmd = { userId: 'user-1', firebaseUid: 'fb-uid-1', appleAuthorizationCode: 'code-1' };
+    const failed = await useCase.execute(cmd);
+    expect(isErr(failed)).toBe(true);
+    if (isErr(failed)) {
+      expect(failed.error.code).toBe(ACCOUNT_DELETION_ERROR_CODES.EXTERNAL_AUTH_CLEANUP_FAILED);
+    }
+    expect(repo.hardDeletedApartmentIds).toEqual([]);
+    expect(repo.anonymizedUsers).toEqual([]);
+    expect(mediaCleanup.batches).toEqual([]);
+
+    failExternal = false;
+    expect(isOk(await useCase.execute(cmd))).toBe(true);
+    expect(repo.hardDeletedApartmentIds).toEqual(['apt-private']);
+    expect(repo.anonymizedUsers).toHaveLength(1);
+    expect(mediaCleanup.batches).toHaveLength(1);
   });
 
   it('rejects blank appleAuthorizationCode before mutating state', async () => {
@@ -154,7 +186,6 @@ describe('createDeleteMyAccountUseCase', () => {
       firebaseUid: 'fb-uid-1',
       appleAuthorizationCode: '   ',
     });
-
     expect(isErr(result)).toBe(true);
     if (isErr(result)) {
       expect(result.error.code).toBe(ACCOUNT_DELETION_ERROR_CODES.INVALID_APPLE_AUTHORIZATION_CODE);

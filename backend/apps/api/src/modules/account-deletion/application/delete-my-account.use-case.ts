@@ -63,13 +63,37 @@ function normalizeAppleAuthCode(
   return ok(trimmed);
 }
 
-// Decision Q5 & Q12: Hard-delete private apartments, transfer or orphan shared ones, anonymize user, revoke external auth.
+// Decision Q5 & Q12: Revoke external auth first so 502 failures stay retryable before destructive D1/R2 purge.
 export function createDeleteMyAccountUseCase(deps: DeleteMyAccountDeps): DeleteMyAccountUseCase {
   return {
     execute: async (command) => {
       const normalizedCode = normalizeAppleAuthCode(command.appleAuthorizationCode);
       if (!normalizedCode.ok) {
         return normalizedCode;
+      }
+
+      if (normalizedCode.value !== undefined) {
+        const revoked = await deps.appleTokenRevoker.revokeAuthorizationCode(normalizedCode.value);
+        if (!revoked.ok) {
+          deps.logger.error('Apple token revocation failed during account deletion', {
+            userId: command.userId,
+            errorCode: revoked.error.code,
+          });
+          return revoked;
+        }
+      }
+
+      if (command.firebaseUid !== null) {
+        const providerDeleted = await deps.identityProviderDeleter.deleteProviderUser(
+          command.firebaseUid,
+        );
+        if (!providerDeleted.ok) {
+          deps.logger.error('Identity provider deletion failed during account deletion', {
+            userId: command.userId,
+            errorCode: providerDeleted.error.code,
+          });
+          return providerDeleted;
+        }
       }
 
       const nowMs = deps.clock.nowMs();
@@ -169,30 +193,6 @@ export function createDeleteMyAccountUseCase(deps: DeleteMyAccountDeps): DeleteM
             errorCode: cleanupResult.error.code,
           });
           return cleanupResult;
-        }
-      }
-
-      if (normalizedCode.value !== undefined) {
-        const revoked = await deps.appleTokenRevoker.revokeAuthorizationCode(normalizedCode.value);
-        if (!revoked.ok) {
-          deps.logger.error('Apple token revocation failed during account deletion', {
-            userId: command.userId,
-            errorCode: revoked.error.code,
-          });
-          return revoked;
-        }
-      }
-
-      if (command.firebaseUid !== null) {
-        const providerDeleted = await deps.identityProviderDeleter.deleteProviderUser(
-          command.firebaseUid,
-        );
-        if (!providerDeleted.ok) {
-          deps.logger.error('Identity provider deletion failed during account deletion', {
-            userId: command.userId,
-            errorCode: providerDeleted.error.code,
-          });
-          return providerDeleted;
         }
       }
 

@@ -1,12 +1,14 @@
 import { createStatement, type SqlStatement } from '@stanmieszkania/d1';
 import { z } from 'zod';
-import { APARTMENT_CHANGES_TABLE, APARTMENT_ROLES, APARTMENTS_TABLE } from '../../apartments';
+import {
+  APARTMENT_CHANGES_TABLE,
+  APARTMENT_ROLES,
+  APARTMENTS_TABLE,
+  CHANGE_LOG_ENTITY_TYPES,
+  CHANGE_LOG_OPS,
+} from '../../apartments';
 import { USERS_TABLE } from '../../identity';
 import { MEMBERSHIPS_TABLE } from '../../membership';
-import {
-  ACCOUNT_DELETION_CHANGE_LOG_ENTITY_TYPE,
-  ACCOUNT_DELETION_CHANGE_LOG_OP,
-} from '../domain/account-deletion.constants';
 
 const A = APARTMENTS_TABLE.columns;
 const M = MEMBERSHIPS_TABLE.columns;
@@ -27,6 +29,19 @@ export const activeContributorRowSchema = z.object({
 export const mediaR2KeyRowSchema = z.object({
   r2_key: z.string(),
 });
+
+function insertChangeLogStatement(
+  apartmentId: string,
+  entityType: string,
+  entityId: string,
+  op: string,
+  createdAt: string,
+): SqlStatement {
+  return createStatement(
+    'INSERT INTO change_log (apartment_id, entity_type, entity_id, op, created_at) VALUES (?, ?, ?, ?, ?)',
+    [apartmentId, entityType, entityId, op, createdAt],
+  );
+}
 
 export function listUserApartmentMembershipsStatement(userId: string): SqlStatement {
   return createStatement(
@@ -100,15 +115,26 @@ export function transferOwnershipAndLeaveStatements(
       `UPDATE ${MEMBERSHIPS_TABLE.name} SET ${M.leftAt} = ? WHERE ${M.apartmentId} = ? AND ${M.userId} = ? AND ${M.leftAt} IS NULL`,
       [leftAt, apartmentId, previousOwnerId],
     ),
-    createStatement(
-      'INSERT INTO change_log (apartment_id, entity_type, entity_id, op, created_at) VALUES (?, ?, ?, ?, ?)',
-      [
-        apartmentId,
-        ACCOUNT_DELETION_CHANGE_LOG_ENTITY_TYPE,
-        apartmentId,
-        ACCOUNT_DELETION_CHANGE_LOG_OP,
-        leftAt,
-      ],
+    insertChangeLogStatement(
+      apartmentId,
+      CHANGE_LOG_ENTITY_TYPES.APARTMENT,
+      apartmentId,
+      CHANGE_LOG_OPS.OWNERSHIP_TRANSFERRED,
+      leftAt,
+    ),
+    insertChangeLogStatement(
+      apartmentId,
+      CHANGE_LOG_ENTITY_TYPES.MEMBERSHIP,
+      previousOwnerId,
+      CHANGE_LOG_OPS.LEFT,
+      leftAt,
+    ),
+    insertChangeLogStatement(
+      apartmentId,
+      CHANGE_LOG_ENTITY_TYPES.MEMBERSHIP,
+      newOwnerId,
+      CHANGE_LOG_OPS.PROMOTED,
+      leftAt,
     ),
   ];
 }
@@ -128,15 +154,19 @@ export function scheduleOrphanDeleteAndLeaveStatements(
       `UPDATE ${MEMBERSHIPS_TABLE.name} SET ${M.leftAt} = ? WHERE ${M.apartmentId} = ? AND ${M.userId} = ? AND ${M.leftAt} IS NULL`,
       [leftAt, apartmentId, ownerId],
     ),
-    createStatement(
-      'INSERT INTO change_log (apartment_id, entity_type, entity_id, op, created_at) VALUES (?, ?, ?, ?, ?)',
-      [
-        apartmentId,
-        ACCOUNT_DELETION_CHANGE_LOG_ENTITY_TYPE,
-        apartmentId,
-        ACCOUNT_DELETION_CHANGE_LOG_OP,
-        leftAt,
-      ],
+    insertChangeLogStatement(
+      apartmentId,
+      CHANGE_LOG_ENTITY_TYPES.APARTMENT,
+      apartmentId,
+      CHANGE_LOG_OPS.UPDATED,
+      leftAt,
+    ),
+    insertChangeLogStatement(
+      apartmentId,
+      CHANGE_LOG_ENTITY_TYPES.MEMBERSHIP,
+      ownerId,
+      CHANGE_LOG_OPS.LEFT,
+      leftAt,
     ),
   ];
 }
@@ -151,15 +181,12 @@ export function leaveAsContributorStatements(
       `UPDATE ${MEMBERSHIPS_TABLE.name} SET ${M.leftAt} = ? WHERE ${M.apartmentId} = ? AND ${M.userId} = ? AND ${M.leftAt} IS NULL`,
       [leftAt, apartmentId, userId],
     ),
-    createStatement(
-      'INSERT INTO change_log (apartment_id, entity_type, entity_id, op, created_at) VALUES (?, ?, ?, ?, ?)',
-      [
-        apartmentId,
-        ACCOUNT_DELETION_CHANGE_LOG_ENTITY_TYPE,
-        apartmentId,
-        ACCOUNT_DELETION_CHANGE_LOG_OP,
-        leftAt,
-      ],
+    insertChangeLogStatement(
+      apartmentId,
+      CHANGE_LOG_ENTITY_TYPES.MEMBERSHIP,
+      userId,
+      CHANGE_LOG_OPS.LEFT,
+      leftAt,
     ),
   ];
 }
