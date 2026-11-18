@@ -1,0 +1,8 @@
+export const DEFAULT_FIXED_TIMESTAMP_ISO = '2026-11-18T12:00:00.000Z';
+export const DEFAULT_FIXED_TIMESTAMP_MS = Date.parse(DEFAULT_FIXED_TIMESTAMP_ISO);
+
+export const UUID_BYTES = 16;
+export const COUNTER_START = 1;
+export const BYTE_RADIX = 256;
+export const LAST_UUID_BYTE_INDEX = UUID_BYTES - 1;
+export const COUNTER_MIN_BYTE_INDEX = 9;
