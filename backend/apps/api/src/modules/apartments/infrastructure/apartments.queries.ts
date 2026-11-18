@@ -25,6 +25,10 @@ export const activeContributorRowSchema = z.object({
   joined_at: z.string(),
 });
 
+export const mediaR2KeyRowSchema = z.object({
+  r2_key: z.string(),
+});
+
 export function findApartmentByIdStatement(id: string): SqlStatement {
   return createStatement(
     `SELECT ${APARTMENTS_TABLE.columnList()} FROM ${APARTMENTS_TABLE.name} WHERE ${A.id} = ? AND ${A.deletedAt} IS NULL LIMIT 1`,
@@ -32,9 +36,10 @@ export function findApartmentByIdStatement(id: string): SqlStatement {
   );
 }
 
+// idx_apartments_invite_code is unique across all rows including soft-deleted apartments.
 export function findApartmentByInviteCodeStatement(inviteCode: string): SqlStatement {
   return createStatement(
-    `SELECT ${APARTMENTS_TABLE.columnList()} FROM ${APARTMENTS_TABLE.name} WHERE ${A.inviteCode} = ? AND ${A.deletedAt} IS NULL LIMIT 1`,
+    `SELECT ${APARTMENTS_TABLE.columnList()} FROM ${APARTMENTS_TABLE.name} WHERE ${A.inviteCode} = ? LIMIT 1`,
     [inviteCode],
   );
 }
@@ -75,4 +80,8 @@ export function listApartmentChangesStatement(apartmentId: string): SqlStatement
     `SELECT ${APARTMENT_CHANGES_TABLE.columnList()} FROM ${APARTMENT_CHANGES_TABLE.name} WHERE ${AC.apartmentId} = ? ORDER BY ${AC.createdAt} ASC, ${AC.id} ASC`,
     [apartmentId],
   );
+}
+
+export function listApartmentMediaR2KeysStatement(apartmentId: string): SqlStatement {
+  return createStatement('SELECT r2_key FROM media WHERE apartment_id = ?', [apartmentId]);
 }

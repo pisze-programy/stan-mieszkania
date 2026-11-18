@@ -31,7 +31,7 @@ describe('Apartments HTTP routes (/v1/apartments)', () => {
     const app = createApp({
       overrides: { clock: new FixedClock(), idGenerator: new SequentialUuidV7Generator() },
     });
-    const env = { DB: getHarness().db, AUTH_MODE: 'local' };
+    const env = { DB: getHarness().db, MEDIA_BUCKET: getHarness().r2, AUTH_MODE: 'local' };
     const aptId = '01933e2a-7b40-7000-8000-000000000010';
     const ownerHeaders = {
       Authorization: 'Bearer dev:owner-fb:Jan',
@@ -99,12 +99,36 @@ describe('Apartments HTTP routes (/v1/apartments)', () => {
     expect(rotated.inviteCode).not.toBeNull();
     expect(rotated.inviteCode).not.toBe(created.inviteCode);
 
+    const r2Key = `apartments/${aptId}/solo-photo.jpg`;
+    await getHarness().r2.put(r2Key, 'jpeg-bytes');
+    await getHarness()
+      .db.prepare(
+        'INSERT INTO media (id, apartment_id, author_id, kind, source, upload_status, sha256, captured_at, captured_tz, width, height, bytes, r2_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      )
+      .bind(
+        'med-solo-1',
+        aptId,
+        created.ownerId,
+        'photo',
+        'camera',
+        'confirmed',
+        'abc',
+        created.createdAt,
+        'Europe/Warsaw',
+        100,
+        100,
+        10,
+        r2Key,
+      )
+      .run();
+
     const deleteRes = await app.request(
       `/v1/apartments/${aptId}`,
       { method: 'DELETE', headers: { Authorization: 'Bearer dev:owner-fb' } },
       env,
     );
     expect(deleteRes.status).toBe(HTTP_STATUS.NO_CONTENT);
+    expect(await getHarness().r2.get(r2Key)).toBeNull();
 
     const afterDeleteGet = await app.request(
       `/v1/apartments/${aptId}`,

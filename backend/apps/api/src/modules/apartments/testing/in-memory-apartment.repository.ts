@@ -20,6 +20,11 @@ export class InMemoryApartmentRepository implements ApartmentRepository {
   private readonly apartments = new Map<string, Apartment>();
   private readonly memberships: StoredMembership[] = [];
   private readonly changes: ApartmentChange[] = [];
+  private readonly mediaKeys = new Map<string, readonly string[]>();
+
+  seedMediaR2Keys(apartmentId: string, r2Keys: readonly string[]): void {
+    this.mediaKeys.set(apartmentId, r2Keys);
+  }
 
   seedMembership(params: {
     readonly apartmentId: string;
@@ -51,7 +56,7 @@ export class InMemoryApartmentRepository implements ApartmentRepository {
 
   findByInviteCode(inviteCode: string): Promise<Result<Apartment | null, DomainError>> {
     for (const apartment of this.apartments.values()) {
-      if (apartment.deletedAt === null && apartment.inviteCode === inviteCode) {
+      if (apartment.inviteCode === inviteCode) {
         return Promise.resolve(ok(apartment));
       }
     }
@@ -196,8 +201,13 @@ export class InMemoryApartmentRepository implements ApartmentRepository {
     return Promise.resolve(ok(undefined));
   }
 
+  listMediaR2Keys(apartmentId: string): Promise<Result<readonly string[], DomainError>> {
+    return Promise.resolve(ok(this.mediaKeys.get(apartmentId) ?? []));
+  }
+
   hardDelete(apartmentId: string): Promise<Result<void, DomainError>> {
     this.apartments.delete(apartmentId);
+    this.mediaKeys.delete(apartmentId);
     return Promise.resolve(ok(undefined));
   }
 

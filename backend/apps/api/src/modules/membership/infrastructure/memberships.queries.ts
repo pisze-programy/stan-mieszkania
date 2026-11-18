@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { APARTMENTS_TABLE } from '../../apartments';
 import {
   MEMBERSHIP_CHANGE_LOG_ENTITY_TYPE,
+  MEMBERSHIP_CHANGE_LOG_OPS,
   MEMBERSHIP_ROLES,
 } from '../domain/membership.constants';
 import { MEMBERSHIPS_TABLE } from './memberships.table';
@@ -16,6 +17,10 @@ export const apartmentIdOnlyRowSchema = z.object({
 
 export const latestJoinedAtRowSchema = z.object({
   latest_joined_at: z.string().nullable(),
+});
+
+export const latestDepartureOpRowSchema = z.object({
+  op: z.enum([MEMBERSHIP_CHANGE_LOG_OPS.REVOKED, MEMBERSHIP_CHANGE_LOG_OPS.LEFT]),
 });
 
 export const memberViewRowSchema = z.object({
@@ -39,7 +44,7 @@ export function findActiveApartmentIdStatement(apartmentId: string): SqlStatemen
 
 export function findApartmentByInviteCodeStatement(inviteCode: string): SqlStatement {
   return createStatement(
-    `SELECT ${APARTMENTS_TABLE.columnList()} FROM ${APARTMENTS_TABLE.name} WHERE ${A.inviteCode} = ? AND ${A.deletedAt} IS NULL LIMIT 1`,
+    `SELECT ${APARTMENTS_TABLE.columnList()} FROM ${APARTMENTS_TABLE.name} WHERE ${A.inviteCode} = ? AND ${A.deletedAt} IS NULL AND ${A.orphanDeleteAfter} IS NULL LIMIT 1`,
     [inviteCode],
   );
 }
@@ -48,6 +53,22 @@ export function findMembershipStatement(apartmentId: string, userId: string): Sq
   return createStatement(
     `SELECT ${MEMBERSHIPS_TABLE.columnList()} FROM ${MEMBERSHIPS_TABLE.name} WHERE ${M.apartmentId} = ? AND ${M.userId} = ? LIMIT 1`,
     [apartmentId, userId],
+  );
+}
+
+export function findLatestMembershipDepartureOpStatement(
+  apartmentId: string,
+  userId: string,
+): SqlStatement {
+  return createStatement(
+    'SELECT op FROM change_log WHERE apartment_id = ? AND entity_type = ? AND entity_id = ? AND op IN (?, ?) ORDER BY seq DESC LIMIT 1',
+    [
+      apartmentId,
+      MEMBERSHIP_CHANGE_LOG_ENTITY_TYPE,
+      userId,
+      MEMBERSHIP_CHANGE_LOG_OPS.REVOKED,
+      MEMBERSHIP_CHANGE_LOG_OPS.LEFT,
+    ],
   );
 }
 

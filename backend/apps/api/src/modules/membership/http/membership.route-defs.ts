@@ -38,6 +38,10 @@ export const joinApartmentRoute = createRoute({
       content: { 'application/json': { schema: ApartmentDtoSchema } },
     },
     [HTTP_STATUS.BAD_REQUEST]: { description: 'Validation error', content: problemJsonContent },
+    [HTTP_STATUS.FORBIDDEN]: {
+      description: 'Revoked contributor cannot re-join until invite code is rotated',
+      content: problemJsonContent,
+    },
     [HTTP_STATUS.NOT_FOUND]: { description: 'Invite code not found', content: problemJsonContent },
     [HTTP_STATUS.UNPROCESSABLE_ENTITY]: {
       description: 'Invalid invite code format',

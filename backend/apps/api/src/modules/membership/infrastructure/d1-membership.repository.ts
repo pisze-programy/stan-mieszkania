@@ -19,10 +19,12 @@ import {
   apartmentIdOnlyRowSchema,
   findActiveApartmentIdStatement,
   findApartmentByInviteCodeStatement,
+  findLatestMembershipDepartureOpStatement,
   findMembershipStatement,
   getLatestContributorJoinedAtStatement,
   insertContributorMembershipStatement,
   insertMembershipChangeLogStatement,
+  latestDepartureOpRowSchema,
   latestJoinedAtRowSchema,
   listApartmentMembersStatement,
   markMembershipLeftStatement,
@@ -58,6 +60,14 @@ export function createD1MembershipRepository<
         MEMBERSHIPS_TABLE.rowSchema,
       );
       return mapResult(result, (row) => (row === null ? null : mapMembershipRowToEntity(row)));
+    },
+    findLatestMembershipDepartureOp: async (apartmentId, userId) => {
+      const result = await queryFirst(
+        db,
+        findLatestMembershipDepartureOpStatement(apartmentId, userId),
+        latestDepartureOpRowSchema,
+      );
+      return mapResult(result, (row) => (row === null ? null : row.op));
     },
     getLatestContributorJoinedAt: async (apartmentId) => {
       const result = await queryFirst(

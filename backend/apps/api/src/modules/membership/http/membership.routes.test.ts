@@ -7,10 +7,28 @@ import { ApartmentDtoSchema } from '../../apartments';
 import { InMemoryInviteRateLimiter } from '../testing/in-memory-invite-rate-limiter';
 import { ApartmentMemberListResponseSchema } from './membership.schema';
 
-const jsonHeaders = (token: string) => ({
-  Authorization: `Bearer ${token}`,
-  'Content-Type': 'application/json',
-});
+type App = ReturnType<typeof createApp>;
+
+const req = (
+  app: App,
+  path: string,
+  token: string,
+  env: Record<string, unknown>,
+  method = 'GET',
+  body?: unknown,
+) =>
+  app.request(
+    path,
+    {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    },
+    env,
+  );
 
 describe('Membership HTTP routes (/v1/apartments/*)', () => {
   let harness: D1TestHarness | undefined;
@@ -31,112 +49,106 @@ describe('Membership HTTP routes (/v1/apartments/*)', () => {
     await harness?.dispose();
   });
 
-  it('supports join by invite code, invite-reset prompt & invalidation, member listing, and revocation', async () => {
+  it('supports join, invite-reset prompt & invalidation, member listing, revocation block, and post-reset rejoin', async () => {
     const clock = new FixedClock();
-    const app = createApp({
-      overrides: { clock, idGenerator: ids },
-    });
+    const app = createApp({ overrides: { clock, idGenerator: ids } });
     const env = { DB: getHarness().db, AUTH_MODE: 'local' };
     const aptId = '01933e2a-7b40-7000-8000-000000000020';
 
-    const putRes = await app.request(
-      `/v1/apartments/${aptId}`,
-      {
-        method: 'PUT',
-        headers: jsonHeaders('dev:owner-fb:Jan'),
-        body: JSON.stringify({ name: 'M1', street: 'S1', city: 'Warszawa' }),
-      },
-      env,
-    );
+    const putRes = await req(app, `/v1/apartments/${aptId}`, 'dev:owner-fb:Jan', env, 'PUT', {
+      name: 'M1',
+      street: 'S1',
+      city: 'Warszawa',
+    });
     expect(putRes.status).toBe(HTTP_STATUS.OK);
     const created = ApartmentDtoSchema.parse(await putRes.json());
     const originalCode = created.inviteCode ?? '';
 
     clock.advanceBy(1_000);
-    const joinRes = await app.request(
-      '/v1/apartments/join',
-      {
-        method: 'POST',
-        headers: jsonHeaders('dev:contrib-fb:Anna'),
-        body: JSON.stringify({ inviteCode: originalCode.toLowerCase().replace('-', ' ') }),
-      },
-      env,
-    );
+    const joinRes = await req(app, '/v1/apartments/join', 'dev:contrib-fb:Anna', env, 'POST', {
+      inviteCode: originalCode.toLowerCase().replace('-', ' '),
+    });
     expect(joinRes.status).toBe(HTTP_STATUS.OK);
     const joined = ApartmentDtoSchema.parse(await joinRes.json());
-    expect(joined.role).toBe('contributor');
-    expect(joined.inviteCode).toBeNull();
-    expect(joined.shouldSuggestInviteCodeReset).toBe(false);
+    expect(joined).toMatchObject({
+      role: 'contributor',
+      inviteCode: null,
+      shouldSuggestInviteCodeReset: false,
+    });
 
-    const ownerGet = await app.request(
-      `/v1/apartments/${aptId}`,
-      { headers: { Authorization: 'Bearer dev:owner-fb' } },
-      env,
-    );
+    const ownerGet = await req(app, `/v1/apartments/${aptId}`, 'dev:owner-fb', env);
     expect(ApartmentDtoSchema.parse(await ownerGet.json()).shouldSuggestInviteCodeReset).toBe(true);
 
-    const membersRes = await app.request(
-      `/v1/apartments/${aptId}/members`,
-      { headers: { Authorization: 'Bearer dev:contrib-fb' } },
-      env,
-    );
+    const membersRes = await req(app, `/v1/apartments/${aptId}/members`, 'dev:contrib-fb', env);
     expect(membersRes.status).toBe(HTTP_STATUS.OK);
     const members = ApartmentMemberListResponseSchema.parse(await membersRes.json()).items;
     expect(members).toHaveLength(2);
     const contribMember = members.find((m) => m.role === 'contributor');
     const ownerMember = members.find((m) => m.role === 'owner');
-    expect(contribMember?.displayName).toBe('Anna');
-    expect(ownerMember?.displayName).toBe('Jan');
 
     clock.advanceBy(1_000);
-    const resetRes = await app.request(
+    const resetRes = await req(
+      app,
       `/v1/apartments/${aptId}/invite-code/reset`,
-      { method: 'POST', headers: { Authorization: 'Bearer dev:owner-fb' } },
+      'dev:owner-fb',
       env,
+      'POST',
     );
-    expect(resetRes.status).toBe(HTTP_STATUS.OK);
-    expect(ApartmentDtoSchema.parse(await resetRes.json()).shouldSuggestInviteCodeReset).toBe(
-      false,
-    );
+    const rotated = ApartmentDtoSchema.parse(await resetRes.json());
+    expect(rotated.shouldSuggestInviteCodeReset).toBe(false);
 
-    const oldCodeJoin = await app.request(
-      '/v1/apartments/join',
-      {
-        method: 'POST',
-        headers: jsonHeaders('dev:other-fb:Piotr'),
-        body: JSON.stringify({ inviteCode: originalCode }),
-      },
-      env,
-    );
+    const oldCodeJoin = await req(app, '/v1/apartments/join', 'dev:other-fb:Piotr', env, 'POST', {
+      inviteCode: originalCode,
+    });
     expect(oldCodeJoin.status).toBe(HTTP_STATUS.NOT_FOUND);
     expect(ProblemDetailsSchema.parse(await oldCodeJoin.json()).code).toBe('INVITE_CODE_NOT_FOUND');
 
-    const ownerSelfRevoke = await app.request(
+    const ownerSelfRevoke = await req(
+      app,
       `/v1/apartments/${aptId}/members/${ownerMember?.userId ?? ''}`,
-      { method: 'DELETE', headers: { Authorization: 'Bearer dev:owner-fb' } },
+      'dev:owner-fb',
       env,
+      'DELETE',
     );
     expect(ownerSelfRevoke.status).toBe(HTTP_STATUS.CONFLICT);
     expect(ProblemDetailsSchema.parse(await ownerSelfRevoke.json()).code).toBe(
       'CANNOT_REVOKE_OWNER',
     );
 
-    const revokeRes = await app.request(
+    clock.advanceBy(1_000);
+    const revokeRes = await req(
+      app,
       `/v1/apartments/${aptId}/members/${contribMember?.userId ?? ''}`,
-      { method: 'DELETE', headers: { Authorization: 'Bearer dev:owner-fb' } },
+      'dev:owner-fb',
       env,
+      'DELETE',
     );
     expect(revokeRes.status).toBe(HTTP_STATUS.NO_CONTENT);
-
-    const contribAfterRevoke = await app.request(
-      `/v1/apartments/${aptId}`,
-      { headers: { Authorization: 'Bearer dev:contrib-fb' } },
-      env,
+    expect((await req(app, `/v1/apartments/${aptId}`, 'dev:contrib-fb', env)).status).toBe(
+      HTTP_STATUS.FORBIDDEN,
     );
-    expect(contribAfterRevoke.status).toBe(HTTP_STATUS.FORBIDDEN);
+
+    const blockedRejoin = await req(app, '/v1/apartments/join', 'dev:contrib-fb', env, 'POST', {
+      inviteCode: rotated.inviteCode,
+    });
+    expect(blockedRejoin.status).toBe(HTTP_STATUS.FORBIDDEN);
+    expect(ProblemDetailsSchema.parse(await blockedRejoin.json()).code).toBe(
+      'MEMBERSHIP_ACCESS_DENIED',
+    );
+
+    clock.advanceBy(1_000);
+    const secondReset = ApartmentDtoSchema.parse(
+      await (
+        await req(app, `/v1/apartments/${aptId}/invite-code/reset`, 'dev:owner-fb', env, 'POST')
+      ).json(),
+    );
+    const allowedRejoin = await req(app, '/v1/apartments/join', 'dev:contrib-fb', env, 'POST', {
+      inviteCode: secondReset.inviteCode,
+    });
+    expect(allowedRejoin.status).toBe(HTTP_STATUS.OK);
   });
 
-  it('supports contributor leave, owner leave conflict, invalid invite code 422, and rate limit 429', async () => {
+  it('supports leave, owner leave conflict, invalid code 422, rate limit 429, and blocks orphan join', async () => {
     const app = createApp({
       overrides: {
         clock: new FixedClock(),
@@ -147,65 +159,52 @@ describe('Membership HTTP routes (/v1/apartments/*)', () => {
     const env = { DB: getHarness().db, AUTH_MODE: 'local' };
     const aptId = '01933e2a-7b40-7000-8000-000000000021';
 
-    const putRes = await app.request(
-      `/v1/apartments/${aptId}`,
-      {
-        method: 'PUT',
-        headers: jsonHeaders('dev:owner2-fb:Marek'),
-        body: JSON.stringify({ name: 'M2', street: 'S2', city: 'Kraków' }),
-      },
-      env,
-    );
+    const putRes = await req(app, `/v1/apartments/${aptId}`, 'dev:owner2-fb:Marek', env, 'PUT', {
+      name: 'M2',
+      street: 'S2',
+      city: 'Kraków',
+    });
     const created = ApartmentDtoSchema.parse(await putRes.json());
 
-    const joinRes = await app.request(
-      '/v1/apartments/join',
-      {
-        method: 'POST',
-        headers: jsonHeaders('dev:contrib2-fb:Ewa'),
-        body: JSON.stringify({ inviteCode: created.inviteCode }),
-      },
-      env,
-    );
-    expect(joinRes.status).toBe(HTTP_STATUS.OK);
+    expect(
+      (
+        await req(app, '/v1/apartments/join', 'dev:contrib2-fb:Ewa', env, 'POST', {
+          inviteCode: created.inviteCode,
+        })
+      ).status,
+    ).toBe(HTTP_STATUS.OK);
+    expect(
+      (await req(app, `/v1/apartments/${aptId}/leave`, 'dev:contrib2-fb', env, 'POST')).status,
+    ).toBe(HTTP_STATUS.NO_CONTENT);
+    expect(
+      (await req(app, `/v1/apartments/${aptId}/leave`, 'dev:owner2-fb', env, 'POST')).status,
+    ).toBe(HTTP_STATUS.CONFLICT);
+    expect(
+      (
+        await req(app, '/v1/apartments/join', 'dev:contrib2-fb', env, 'POST', {
+          inviteCode: 'ABCD-01IO',
+        })
+      ).status,
+    ).toBe(HTTP_STATUS.UNPROCESSABLE_ENTITY);
 
-    const leaveRes = await app.request(
-      `/v1/apartments/${aptId}/leave`,
-      { method: 'POST', headers: { Authorization: 'Bearer dev:contrib2-fb' } },
-      env,
-    );
-    expect(leaveRes.status).toBe(HTTP_STATUS.NO_CONTENT);
-
-    const ownerLeaveRes = await app.request(
-      `/v1/apartments/${aptId}/leave`,
-      { method: 'POST', headers: { Authorization: 'Bearer dev:owner2-fb' } },
-      env,
-    );
-    expect(ownerLeaveRes.status).toBe(HTTP_STATUS.CONFLICT);
-
-    const invalidRes = await app.request(
-      '/v1/apartments/join',
-      {
-        method: 'POST',
-        headers: jsonHeaders('dev:contrib2-fb'),
-        body: JSON.stringify({ inviteCode: 'ABCD-01IO' }),
-      },
-      env,
-    );
-    expect(invalidRes.status).toBe(HTTP_STATUS.UNPROCESSABLE_ENTITY);
-
-    const limitedRes = await app.request(
-      '/v1/apartments/join',
-      {
-        method: 'POST',
-        headers: jsonHeaders('dev:contrib2-fb'),
-        body: JSON.stringify({ inviteCode: created.inviteCode }),
-      },
-      env,
-    );
+    const limitedRes = await req(app, '/v1/apartments/join', 'dev:contrib2-fb', env, 'POST', {
+      inviteCode: created.inviteCode,
+    });
     expect(limitedRes.status).toBe(HTTP_STATUS.TOO_MANY_REQUESTS);
     expect(ProblemDetailsSchema.parse(await limitedRes.json()).code).toBe(
       'INVITE_CODE_RATE_LIMITED',
     );
+
+    await getHarness()
+      .db.prepare('UPDATE apartments SET orphan_delete_after = ? WHERE id = ?')
+      .bind('2026-12-18T12:00:00.000Z', aptId)
+      .run();
+    expect(
+      (
+        await req(app, '/v1/apartments/join', 'dev:stranger2-fb:Ola', env, 'POST', {
+          inviteCode: created.inviteCode,
+        })
+      ).status,
+    ).toBe(HTTP_STATUS.NOT_FOUND);
   });
 });

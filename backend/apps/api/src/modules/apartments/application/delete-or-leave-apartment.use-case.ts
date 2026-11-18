@@ -1,4 +1,5 @@
 import { err, type Clock, type DomainError, type Result } from '@stanmieszkania/shared';
+import type { MediaCleanupPort } from '../../account-deletion';
 import type { ApartmentRepository } from '../domain/apartment.repository';
 import { APARTMENT_ROLES } from '../domain/apartments.constants';
 import { apartmentAccessDeniedError, apartmentNotFoundError } from '../domain/apartments.errors';
@@ -6,6 +7,7 @@ import { resolveOwnerDeparture } from '../domain/ownership-transfer.policy';
 
 export interface DeleteOrLeaveApartmentDeps {
   readonly apartmentRepository: ApartmentRepository;
+  readonly mediaCleanup: MediaCleanupPort;
   readonly clock: Clock;
 }
 
@@ -70,7 +72,21 @@ export function createDeleteOrLeaveApartmentUseCase(
         });
       }
 
-      return deps.apartmentRepository.hardDelete(input.apartmentId);
+      const r2KeysResult = await deps.apartmentRepository.listMediaR2Keys(input.apartmentId);
+      if (!r2KeysResult.ok) {
+        return r2KeysResult;
+      }
+
+      const deleted = await deps.apartmentRepository.hardDelete(input.apartmentId);
+      if (!deleted.ok) {
+        return deleted;
+      }
+
+      if (r2KeysResult.value.length > 0) {
+        return deps.mediaCleanup.deletePrivateMediaObjects(input.userId, r2KeysResult.value);
+      }
+
+      return deleted;
     },
   };
 }

@@ -1,6 +1,7 @@
-import { isErr, isOk } from '@stanmieszkania/shared';
+import { createDomainError, err, isErr, isOk } from '@stanmieszkania/shared';
 import { FixedClock, SequentialUuidV7Generator } from '@stanmieszkania/testing';
 import { describe, expect, it } from 'vitest';
+import { RecordingMediaCleanup } from '../../account-deletion';
 import { APARTMENT_ERROR_CODES } from '../domain/apartments.errors';
 import { InMemoryApartmentRepository } from '../testing/in-memory-apartment.repository';
 import { createCreateApartmentUseCase } from './create-apartment.use-case';
@@ -68,6 +69,23 @@ describe('Apartments application use cases', () => {
     if (isOk(second)) {
       expect(second.value.apartment.inviteCode).toBe('BBBB-3333');
     }
+
+    const failingRepo = new InMemoryApartmentRepository();
+    failingRepo.createWithOwnerMembership = () =>
+      Promise.resolve(err(createDomainError('DB_EXECUTION_FAILED', 'Simulated FK failure')));
+    const failingCreate = createCreateApartmentUseCase({
+      apartmentRepository: failingRepo,
+      clock,
+      generateCode: () => 'DDDD-5555',
+    });
+    const propagated = await failingCreate.execute({
+      apartmentId: 'apt-3',
+      ownerId: 'missing-user',
+      name: 'Broken',
+      street: 'S',
+      city: 'C',
+    });
+    expect(isErr(propagated) && propagated.error.code).toBe('DB_EXECUTION_FAILED');
   });
 
   it('enforces owner-only update & reset, records change history, and handles owner transfer / contributor leave / solo delete', async () => {
@@ -90,8 +108,10 @@ describe('Apartments application use cases', () => {
       clock,
       generateCode: () => 'NEXT-3333',
     });
+    const mediaCleanup = new RecordingMediaCleanup();
     const deleteOrLeaveUseCase = createDeleteOrLeaveApartmentUseCase({
       apartmentRepository: repo,
+      mediaCleanup,
       clock,
     });
     const historyUseCase = createListApartmentChangesUseCase({ apartmentRepository: repo });
@@ -148,9 +168,13 @@ describe('Apartments application use cases', () => {
       expect(afterTransfer.value?.ownerId).toBe('contrib-1');
     }
 
+    repo.seedMediaR2Keys('apt-1', ['apartments/apt-1/photo-1.jpg']);
     expect(
       (await deleteOrLeaveUseCase.execute({ apartmentId: 'apt-1', userId: 'contrib-1' })).ok,
     ).toBe(true);
+    expect(mediaCleanup.batches).toEqual([
+      { userId: 'contrib-1', r2Keys: ['apartments/apt-1/photo-1.jpg'] },
+    ]);
     const afterSoloDelete = await repo.findById('apt-1');
     if (isOk(afterSoloDelete)) {
       expect(afterSoloDelete.value).toBeNull();

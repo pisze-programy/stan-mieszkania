@@ -18,8 +18,12 @@ export interface InMemoryUserProfile {
   readonly color: string;
 }
 
+export interface SeedInMemoryApartmentInput extends JoinableApartment {
+  readonly orphanDeleteAfter?: string | null;
+}
+
 export class InMemoryMembershipRepository implements MembershipRepository {
-  private readonly apartments = new Map<string, JoinableApartment>();
+  private readonly apartments = new Map<string, SeedInMemoryApartmentInput>();
   private readonly users = new Map<string, InMemoryUserProfile>();
   private readonly memberships = new Map<string, Membership>();
   public readonly changeLog: Array<{
@@ -37,7 +41,7 @@ export class InMemoryMembershipRepository implements MembershipRepository {
     this.users.set(user.id, user);
   }
 
-  public seedApartment(apartment: JoinableApartment, ownerJoinedAt?: string): void {
+  public seedApartment(apartment: SeedInMemoryApartmentInput, ownerJoinedAt?: string): void {
     this.apartments.set(apartment.id, apartment);
     this.memberships.set(InMemoryMembershipRepository.key(apartment.id, apartment.ownerId), {
       apartmentId: apartment.id,
@@ -48,6 +52,18 @@ export class InMemoryMembershipRepository implements MembershipRepository {
     });
   }
 
+  public rotateInviteCode(apartmentId: string, inviteCode: string, rotatedAt: string): void {
+    const existing = this.apartments.get(apartmentId);
+    if (existing !== undefined) {
+      this.apartments.set(apartmentId, {
+        ...existing,
+        inviteCode,
+        inviteCodeRotatedAt: rotatedAt,
+        updatedAt: rotatedAt,
+      });
+    }
+  }
+
   public apartmentExists(apartmentId: string): Promise<Result<boolean, DomainError>> {
     return Promise.resolve(ok(this.apartments.has(apartmentId)));
   }
@@ -56,7 +72,11 @@ export class InMemoryMembershipRepository implements MembershipRepository {
     inviteCode: string,
   ): Promise<Result<JoinableApartment | null, DomainError>> {
     const found =
-      Array.from(this.apartments.values()).find((apt) => apt.inviteCode === inviteCode) ?? null;
+      Array.from(this.apartments.values()).find(
+        (apt) =>
+          apt.inviteCode === inviteCode &&
+          (apt.orphanDeleteAfter === undefined || apt.orphanDeleteAfter === null),
+      ) ?? null;
     return Promise.resolve(ok(found));
   }
 
@@ -67,6 +87,24 @@ export class InMemoryMembershipRepository implements MembershipRepository {
     return Promise.resolve(
       ok(this.memberships.get(InMemoryMembershipRepository.key(apartmentId, userId)) ?? null),
     );
+  }
+
+  public findLatestMembershipDepartureOp(
+    apartmentId: string,
+    userId: string,
+  ): Promise<Result<'revoked' | 'left' | null, DomainError>> {
+    for (let index = this.changeLog.length - 1; index >= 0; index -= 1) {
+      const entry = this.changeLog[index];
+      if (
+        entry !== undefined &&
+        entry.apartmentId === apartmentId &&
+        entry.userId === userId &&
+        (entry.op === 'revoked' || entry.op === 'left')
+      ) {
+        return Promise.resolve(ok(entry.op));
+      }
+    }
+    return Promise.resolve(ok(null));
   }
 
   public getLatestContributorJoinedAt(

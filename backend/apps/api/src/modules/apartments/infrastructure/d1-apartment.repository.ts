@@ -1,5 +1,4 @@
 import {
-  execute,
   executeBatch,
   query,
   queryFirst,
@@ -9,7 +8,7 @@ import {
 } from '@stanmieszkania/d1';
 import { mapResult } from '@stanmieszkania/shared';
 import type { ApartmentRepository } from '../domain/apartment.repository';
-import { CHANGE_LOG_OPS } from '../domain/apartments.constants';
+import { CHANGE_LOG_ENTITY_TYPES, CHANGE_LOG_OPS } from '../domain/apartments.constants';
 import { APARTMENT_CHANGES_TABLE } from './apartment-changes.table';
 import {
   hardDeleteApartmentStatements,
@@ -17,10 +16,9 @@ import {
   insertApartmentStatement,
   insertChangeLogStatement,
   insertOwnerMembershipStatement,
-  markMembershipLeftStatement,
-  promoteMembershipToOwnerStatement,
+  leaveAsContributorStatements,
+  transferOwnershipAndLeaveStatements,
   updateApartmentMetadataStatement,
-  updateApartmentOwnerStatement,
   updateInviteCodeStatement,
 } from './apartment-mutations.queries';
 import {
@@ -39,7 +37,9 @@ import {
   latestJoinedRowSchema,
   listActiveContributorsStatement,
   listApartmentChangesStatement,
+  listApartmentMediaR2KeysStatement,
   listApartmentsForUserStatement,
+  mediaR2KeyRowSchema,
   membershipRoleRowSchema,
 } from './apartments.queries';
 import { APARTMENTS_TABLE } from './apartments.table';
@@ -109,7 +109,13 @@ export function createD1ApartmentRepository<TStatement extends D1PreparedStateme
       const result = await executeBatch(db, [
         insertApartmentStatement(row),
         insertOwnerMembershipStatement(apartment.id, apartment.ownerId, joinedAt),
-        insertChangeLogStatement(apartment.id, apartment.id, CHANGE_LOG_OPS.CREATED, joinedAt),
+        insertChangeLogStatement(
+          apartment.id,
+          CHANGE_LOG_ENTITY_TYPES.APARTMENT,
+          apartment.id,
+          CHANGE_LOG_OPS.CREATED,
+          joinedAt,
+        ),
       ]);
       return mapResult(result, () => undefined);
     },
@@ -122,6 +128,7 @@ export function createD1ApartmentRepository<TStatement extends D1PreparedStateme
         ),
         insertChangeLogStatement(
           apartment.id,
+          CHANGE_LOG_ENTITY_TYPES.APARTMENT,
           apartment.id,
           CHANGE_LOG_OPS.UPDATED,
           apartment.updatedAt,
@@ -134,6 +141,7 @@ export function createD1ApartmentRepository<TStatement extends D1PreparedStateme
         updateInviteCodeStatement(apartmentId, inviteCode, rotatedAt),
         insertChangeLogStatement(
           apartmentId,
+          CHANGE_LOG_ENTITY_TYPES.APARTMENT,
           apartmentId,
           CHANGE_LOG_OPS.INVITE_CODE_ROTATED,
           rotatedAt,
@@ -142,22 +150,26 @@ export function createD1ApartmentRepository<TStatement extends D1PreparedStateme
       return mapResult(result, () => undefined);
     },
     transferOwnershipAndLeave: async ({ apartmentId, previousOwnerId, newOwnerId, leftAt }) => {
-      const result = await executeBatch(db, [
-        updateApartmentOwnerStatement(apartmentId, newOwnerId, leftAt),
-        markMembershipLeftStatement(apartmentId, previousOwnerId, leftAt),
-        promoteMembershipToOwnerStatement(apartmentId, newOwnerId),
-        insertChangeLogStatement(
-          apartmentId,
-          apartmentId,
-          CHANGE_LOG_OPS.OWNERSHIP_TRANSFERRED,
-          leftAt,
-        ),
-      ]);
+      const result = await executeBatch(
+        db,
+        transferOwnershipAndLeaveStatements(apartmentId, previousOwnerId, newOwnerId, leftAt),
+      );
       return mapResult(result, () => undefined);
     },
     leaveAsContributor: async ({ apartmentId, userId, leftAt }) => {
-      const result = await execute(db, markMembershipLeftStatement(apartmentId, userId, leftAt));
+      const result = await executeBatch(
+        db,
+        leaveAsContributorStatements(apartmentId, userId, leftAt),
+      );
       return mapResult(result, () => undefined);
+    },
+    listMediaR2Keys: async (apartmentId) => {
+      const result = await query(
+        db,
+        listApartmentMediaR2KeysStatement(apartmentId),
+        mediaR2KeyRowSchema,
+      );
+      return mapResult(result, (rows) => rows.map((row) => row.r2_key));
     },
     hardDelete: async (apartmentId) => {
       const result = await executeBatch(db, hardDeleteApartmentStatements(apartmentId));

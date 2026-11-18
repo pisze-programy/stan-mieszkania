@@ -1,9 +1,13 @@
 import { err, ok, type Clock, type DomainError, type Result } from '@stanmieszkania/shared';
 import { normalizeInviteCode } from '../../apartments';
 import type { InviteCodeRateLimiterPort } from '../domain/invite-rate-limiter.port';
-import { MEMBERSHIP_ROLES } from '../domain/membership.constants';
+import { MEMBERSHIP_CHANGE_LOG_OPS, MEMBERSHIP_ROLES } from '../domain/membership.constants';
 import { isActiveMembership } from '../domain/membership.entity';
-import { inviteCodeInvalidError, inviteCodeNotFoundError } from '../domain/membership.errors';
+import {
+  inviteCodeInvalidError,
+  inviteCodeNotFoundError,
+  membershipAccessDeniedError,
+} from '../domain/membership.errors';
 import type { JoinApartmentSummary, MembershipRepository } from '../domain/membership.repository';
 
 export interface JoinApartmentByCodeDeps {
@@ -66,6 +70,25 @@ export function createJoinApartmentByCodeUseCase(
           latestContributorJoinedAt = latest.value;
         }
         return ok({ apartment, role: existing.role, latestContributorJoinedAt });
+      }
+
+      if (existing !== null && existing.leftAt !== null) {
+        const departureOp = await deps.membershipRepository.findLatestMembershipDepartureOp(
+          apartment.id,
+          input.userId,
+        );
+        if (!departureOp.ok) {
+          return departureOp;
+        }
+        // Decision Q9: Revoked contributors stay blocked until the Owner rotates the invite code.
+        if (departureOp.value === MEMBERSHIP_CHANGE_LOG_OPS.REVOKED) {
+          const rotatedAfterRevocation =
+            apartment.inviteCodeRotatedAt !== null &&
+            Date.parse(apartment.inviteCodeRotatedAt) > Date.parse(existing.leftAt);
+          if (!rotatedAfterRevocation) {
+            return err(membershipAccessDeniedError(apartment.id));
+          }
+        }
       }
 
       const joined = await deps.membershipRepository.joinAsContributor({

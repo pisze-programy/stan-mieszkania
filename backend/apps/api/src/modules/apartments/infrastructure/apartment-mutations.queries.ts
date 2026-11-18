@@ -1,5 +1,9 @@
 import { createStatement, type SqlStatement } from '@stanmieszkania/d1';
-import { APARTMENT_ROLES, CHANGE_LOG_ENTITY_TYPES } from '../domain/apartments.constants';
+import {
+  APARTMENT_ROLES,
+  CHANGE_LOG_ENTITY_TYPES,
+  CHANGE_LOG_OPS,
+} from '../domain/apartments.constants';
 import { APARTMENT_CHANGES_TABLE, type ApartmentChangeRow } from './apartment-changes.table';
 import { APARTMENTS_TABLE, type ApartmentRow } from './apartments.table';
 
@@ -103,14 +107,66 @@ export function promoteMembershipToOwnerStatement(
 
 export function insertChangeLogStatement(
   apartmentId: string,
+  entityType: string,
   entityId: string,
   op: string,
   createdAt: string,
 ): SqlStatement {
   return createStatement(
     'INSERT INTO change_log (apartment_id, entity_type, entity_id, op, created_at) VALUES (?, ?, ?, ?, ?)',
-    [apartmentId, CHANGE_LOG_ENTITY_TYPES.APARTMENT, entityId, op, createdAt],
+    [apartmentId, entityType, entityId, op, createdAt],
   );
+}
+
+export function transferOwnershipAndLeaveStatements(
+  apartmentId: string,
+  previousOwnerId: string,
+  newOwnerId: string,
+  leftAt: string,
+): readonly SqlStatement[] {
+  return [
+    updateApartmentOwnerStatement(apartmentId, newOwnerId, leftAt),
+    markMembershipLeftStatement(apartmentId, previousOwnerId, leftAt),
+    promoteMembershipToOwnerStatement(apartmentId, newOwnerId),
+    insertChangeLogStatement(
+      apartmentId,
+      CHANGE_LOG_ENTITY_TYPES.APARTMENT,
+      apartmentId,
+      CHANGE_LOG_OPS.OWNERSHIP_TRANSFERRED,
+      leftAt,
+    ),
+    insertChangeLogStatement(
+      apartmentId,
+      CHANGE_LOG_ENTITY_TYPES.MEMBERSHIP,
+      previousOwnerId,
+      CHANGE_LOG_OPS.LEFT,
+      leftAt,
+    ),
+    insertChangeLogStatement(
+      apartmentId,
+      CHANGE_LOG_ENTITY_TYPES.MEMBERSHIP,
+      newOwnerId,
+      CHANGE_LOG_OPS.PROMOTED,
+      leftAt,
+    ),
+  ];
+}
+
+export function leaveAsContributorStatements(
+  apartmentId: string,
+  userId: string,
+  leftAt: string,
+): readonly SqlStatement[] {
+  return [
+    markMembershipLeftStatement(apartmentId, userId, leftAt),
+    insertChangeLogStatement(
+      apartmentId,
+      CHANGE_LOG_ENTITY_TYPES.MEMBERSHIP,
+      userId,
+      CHANGE_LOG_OPS.LEFT,
+      leftAt,
+    ),
+  ];
 }
 
 // 0001_init enforces ON DELETE RESTRICT on all apartment children; delete in reverse FK order.

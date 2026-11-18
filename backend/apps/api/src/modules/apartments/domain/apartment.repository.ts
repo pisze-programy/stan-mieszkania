@@ -61,6 +61,7 @@ export interface ApartmentRepository {
     params: TransferOwnershipAndLeaveParams,
   ): Promise<Result<void, DomainError>>;
   leaveAsContributor(params: LeaveAsContributorParams): Promise<Result<void, DomainError>>;
+  listMediaR2Keys(apartmentId: string): Promise<Result<readonly string[], DomainError>>;
   hardDelete(apartmentId: string): Promise<Result<void, DomainError>>;
   listChanges(apartmentId: string): Promise<Result<readonly ApartmentChange[], DomainError>>;
 }

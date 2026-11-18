@@ -85,6 +85,7 @@ export function createMembershipRoutes<E extends { Variables: HttpContextVariabl
     });
     if (!result.ok) {
       return respondDomainError(c, result.error, c.get('requestId'), [
+        HTTP_STATUS.FORBIDDEN,
         HTTP_STATUS.NOT_FOUND,
         HTTP_STATUS.UNPROCESSABLE_ENTITY,
         HTTP_STATUS.TOO_MANY_REQUESTS,

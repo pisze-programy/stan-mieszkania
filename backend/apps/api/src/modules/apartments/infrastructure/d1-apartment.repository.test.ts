@@ -114,9 +114,44 @@ describe('D1ApartmentRepository', () => {
     if (isOk(afterTransfer)) {
       expect(afterTransfer.value?.ownerId).toBe('usr-contrib');
     }
-    expect((await repo.findActiveRole(aptId, 'usr-owner')).ok).toBe(true);
     expect(await repo.findActiveRole(aptId, 'usr-owner')).toEqual({ ok: true, value: null });
     expect(await repo.findActiveRole(aptId, 'usr-contrib')).toEqual({ ok: true, value: 'owner' });
+
+    await db
+      .prepare(
+        'INSERT INTO memberships (apartment_id, user_id, role, joined_at) VALUES (?, ?, ?, ?)',
+      )
+      .bind(aptId, 'usr-owner', 'contributor', '2026-11-18T12:12:00.000Z')
+      .run()
+      .catch(() => undefined);
+    await db
+      .prepare(
+        'UPDATE memberships SET role = ?, left_at = NULL WHERE apartment_id = ? AND user_id = ?',
+      )
+      .bind('contributor', aptId, 'usr-owner')
+      .run();
+    expect(
+      (
+        await repo.leaveAsContributor({
+          apartmentId: aptId,
+          userId: 'usr-owner',
+          leftAt: '2026-11-18T12:15:00.000Z',
+        })
+      ).ok,
+    ).toBe(true);
+
+    const logRows = await db
+      .prepare(
+        'SELECT entity_type, entity_id, op FROM change_log WHERE apartment_id = ? ORDER BY seq ASC',
+      )
+      .bind(aptId)
+      .all<{ entity_type: string; entity_id: string; op: string }>();
+    expect(logRows.results.slice(-4)).toEqual([
+      { entity_type: 'apartment', entity_id: aptId, op: 'ownership_transferred' },
+      { entity_type: 'membership', entity_id: 'usr-owner', op: 'left' },
+      { entity_type: 'membership', entity_id: 'usr-contrib', op: 'promoted' },
+      { entity_type: 'membership', entity_id: 'usr-owner', op: 'left' },
+    ]);
 
     expect((await repo.hardDelete(aptId)).ok).toBe(true);
     expect(await repo.findById(aptId)).toEqual({ ok: true, value: null });

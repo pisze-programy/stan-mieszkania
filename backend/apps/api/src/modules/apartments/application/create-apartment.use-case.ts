@@ -117,6 +117,14 @@ export function createCreateApartmentUseCase(deps: CreateApartmentDeps): CreateA
         if (replay.value !== null) {
           return ok(replay.value);
         }
+
+        const codeCollision = await deps.apartmentRepository.findByInviteCode(inviteCode);
+        if (!codeCollision.ok) {
+          return codeCollision;
+        }
+        if (codeCollision.value === null) {
+          return inserted;
+        }
       }
 
       return err(inviteCodeCollisionError());

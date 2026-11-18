@@ -160,7 +160,11 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     getApartment: createGetApartmentUseCase({ apartmentRepository }),
     updateApartment: createUpdateApartmentUseCase({ apartmentRepository, clock, idGenerator }),
     resetInviteCode: createResetInviteCodeUseCase({ apartmentRepository, clock }),
-    deleteOrLeaveApartment: createDeleteOrLeaveApartmentUseCase({ apartmentRepository, clock }),
+    deleteOrLeaveApartment: createDeleteOrLeaveApartmentUseCase({
+      apartmentRepository,
+      mediaCleanup,
+      clock,
+    }),
     listApartmentChanges: createListApartmentChangesUseCase({ apartmentRepository }),
   };
   const membership = {

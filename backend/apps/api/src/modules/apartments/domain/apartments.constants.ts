@@ -31,6 +31,7 @@ export const APARTMENT_CHANGE_FIELDS = {
 
 export const CHANGE_LOG_ENTITY_TYPES = {
   APARTMENT: 'apartment',
+  MEMBERSHIP: 'membership',
 } as const;
 
 export const CHANGE_LOG_OPS = {
@@ -38,4 +39,6 @@ export const CHANGE_LOG_OPS = {
   UPDATED: 'updated',
   INVITE_CODE_ROTATED: 'invite_code_rotated',
   OWNERSHIP_TRANSFERRED: 'ownership_transferred',
+  LEFT: 'left',
+  PROMOTED: 'promoted',
 } as const;

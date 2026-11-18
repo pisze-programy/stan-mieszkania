@@ -35,6 +35,10 @@ export interface MembershipRepository {
     apartmentId: string,
     userId: string,
   ): Promise<Result<Membership | null, DomainError>>;
+  findLatestMembershipDepartureOp(
+    apartmentId: string,
+    userId: string,
+  ): Promise<Result<'revoked' | 'left' | null, DomainError>>;
   getLatestContributorJoinedAt(apartmentId: string): Promise<Result<string | null, DomainError>>;
   listByApartment(
     apartmentId: string,

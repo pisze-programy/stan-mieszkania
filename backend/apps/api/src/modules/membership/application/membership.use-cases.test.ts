@@ -129,9 +129,43 @@ describe('membership use cases', () => {
     ).toBe(true);
 
     clock.advanceBy(10_000);
-    expect((await join.execute({ userId: 'usr-contrib', inviteCode: 'K7QM-4XPB' })).ok).toBe(true);
+    const blockedRejoin = await join.execute({ userId: 'usr-contrib', inviteCode: 'K7QM-4XPB' });
+    expect(isErr(blockedRejoin) && blockedRejoin.error.code).toBe(
+      MEMBERSHIP_ERROR_CODES.MEMBERSHIP_ACCESS_DENIED,
+    );
+
+    clock.advanceBy(10_000);
+    repo.rotateInviteCode('apt-1', 'NEW9-4XPB', clock.nowIso());
+    clock.advanceBy(10_000);
+    expect((await join.execute({ userId: 'usr-contrib', inviteCode: 'NEW9-4XPB' })).ok).toBe(true);
     clock.advanceBy(10_000);
     expect((await leave.execute({ apartmentId: 'apt-1', userId: 'usr-contrib' })).ok).toBe(true);
-    expect(repo.changeLog.map((item) => item.op)).toEqual(['joined', 'revoked', 'joined', 'left']);
+    clock.advanceBy(10_000);
+    expect((await join.execute({ userId: 'usr-contrib', inviteCode: 'NEW9-4XPB' })).ok).toBe(true);
+    expect(repo.changeLog.map((item) => item.op)).toEqual([
+      'joined',
+      'revoked',
+      'joined',
+      'left',
+      'joined',
+    ]);
+
+    repo.seedApartment({
+      id: 'apt-orphan',
+      ownerId: 'usr-owner',
+      name: 'Orphan',
+      street: 'S2',
+      city: 'Warszawa',
+      inviteCode: 'KRPH-2222',
+      inviteCodeRotatedAt: null,
+      cloudMediaCount: 0,
+      createdAt: clock.nowIso(),
+      updatedAt: clock.nowIso(),
+      orphanDeleteAfter: '2026-12-18T12:00:00.000Z',
+    });
+    const orphanJoin = await join.execute({ userId: 'usr-contrib', inviteCode: 'KRPH-2222' });
+    expect(isErr(orphanJoin) && orphanJoin.error.code).toBe(
+      MEMBERSHIP_ERROR_CODES.INVITE_CODE_NOT_FOUND,
+    );
   });
 });
