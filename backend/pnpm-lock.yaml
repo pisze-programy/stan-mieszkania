@@ -39,6 +39,18 @@ importers:
         specifier: 4.1.12
         version: 4.1.12(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0))
 
+  packages/d1:
+    dependencies:
+      '@cloudflare/workers-types':
+        specifier: 5.20261118.1
+        version: 5.20261118.1
+      '@stanmieszkania/shared':
+        specifier: workspace:*
+        version: link:../shared
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+
   packages/shared: {}
 
 packages:
@@ -54,6 +66,9 @@ packages:
   '@boundaries/policies@1.0.3':
     resolution: {integrity: sha512-0PzaCmNaJQjJ9Sypdn3GXdIZ05qKedYiIglt+g3XAzFYa0ngcz59YxMgyxY4Z+Cn+Hn/MCAFCAJ5o8iOcn52yw==}
     engines: {node: '>=18.18'}
+
+  '@cloudflare/workers-types@5.20261118.1':
+    resolution: {integrity: sha512-b1ppAa/0wrXvboTHbfyYnyYsh13OHu4ONP1h0HclZ0fEabwh2qT18YPY/z+wjyOs3o/BkyD0HCA800Ox+nju/Q==}
 
   '@emnapi/core@2.0.0-beta.2':
     resolution: {integrity: sha512-MzCVoWtcg4Pm2B3je5mMvYMvj3MmBKw+fU7vbsJc9/iT8ip6/eYIHo/Dsm/mr+wsHB6SEyJDuxB09Yy6r/8+4A==}
@@ -1173,6 +1188,9 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
+
 snapshots:
 
   '@boundaries/config@1.0.3':
@@ -1191,6 +1209,8 @@ snapshots:
       '@boundaries/config': 1.0.3
       '@boundaries/elements': 3.3.4
       handlebars: 4.7.10
+
+  '@cloudflare/workers-types@5.20261118.1': {}
 
   '@emnapi/core@2.0.0-beta.2':
     dependencies:
@@ -2181,3 +2201,5 @@ snapshots:
   wordwrap@1.0.0: {}
 
   yocto-queue@0.1.0: {}
+
+  zod@4.6.7: {}
