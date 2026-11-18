@@ -1,0 +1,88 @@
+import { HTTP_STATUS } from '@stanmieszkania/http-contracts';
+
+export const COMMON_ERROR_CODES = {
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  NOT_FOUND: 'NOT_FOUND',
+  ROUTE_NOT_FOUND: 'ROUTE_NOT_FOUND',
+  CONFLICT: 'CONFLICT',
+  QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
+  UNPROCESSABLE_ENTITY: 'UNPROCESSABLE_ENTITY',
+  APP_UPDATE_REQUIRED: 'APP_UPDATE_REQUIRED',
+  RATE_LIMITED: 'RATE_LIMITED',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const;
+
+export type HttpErrorStatusCode =
+  | typeof HTTP_STATUS.BAD_REQUEST
+  | typeof HTTP_STATUS.UNAUTHORIZED
+  | typeof HTTP_STATUS.FORBIDDEN
+  | typeof HTTP_STATUS.NOT_FOUND
+  | typeof HTTP_STATUS.CONFLICT
+  | typeof HTTP_STATUS.UNPROCESSABLE_ENTITY
+  | typeof HTTP_STATUS.UPGRADE_REQUIRED
+  | typeof HTTP_STATUS.TOO_MANY_REQUESTS
+  | typeof HTTP_STATUS.INTERNAL_SERVER_ERROR
+  | typeof HTTP_STATUS.BAD_GATEWAY
+  | typeof HTTP_STATUS.SERVICE_UNAVAILABLE;
+
+export interface HttpErrorMappingEntry {
+  readonly status: HttpErrorStatusCode;
+  readonly title: string;
+}
+
+export const ERROR_CODE_HTTP_MAP: Readonly<Record<string, HttpErrorMappingEntry>> = {
+  [COMMON_ERROR_CODES.VALIDATION_ERROR]: {
+    status: HTTP_STATUS.BAD_REQUEST,
+    title: 'Validation Failed',
+  },
+  [COMMON_ERROR_CODES.UNAUTHORIZED]: {
+    status: HTTP_STATUS.UNAUTHORIZED,
+    title: 'Unauthorized',
+  },
+  [COMMON_ERROR_CODES.FORBIDDEN]: {
+    status: HTTP_STATUS.FORBIDDEN,
+    title: 'Forbidden',
+  },
+  [COMMON_ERROR_CODES.NOT_FOUND]: {
+    status: HTTP_STATUS.NOT_FOUND,
+    title: 'Resource Not Found',
+  },
+  [COMMON_ERROR_CODES.ROUTE_NOT_FOUND]: {
+    status: HTTP_STATUS.NOT_FOUND,
+    title: 'Route Not Found',
+  },
+  [COMMON_ERROR_CODES.CONFLICT]: {
+    status: HTTP_STATUS.CONFLICT,
+    title: 'Conflict',
+  },
+  [COMMON_ERROR_CODES.QUOTA_EXCEEDED]: {
+    status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+    title: 'Quota Exceeded',
+  },
+  [COMMON_ERROR_CODES.UNPROCESSABLE_ENTITY]: {
+    status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+    title: 'Unprocessable Entity',
+  },
+  [COMMON_ERROR_CODES.APP_UPDATE_REQUIRED]: {
+    status: HTTP_STATUS.UPGRADE_REQUIRED,
+    title: 'App Update Required',
+  },
+  [COMMON_ERROR_CODES.RATE_LIMITED]: {
+    status: HTTP_STATUS.TOO_MANY_REQUESTS,
+    title: 'Too Many Requests',
+  },
+};
+
+export const FALLBACK_HTTP_ERROR: HttpErrorMappingEntry = {
+  status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+  title: 'Internal Server Error',
+};
+
+export const MAX_REQUEST_ID_HEADER_LENGTH = 128;
+export const PUBLIC_CONFIG_ROUTE_PATH = '/v1/config';
+export const SEMVER_RADIX = 10;
+export const SEMVER_PART_COUNT = 3;
+export const SEMVER_SPLIT_LIMIT = 2;
+export const UNKNOWN_REQUEST_ID = 'unknown';

@@ -1,0 +1,68 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "stanmieszkania-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "stanmieszkania-local",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA_BUCKET",
+      "bucket_name": "stanmieszkania-media-local",
+      "jurisdiction": "eu",
+    },
+  ],
+  "vars": {
+    "CLOUD_MEDIA_QUOTA_PER_APARTMENT": "250",
+    "PRESIGN_PUT_TTL_SECONDS": "900",
+    "PRESIGN_GET_TTL_SECONDS": "3600",
+    "INVITE_CODE_RATE_LIMIT_MAX_ATTEMPTS": "5",
+    "INVITE_CODE_RATE_LIMIT_WINDOW_SECONDS": "900",
+    "JPEG_MAX_DIMENSION_PX": "3000",
+    "JPEG_QUALITY": "0.8",
+    "JPEG_MAX_BYTES": "3145728",
+    "MIN_SUPPORTED_APP_VERSION": "1.0.0",
+    "AUTH_MODE": "local",
+    "STORAGE_MODE": "local",
+  },
+  "env": {
+    "production": {
+      "name": "stanmieszkania-api-production",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "stanmieszkania-production",
+          "database_id": "00000000-0000-0000-0000-000000000000",
+          "migrations_dir": "migrations",
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "MEDIA_BUCKET",
+          "bucket_name": "stanmieszkania-media-production",
+          "jurisdiction": "eu",
+        },
+      ],
+      "vars": {
+        "CLOUD_MEDIA_QUOTA_PER_APARTMENT": "250",
+        "PRESIGN_PUT_TTL_SECONDS": "900",
+        "PRESIGN_GET_TTL_SECONDS": "3600",
+        "INVITE_CODE_RATE_LIMIT_MAX_ATTEMPTS": "5",
+        "INVITE_CODE_RATE_LIMIT_WINDOW_SECONDS": "900",
+        "JPEG_MAX_DIMENSION_PX": "3000",
+        "JPEG_QUALITY": "0.8",
+        "JPEG_MAX_BYTES": "3145728",
+        "MIN_SUPPORTED_APP_VERSION": "1.0.0",
+        "AUTH_MODE": "firebase",
+        "STORAGE_MODE": "r2",
+      },
+    },
+  },
+}
