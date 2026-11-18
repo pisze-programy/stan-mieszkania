@@ -58,7 +58,7 @@ export function mapDomainErrorToHttp(error: DomainError, requestId: string): Map
   return { status: mapping.status, problem };
 }
 
-export function validationErrorResponse(c: Context, error: ZodError, requestId: string): Response {
+export function validationErrorResponse(c: Context, error: ZodError, requestId: string) {
   const problem = createProblemDetails({
     status: HTTP_STATUS.BAD_REQUEST,
     title: 'Validation Failed',
@@ -76,7 +76,7 @@ export function validationErrorResponse(c: Context, error: ZodError, requestId: 
   return problemDetailsResponse(c, HTTP_STATUS.BAD_REQUEST, problem);
 }
 
-export function notFoundErrorResponse(c: Context, requestId: string): Response {
+export function notFoundErrorResponse(c: Context, requestId: string) {
   const problem = createProblemDetails({
     status: HTTP_STATUS.NOT_FOUND,
     title: 'Route Not Found',
@@ -88,7 +88,7 @@ export function notFoundErrorResponse(c: Context, requestId: string): Response {
   return problemDetailsResponse(c, HTTP_STATUS.NOT_FOUND, problem);
 }
 
-export function internalServerErrorResponse(c: Context, requestId: string): Response {
+export function internalServerErrorResponse(c: Context, requestId: string) {
   const problem = createInternalProblemDetails(
     HTTP_STATUS.INTERNAL_SERVER_ERROR,
     FALLBACK_HTTP_ERROR.title,
@@ -96,4 +96,22 @@ export function internalServerErrorResponse(c: Context, requestId: string): Resp
   );
 
   return problemDetailsResponse(c, HTTP_STATUS.INTERNAL_SERVER_ERROR, problem);
+}
+
+export function respondDomainError<const TAllowed extends readonly HttpErrorStatusCode[]>(
+  c: Context,
+  error: DomainError,
+  requestId: string,
+  allowedStatuses: TAllowed,
+) {
+  const mapped = mapDomainErrorToHttp(error, requestId);
+  const matchedStatus = allowedStatuses.find(
+    (status): status is TAllowed[number] => status === mapped.status,
+  );
+
+  if (matchedStatus !== undefined) {
+    return problemDetailsResponse(c, matchedStatus, mapped.problem);
+  }
+
+  return internalServerErrorResponse(c, requestId);
 }

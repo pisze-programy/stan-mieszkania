@@ -6,6 +6,7 @@ export const SHORT_TAG_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
 
 export const DEFAULT_USER_NAME_PREFIX = 'Użytkownik #';
 export const DELETED_USER_DISPLAY_NAME = 'Usunięty użytkownik';
+export const HEX_COLOR_REGEX = /^#[0-9A-Fa-f]{6}$/;
 
 export const AUTHOR_COLOR_PALETTE = [
   '#007AFF',

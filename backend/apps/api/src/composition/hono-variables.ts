@@ -1,10 +1,17 @@
-import type { D1Database, R2Bucket } from '@cloudflare/workers-types';
+import type { R2Bucket } from '@cloudflare/workers-types';
+import type { D1Queryable } from '@stanmieszkania/d1';
 import type { Clock, IdGenerator, Logger } from '@stanmieszkania/shared';
 import type { AppConfig } from '../config/app-config';
 import type { HttpContextVariables } from '../http/http-env';
+import type {
+  AuthenticateUserUseCase,
+  TokenVerifierPort,
+  UpdateDisplayNameUseCase,
+  UserRepository,
+} from '../modules/identity';
 
 export interface AppBindings {
-  readonly DB: D1Database;
+  readonly DB: D1Queryable;
   readonly MEDIA_BUCKET: R2Bucket;
   readonly CLOUD_MEDIA_QUOTA_PER_APARTMENT?: string;
   readonly PRESIGN_PUT_TTL_SECONDS?: string;
@@ -25,6 +32,10 @@ export interface RequestContainer {
   readonly idGenerator: IdGenerator;
   readonly appConfig: AppConfig;
   readonly logger: Logger;
+  readonly userRepository: UserRepository;
+  readonly tokenVerifier: TokenVerifierPort;
+  readonly authenticateUser: AuthenticateUserUseCase;
+  readonly updateDisplayName: UpdateDisplayNameUseCase;
 }
 
 export interface AppVariables extends HttpContextVariables {

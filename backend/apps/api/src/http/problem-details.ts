@@ -6,12 +6,12 @@ import {
 import type { Context } from 'hono';
 import type { HttpErrorStatusCode } from './http.constants';
 
-export function problemDetailsResponse(
+export function problemDetailsResponse<TStatus extends HttpErrorStatusCode>(
   c: Context,
-  status: HttpErrorStatusCode,
+  status: TStatus,
   problem: ProblemDetails,
-): Response {
-  return c.body(JSON.stringify(problem), status, {
+) {
+  return c.json(problem, status, {
     'Content-Type': PROBLEM_JSON_CONTENT_TYPE,
   });
 }

@@ -12,6 +12,11 @@ export const COMMON_ERROR_CODES = {
   APP_UPDATE_REQUIRED: 'APP_UPDATE_REQUIRED',
   RATE_LIMITED: 'RATE_LIMITED',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
+  AUTH_TOKEN_MISSING: 'AUTH_TOKEN_MISSING',
+  AUTH_TOKEN_INVALID: 'AUTH_TOKEN_INVALID',
+  USER_DELETED: 'USER_DELETED',
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  DISPLAY_NAME_INVALID: 'DISPLAY_NAME_INVALID',
 } as const;
 
 export type HttpErrorStatusCode =
@@ -73,6 +78,26 @@ export const ERROR_CODE_HTTP_MAP: Readonly<Record<string, HttpErrorMappingEntry>
     status: HTTP_STATUS.TOO_MANY_REQUESTS,
     title: 'Too Many Requests',
   },
+  [COMMON_ERROR_CODES.AUTH_TOKEN_MISSING]: {
+    status: HTTP_STATUS.UNAUTHORIZED,
+    title: 'Unauthorized',
+  },
+  [COMMON_ERROR_CODES.AUTH_TOKEN_INVALID]: {
+    status: HTTP_STATUS.UNAUTHORIZED,
+    title: 'Unauthorized',
+  },
+  [COMMON_ERROR_CODES.USER_DELETED]: {
+    status: HTTP_STATUS.FORBIDDEN,
+    title: 'Account Deleted',
+  },
+  [COMMON_ERROR_CODES.USER_NOT_FOUND]: {
+    status: HTTP_STATUS.NOT_FOUND,
+    title: 'User Not Found',
+  },
+  [COMMON_ERROR_CODES.DISPLAY_NAME_INVALID]: {
+    status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+    title: 'Invalid Display Name',
+  },
 };
 
 export const FALLBACK_HTTP_ERROR: HttpErrorMappingEntry = {
@@ -81,6 +106,8 @@ export const FALLBACK_HTTP_ERROR: HttpErrorMappingEntry = {
 };
 
 export const MAX_REQUEST_ID_HEADER_LENGTH = 128;
+export const AUTHORIZATION_HEADER_NAME = 'Authorization';
+export const BEARER_AUTH_PREFIX = 'Bearer ';
 export const PUBLIC_CONFIG_ROUTE_PATH = '/v1/config';
 export const SEMVER_RADIX = 10;
 export const SEMVER_PART_COUNT = 3;

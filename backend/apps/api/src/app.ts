@@ -12,9 +12,11 @@ import {
 } from './http/domain-error-to-http.mapper';
 import { UNKNOWN_REQUEST_ID } from './http/http.constants';
 import { appVersionMiddleware } from './http/middleware/app-version.middleware';
+import { firebaseAuthMiddleware } from './http/middleware/firebase-auth.middleware';
 import { requestIdMiddleware } from './http/middleware/request-id.middleware';
 import { createOpenApiDefaultHook } from './http/openapi-default-hook';
 import { createAppConfigRoutes } from './modules/app-config';
+import { createIdentityRoutes } from './modules/identity';
 
 export interface CreateAppOptions {
   readonly overrides?: RequestContainerOverrides;
@@ -62,11 +64,14 @@ export function createApp(options: CreateAppOptions = {}): OpenAPIHono<AppHonoEn
     const appConfig = parseAppConfig(c.env);
     const requestId = c.get('requestId');
     const container = createRequestContainer({
+      db: c.env.DB,
       appConfig,
       requestId,
       ...(options.overrides !== undefined ? { overrides: options.overrides } : {}),
     });
     c.set('appConfig', appConfig);
+    c.set('logger', container.logger);
+    c.set('authenticateToken', (idToken) => container.authenticateUser.execute(idToken));
     c.set('container', container);
     await next();
   });
@@ -93,6 +98,14 @@ export function createApp(options: CreateAppOptions = {}): OpenAPIHono<AppHonoEn
   });
 
   app.route('/v1', createAppConfigRoutes());
+
+  const requireAuth = firebaseAuthMiddleware();
+  app.use('/v1/me', requireAuth);
+  app.use('/v1/me/*', requireAuth);
+  app.route(
+    '/v1',
+    createIdentityRoutes<AppHonoEnv>((c) => c.get('container').updateDisplayName),
+  );
 
   return app;
 }
