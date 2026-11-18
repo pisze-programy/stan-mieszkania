@@ -148,10 +148,11 @@ describe('Identity HTTP routes (/v1/me)', () => {
     expect(invalid.status).toBe(HTTP_STATUS.UNAUTHORIZED);
     expect(ProblemDetailsSchema.parse(await invalid.json()).code).toBe('AUTH_TOKEN_INVALID');
 
+    const firebaseEnv = { DB: db, AUTH_MODE: 'firebase' };
     const firebaseFailClosed = await app.request(
       '/v1/me',
       { headers: { Authorization: 'Bearer dev:uid-anon' } },
-      { DB: db, AUTH_MODE: 'firebase' },
+      firebaseEnv,
     );
     expect(firebaseFailClosed.status).toBe(HTTP_STATUS.UNAUTHORIZED);
 

@@ -1,12 +1,14 @@
 import type { DomainError, Result } from '@stanmieszkania/shared';
 import type { ApartmentChange } from './apartment-change.entity';
 import type { Apartment } from './apartment.entity';
+import type { ActiveContributor } from './ownership-transfer.policy';
 
 export type ApartmentMemberRole = 'owner' | 'contributor';
 
 export interface ApartmentListEntry {
   readonly apartment: Apartment;
   readonly role: ApartmentMemberRole;
+  readonly latestContributorJoinedAt: string | null;
 }
 
 export interface CreateApartmentWithOwnerParams {
@@ -32,9 +34,23 @@ export interface TransferOwnershipAndLeaveParams {
   readonly leftAt: string;
 }
 
+export interface LeaveAsContributorParams {
+  readonly apartmentId: string;
+  readonly userId: string;
+  readonly leftAt: string;
+}
+
 export interface ApartmentRepository {
   findById(id: string): Promise<Result<Apartment | null, DomainError>>;
   findByInviteCode(inviteCode: string): Promise<Result<Apartment | null, DomainError>>;
+  findActiveRole(
+    apartmentId: string,
+    userId: string,
+  ): Promise<Result<ApartmentMemberRole | null, DomainError>>;
+  getLatestContributorJoinedAt(apartmentId: string): Promise<Result<string | null, DomainError>>;
+  listActiveContributors(
+    apartmentId: string,
+  ): Promise<Result<readonly ActiveContributor[], DomainError>>;
   listForUser(userId: string): Promise<Result<readonly ApartmentListEntry[], DomainError>>;
   createWithOwnerMembership(
     params: CreateApartmentWithOwnerParams,
@@ -44,6 +60,7 @@ export interface ApartmentRepository {
   transferOwnershipAndLeave(
     params: TransferOwnershipAndLeaveParams,
   ): Promise<Result<void, DomainError>>;
+  leaveAsContributor(params: LeaveAsContributorParams): Promise<Result<void, DomainError>>;
   hardDelete(apartmentId: string): Promise<Result<void, DomainError>>;
   listChanges(apartmentId: string): Promise<Result<readonly ApartmentChange[], DomainError>>;
 }

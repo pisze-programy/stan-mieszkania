@@ -16,6 +16,7 @@ import { firebaseAuthMiddleware } from './http/middleware/firebase-auth.middlewa
 import { requestIdMiddleware } from './http/middleware/request-id.middleware';
 import { createOpenApiDefaultHook } from './http/openapi-default-hook';
 import { createAppConfigRoutes } from './modules/app-config';
+import { createApartmentsRoutes } from './modules/apartments';
 import { createIdentityRoutes } from './modules/identity';
 
 export interface CreateAppOptions {
@@ -102,9 +103,15 @@ export function createApp(options: CreateAppOptions = {}): OpenAPIHono<AppHonoEn
   const requireAuth = firebaseAuthMiddleware();
   app.use('/v1/me', requireAuth);
   app.use('/v1/me/*', requireAuth);
+  app.use('/v1/apartments', requireAuth);
+  app.use('/v1/apartments/*', requireAuth);
   app.route(
     '/v1',
     createIdentityRoutes<AppHonoEnv>((c) => c.get('container').updateDisplayName),
+  );
+  app.route(
+    '/v1',
+    createApartmentsRoutes<AppHonoEnv>((c) => c.get('container').apartments),
   );
 
   return app;
