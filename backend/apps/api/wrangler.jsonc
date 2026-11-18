@@ -19,6 +19,20 @@
       "jurisdiction": "eu",
     },
   ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "USER_GUARD",
+        "class_name": "UserGuard",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["UserGuard"],
+    },
+  ],
   "vars": {
     "CLOUD_MEDIA_QUOTA_PER_APARTMENT": "250",
     "PRESIGN_PUT_TTL_SECONDS": "900",
@@ -48,6 +62,20 @@
           "binding": "MEDIA_BUCKET",
           "bucket_name": "stanmieszkania-media-production",
           "jurisdiction": "eu",
+        },
+      ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "USER_GUARD",
+            "class_name": "UserGuard",
+          },
+        ],
+      },
+      "migrations": [
+        {
+          "tag": "v1",
+          "new_sqlite_classes": ["UserGuard"],
         },
       ],
       "vars": {

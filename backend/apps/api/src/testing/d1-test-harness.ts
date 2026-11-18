@@ -1,24 +1,32 @@
 import { readdir, readFile } from 'node:fs/promises';
+import { stripTypeScriptTypes } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Miniflare } from 'miniflare';
 
 const D1_BINDING_NAME = 'DB';
 const R2_BINDING_NAME = 'MEDIA_BUCKET';
+const USER_GUARD_BINDING_NAME = 'USER_GUARD';
+const USER_GUARD_CLASS_NAME = 'UserGuard';
 const TEST_WORKER_NAME = 'stanmieszkania-test-worker';
 const COMPATIBILITY_DATE = '2026-10-01';
-const MIGRATIONS_DIR = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../../migrations',
-);
-const NOOP_WORKER_SCRIPT = 'export default { fetch() { return new Response("ok"); } };';
+const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const MIGRATIONS_DIR = path.resolve(CURRENT_DIR, '../../migrations');
+const DURABLE_OBJECTS_DIR = path.resolve(CURRENT_DIR, '../durable-objects');
+const WORKER_ENTRY_SCRIPT =
+  "export { UserGuard } from './user-guard.durable-object.js';\n" +
+  'export default { fetch() { return new Response("ok"); } };';
 
 export type MiniflareD1Database = Awaited<ReturnType<Miniflare['getD1Database']>>;
 export type MiniflareR2Bucket = Awaited<ReturnType<Miniflare['getR2Bucket']>>;
+export type MiniflareDurableObjectNamespace = Awaited<
+  ReturnType<Miniflare['getDurableObjectNamespace']>
+>;
 
 export interface D1TestHarness {
   readonly db: MiniflareD1Database;
   readonly r2: MiniflareR2Bucket;
+  readonly userGuard: MiniflareDurableObjectNamespace;
   readonly appliedMigrations: readonly string[];
   readonly dispose: () => Promise<void>;
 }
@@ -96,7 +104,27 @@ async function applySqlMigrations(
   return sqlFiles;
 }
 
+async function loadUserGuardModules(): Promise<{
+  readonly constantsJs: string;
+  readonly userGuardJs: string;
+}> {
+  const [constantsTs, userGuardTs] = await Promise.all([
+    readFile(path.join(DURABLE_OBJECTS_DIR, 'user-guard.constants.ts'), 'utf8'),
+    readFile(path.join(DURABLE_OBJECTS_DIR, 'user-guard.durable-object.ts'), 'utf8'),
+  ]);
+
+  const constantsJs = stripTypeScriptTypes(constantsTs);
+  const userGuardJs = stripTypeScriptTypes(userGuardTs).replace(
+    "'./user-guard.constants'",
+    "'./user-guard.constants.js'",
+  );
+
+  return { constantsJs, userGuardJs };
+}
+
 export async function createD1TestHarness(): Promise<D1TestHarness> {
+  const { constantsJs, userGuardJs } = await loadUserGuardModules();
+
   const mf = new Miniflare({
     workers: [
       {
@@ -108,8 +136,22 @@ export async function createD1TestHarness(): Promise<D1TestHarness> {
             modules: {
               'index.js': {
                 type: 'esm',
-                contents: NOOP_WORKER_SCRIPT,
+                contents: WORKER_ENTRY_SCRIPT,
               },
+              'user-guard.constants.js': {
+                type: 'esm',
+                contents: constantsJs,
+              },
+              'user-guard.durable-object.js': {
+                type: 'esm',
+                contents: userGuardJs,
+              },
+            },
+          },
+          exports: {
+            [USER_GUARD_CLASS_NAME]: {
+              type: 'durable-object',
+              storage: 'sqlite',
             },
           },
           env: {
@@ -121,6 +163,11 @@ export async function createD1TestHarness(): Promise<D1TestHarness> {
               type: 'r2',
               name: 'stanmieszkania-test-media',
             },
+            [USER_GUARD_BINDING_NAME]: {
+              type: 'durable-object',
+              worker: TEST_WORKER_NAME,
+              exportName: USER_GUARD_CLASS_NAME,
+            },
           },
         },
       },
@@ -130,11 +177,13 @@ export async function createD1TestHarness(): Promise<D1TestHarness> {
   try {
     const db = await mf.getD1Database(D1_BINDING_NAME);
     const r2 = await mf.getR2Bucket(R2_BINDING_NAME);
+    const userGuard = await mf.getDurableObjectNamespace(USER_GUARD_BINDING_NAME);
     const appliedMigrations = await applySqlMigrations(db, MIGRATIONS_DIR);
 
     return {
       db,
       r2,
+      userGuard,
       appliedMigrations,
       dispose: async (): Promise<void> => {
         await mf.dispose();

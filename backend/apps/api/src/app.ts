@@ -15,6 +15,7 @@ import { appVersionMiddleware } from './http/middleware/app-version.middleware';
 import { firebaseAuthMiddleware } from './http/middleware/firebase-auth.middleware';
 import { requestIdMiddleware } from './http/middleware/request-id.middleware';
 import { createOpenApiDefaultHook } from './http/openapi-default-hook';
+import { createAccountDeletionRoutes } from './modules/account-deletion';
 import { createAppConfigRoutes } from './modules/app-config';
 import { createApartmentsRoutes } from './modules/apartments';
 import { createIdentityRoutes } from './modules/identity';
@@ -67,6 +68,8 @@ export function createApp(options: CreateAppOptions = {}): OpenAPIHono<AppHonoEn
     const requestId = c.get('requestId');
     const container = createRequestContainer({
       db: c.env.DB,
+      ...(c.env.MEDIA_BUCKET !== undefined ? { mediaBucket: c.env.MEDIA_BUCKET } : {}),
+      ...(c.env.USER_GUARD !== undefined ? { userGuard: c.env.USER_GUARD } : {}),
       appConfig,
       requestId,
       ...(options.overrides !== undefined ? { overrides: options.overrides } : {}),
@@ -109,6 +112,10 @@ export function createApp(options: CreateAppOptions = {}): OpenAPIHono<AppHonoEn
   app.route(
     '/v1',
     createIdentityRoutes<AppHonoEnv>((c) => c.get('container').updateDisplayName),
+  );
+  app.route(
+    '/v1',
+    createAccountDeletionRoutes<AppHonoEnv>((c) => c.get('container').deleteMyAccount),
   );
   app.route(
     '/v1',

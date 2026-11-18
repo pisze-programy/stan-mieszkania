@@ -1,3 +1,4 @@
+import type { D1Database, DurableObjectNamespace, R2Bucket } from '@cloudflare/workers-types';
 import { SEMVER_REGEX } from '@stanmieszkania/http-contracts';
 import { z } from 'zod';
 import {
@@ -69,3 +70,9 @@ export const EnvVarsSchema = z.object({
 });
 
 export type RawEnvVars = z.infer<typeof EnvVarsSchema>;
+
+export interface WorkerRuntimeBindings {
+  readonly DB: D1Database;
+  readonly MEDIA_BUCKET?: R2Bucket;
+  readonly USER_GUARD?: DurableObjectNamespace;
+}
