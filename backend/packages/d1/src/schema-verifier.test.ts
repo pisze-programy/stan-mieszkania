@@ -48,7 +48,6 @@ function createPragmaFakeDb(
           });
         }) as unknown as D1PreparedStatementLike['all'],
       };
-
       return statement;
     },
   };
@@ -56,49 +55,31 @@ function createPragmaFakeDb(
 
 const usersTable = defineTable({
   name: 'users',
-  columns: {
-    id: 'id',
-    firebaseUid: 'firebase_uid',
-    displayName: 'display_name',
-  } as const,
-  rowSchema: z.object({
-    id: z.string(),
-    firebase_uid: z.string(),
-    display_name: z.string(),
-  }),
+  columns: { id: 'id', firebaseUid: 'firebase_uid', displayName: 'display_name' } as const,
+  rowSchema: z.object({ id: z.string(), firebase_uid: z.string(), display_name: z.string() }),
 });
 
 const apartmentsTable = defineTable({
   name: 'apartments',
-  columns: {
-    id: 'id',
-    ownerId: 'owner_id',
-    name: 'name',
-  } as const,
-  rowSchema: z.object({
-    id: z.string(),
-    owner_id: z.string(),
-    name: z.string(),
-  }),
+  columns: { id: 'id', ownerId: 'owner_id', name: 'name' } as const,
+  rowSchema: z.object({ id: z.string(), owner_id: z.string(), name: z.string() }),
 });
 
 describe('verifyTableSchemas', () => {
-  it('succeeds when all tables match SQLite columns bidirectionally', async () => {
+  it('succeeds when all tables match SQLite columns and rowSchema bidirectionally', async () => {
     const db = createPragmaFakeDb({
       users: ['id', 'firebase_uid', 'display_name'],
       apartments: ['id', 'owner_id', 'name'],
     });
 
-    const result = await verifyTableSchemas(db, [usersTable, apartmentsTable]);
-
-    expect(result).toEqual({ ok: true, value: undefined });
+    expect(await verifyTableSchemas(db, [usersTable, apartmentsTable])).toEqual({
+      ok: true,
+      value: undefined,
+    });
   });
 
   it('fails with DB_SCHEMA_MISMATCH when an expected column is missing in DB', async () => {
-    const db = createPragmaFakeDb({
-      users: ['id', 'firebase_uid'],
-    });
-
+    const db = createPragmaFakeDb({ users: ['id', 'firebase_uid'] });
     const result = await verifyTableSchemas(db, [usersTable]);
 
     expect(isErr(result)).toBe(true);
@@ -110,6 +91,8 @@ describe('verifyTableSchemas', () => {
             table: 'users',
             missingInDb: ['display_name'],
             extraInDb: [],
+            missingInRowSchema: [],
+            extraInRowSchema: ['display_name'],
           },
         ],
       });
@@ -120,7 +103,6 @@ describe('verifyTableSchemas', () => {
     const db = createPragmaFakeDb({
       users: ['id', 'firebase_uid', 'display_name', 'legacy_flag'],
     });
-
     const result = await verifyTableSchemas(db, [usersTable]);
 
     expect(isErr(result)).toBe(true);
@@ -132,6 +114,8 @@ describe('verifyTableSchemas', () => {
             table: 'users',
             missingInDb: [],
             extraInDb: ['legacy_flag'],
+            missingInRowSchema: ['legacy_flag'],
+            extraInRowSchema: [],
           },
         ],
       });
@@ -143,7 +127,6 @@ describe('verifyTableSchemas', () => {
       users: ['id', 'extra_col'],
       apartments: ['id', 'owner_id', 'name', 'city'],
     });
-
     const result = await verifyTableSchemas(db, [usersTable, apartmentsTable]);
 
     expect(isErr(result)).toBe(true);
@@ -155,11 +138,15 @@ describe('verifyTableSchemas', () => {
             table: 'users',
             missingInDb: ['display_name', 'firebase_uid'],
             extraInDb: ['extra_col'],
+            missingInRowSchema: ['extra_col'],
+            extraInRowSchema: ['display_name', 'firebase_uid'],
           },
           {
             table: 'apartments',
             missingInDb: [],
             extraInDb: ['city'],
+            missingInRowSchema: ['city'],
+            extraInRowSchema: [],
           },
         ],
       });
@@ -168,10 +155,7 @@ describe('verifyTableSchemas', () => {
 
   it('rejects invalid SQLite table identifiers before issuing PRAGMA', async () => {
     const prepareSpy = vi.fn<D1Queryable['prepare']>();
-    const db: D1Queryable = {
-      prepare: prepareSpy,
-    };
-
+    const db: D1Queryable = { prepare: prepareSpy };
     const invalidTable = defineTable({
       name: 'users"; DROP TABLE users; --',
       columns: { id: 'id' } as const,

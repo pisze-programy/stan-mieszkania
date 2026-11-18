@@ -1,5 +1,5 @@
 import { err, ok, type Result } from '@stanmieszkania/shared';
-import { z } from 'zod';
+import { z, type ZodType } from 'zod';
 import { createDbSchemaMismatchError, type DbError } from './db.errors';
 import type { TableSchemaDescriptor } from './define-table';
 import { query } from './query';
@@ -15,6 +15,26 @@ export interface TableSchemaMismatch {
   readonly table: string;
   readonly missingInDb: readonly string[];
   readonly extraInDb: readonly string[];
+  readonly missingInRowSchema: readonly string[];
+  readonly extraInRowSchema: readonly string[];
+  readonly nonObjectRowSchema?: true;
+}
+
+function extractRowSchemaColumns(schema: ZodType): readonly string[] | null {
+  let current: unknown = schema;
+  while (current instanceof z.ZodPipe) {
+    const next: unknown = current.in;
+    current = next;
+  }
+  if (current instanceof z.ZodObject) {
+    const shape: Readonly<Record<string, unknown>> = current.shape;
+    return Object.keys(shape);
+  }
+  return null;
+}
+
+function diffSets(source: ReadonlySet<string>, target: ReadonlySet<string>): readonly string[] {
+  return [...source].filter((value) => !target.has(value)).sort();
 }
 
 export async function verifyTableSchemas(
@@ -45,15 +65,40 @@ export async function verifyTableSchemas(
     const expectedColumns = new Set(Object.values(table.columns));
     const actualColumns = new Set(pragmaResult.value.map((row) => row.name));
 
-    const missingInDb = [...expectedColumns].filter((column) => !actualColumns.has(column)).sort();
-    const extraInDb = [...actualColumns].filter((column) => !expectedColumns.has(column)).sort();
+    const missingInDb = diffSets(expectedColumns, actualColumns);
+    const extraInDb = diffSets(actualColumns, expectedColumns);
 
-    if (missingInDb.length > 0 || extraInDb.length > 0) {
-      mismatches.push({
-        table: table.name,
-        missingInDb,
-        extraInDb,
-      });
+    const rowSchemaColumns = extractRowSchemaColumns(table.rowSchema);
+    const rowSchemaSet = rowSchemaColumns === null ? null : new Set(rowSchemaColumns);
+    const missingInRowSchema = rowSchemaSet === null ? [] : diffSets(actualColumns, rowSchemaSet);
+    const extraInRowSchema = rowSchemaSet === null ? [] : diffSets(rowSchemaSet, actualColumns);
+    const nonObjectRowSchema = rowSchemaSet === null;
+
+    if (
+      missingInDb.length > 0 ||
+      extraInDb.length > 0 ||
+      missingInRowSchema.length > 0 ||
+      extraInRowSchema.length > 0 ||
+      nonObjectRowSchema
+    ) {
+      mismatches.push(
+        nonObjectRowSchema
+          ? {
+              table: table.name,
+              missingInDb,
+              extraInDb,
+              missingInRowSchema,
+              extraInRowSchema,
+              nonObjectRowSchema: true,
+            }
+          : {
+              table: table.name,
+              missingInDb,
+              extraInDb,
+              missingInRowSchema,
+              extraInRowSchema,
+            },
+      );
     }
   }
 

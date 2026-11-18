@@ -5,6 +5,7 @@ export type TableColumns = Readonly<Record<string, string>>;
 export interface TableSchemaDescriptor {
   readonly name: string;
   readonly columns: TableColumns;
+  readonly rowSchema: ZodType;
 }
 
 export interface DefineTableInput<TName extends string, TColumns extends TableColumns, TRow> {
