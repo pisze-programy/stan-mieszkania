@@ -1,0 +1,52 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Node / pnpm
+node_modules/
+.pnpm-store/
+*.tsbuildinfo
+dist/
+build/
+coverage/
+.vitest/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cloudflare Wrangler / Miniflare
+.wrangler/
+.mf/
+wrangler.toml.bak
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+*.pem
+*.key
+*GoogleService-Info*.plist
+
+# Xcode / Swift / iOS
+DerivedData/
+*.xcarchive
+*.ipa
+*.dSYM.zip
+*.dSYM
+xcuserdata/
+*.xcuserstate
+*.moved-aside
+*.hmap
+*.vmap
+.build/
+.swiftpm/
+Packages/*/Package.resolved
+ios/build/
