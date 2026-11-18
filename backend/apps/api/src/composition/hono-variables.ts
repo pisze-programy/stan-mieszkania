@@ -9,6 +9,11 @@ import type {
   UpdateDisplayNameUseCase,
   UserRepository,
 } from '../modules/identity';
+import type {
+  InviteCodeRateLimiterPort,
+  MembershipRepository,
+  MembershipRouteHandlers,
+} from '../modules/membership';
 
 export interface AppBindings {
   readonly DB: D1Database;
@@ -34,10 +39,13 @@ export interface RequestContainer {
   readonly logger: Logger;
   readonly userRepository: UserRepository;
   readonly apartmentRepository: ApartmentRepository;
+  readonly membershipRepository: MembershipRepository;
+  readonly inviteRateLimiter: InviteCodeRateLimiterPort;
   readonly tokenVerifier: TokenVerifierPort;
   readonly authenticateUser: AuthenticateUserUseCase;
   readonly updateDisplayName: UpdateDisplayNameUseCase;
   readonly apartments: ApartmentRouteHandlers;
+  readonly membership: MembershipRouteHandlers;
 }
 
 export interface AppVariables extends HttpContextVariables {

@@ -28,6 +28,16 @@ import {
   type TokenVerifierPort,
   type UserRepository,
 } from '../modules/identity';
+import {
+  createAllowAllInviteRateLimiter,
+  createD1MembershipRepository,
+  createJoinApartmentByCodeUseCase,
+  createLeaveApartmentUseCase,
+  createListApartmentMembersUseCase,
+  createRevokeMemberAccessUseCase,
+  type InviteCodeRateLimiterPort,
+  type MembershipRepository,
+} from '../modules/membership';
 import type { RequestContainer } from './hono-variables';
 
 export interface RequestContainerOverrides {
@@ -36,6 +46,8 @@ export interface RequestContainerOverrides {
   readonly logger?: Logger;
   readonly userRepository?: UserRepository;
   readonly apartmentRepository?: ApartmentRepository;
+  readonly membershipRepository?: MembershipRepository;
+  readonly inviteRateLimiter?: InviteCodeRateLimiterPort;
   readonly tokenVerifier?: TokenVerifierPort;
 }
 
@@ -62,6 +74,9 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
   const userRepository = input.overrides?.userRepository ?? createD1UserRepository(input.db);
   const apartmentRepository =
     input.overrides?.apartmentRepository ?? createD1ApartmentRepository(input.db);
+  const membershipRepository =
+    input.overrides?.membershipRepository ?? createD1MembershipRepository(input.db);
+  const inviteRateLimiter = input.overrides?.inviteRateLimiter ?? createAllowAllInviteRateLimiter();
 
   const tokenVerifier =
     input.overrides?.tokenVerifier ??
@@ -90,6 +105,17 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     listApartmentChanges: createListApartmentChangesUseCase({ apartmentRepository }),
   };
 
+  const membership = {
+    joinApartment: createJoinApartmentByCodeUseCase({
+      membershipRepository,
+      inviteRateLimiter,
+      clock,
+    }),
+    listMembers: createListApartmentMembersUseCase({ membershipRepository }),
+    revokeMember: createRevokeMemberAccessUseCase({ membershipRepository, clock }),
+    leaveApartment: createLeaveApartmentUseCase({ membershipRepository, clock }),
+  };
+
   return {
     clock,
     idGenerator,
@@ -97,9 +123,12 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     logger: baseLogger.child({ requestId: input.requestId }),
     userRepository,
     apartmentRepository,
+    membershipRepository,
+    inviteRateLimiter,
     tokenVerifier,
     authenticateUser,
     updateDisplayName,
     apartments,
+    membership,
   };
 }

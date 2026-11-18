@@ -18,6 +18,7 @@ import { createOpenApiDefaultHook } from './http/openapi-default-hook';
 import { createAppConfigRoutes } from './modules/app-config';
 import { createApartmentsRoutes } from './modules/apartments';
 import { createIdentityRoutes } from './modules/identity';
+import { createMembershipRoutes } from './modules/membership';
 
 export interface CreateAppOptions {
   readonly overrides?: RequestContainerOverrides;
@@ -108,6 +109,10 @@ export function createApp(options: CreateAppOptions = {}): OpenAPIHono<AppHonoEn
   app.route(
     '/v1',
     createIdentityRoutes<AppHonoEnv>((c) => c.get('container').updateDisplayName),
+  );
+  app.route(
+    '/v1',
+    createMembershipRoutes<AppHonoEnv>((c) => c.get('container').membership),
   );
   app.route(
     '/v1',
