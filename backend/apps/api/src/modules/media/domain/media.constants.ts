@@ -18,7 +18,9 @@ export const MIN_EXCLUSIVE_ACCURACY_METERS = 0;
 export const MEDIA_R2_KEY_EXTENSION = '.jpg';
 export const MEDIA_CHANGE_LOG_ENTITY_TYPE = 'media';
 export const MEDIA_CHANGE_LOG_OPS = {
-  CREATED: 'created',
-  UPLOADED: 'uploaded',
-  DELETED: 'deleted',
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  SOFT_DELETED: 'soft_deleted',
 } as const;
+export const MEDIA_TIMEZONE_MAX_LENGTH = 64;
+export const MEDIA_CONTENT_TYPE_JPEG = 'image/jpeg';

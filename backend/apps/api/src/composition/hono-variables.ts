@@ -1,10 +1,7 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { Clock, IdGenerator, Logger } from '@stanmieszkania/shared';
 import type { AppConfig } from '../config/app-config';
-import type {
-  UserGuardNamespaceLike,
-  UserGuardR2BucketLike,
-} from '../durable-objects/user-guard.types';
+import type { UserGuardNamespaceLike } from '../durable-objects/user-guard.types';
 import type { HttpContextVariables } from '../http/http-env';
 import type {
   AccountDeletionRepository,
@@ -21,6 +18,13 @@ import type {
   UserRepository,
 } from '../modules/identity';
 import type {
+  LocalR2BucketLike,
+  LocalStorageHandlers,
+  MediaRepository,
+  MediaRouteHandlers,
+  ObjectStoragePort,
+} from '../modules/media';
+import type {
   InviteCodeRateLimiterPort,
   MembershipRepository,
   MembershipRouteHandlers,
@@ -28,7 +32,7 @@ import type {
 
 export interface AppBindings {
   readonly DB: D1Database;
-  readonly MEDIA_BUCKET?: UserGuardR2BucketLike;
+  readonly MEDIA_BUCKET?: LocalR2BucketLike;
   readonly USER_GUARD?: UserGuardNamespaceLike;
   readonly CLOUD_MEDIA_QUOTA_PER_APARTMENT?: string;
   readonly PRESIGN_PUT_TTL_SECONDS?: string;
@@ -52,8 +56,10 @@ export interface RequestContainer {
   readonly userRepository: UserRepository;
   readonly apartmentRepository: ApartmentRepository;
   readonly membershipRepository: MembershipRepository;
+  readonly mediaRepository: MediaRepository;
   readonly accountDeletionRepository: AccountDeletionRepository;
   readonly inviteRateLimiter: InviteCodeRateLimiterPort;
+  readonly objectStorage: ObjectStoragePort;
   readonly mediaCleanup: MediaCleanupPort;
   readonly appleTokenRevoker: AppleTokenRevokerPort;
   readonly identityProviderDeleter: IdentityProviderDeleterPort;
@@ -63,6 +69,8 @@ export interface RequestContainer {
   readonly deleteMyAccount: DeleteMyAccountUseCase;
   readonly apartments: ApartmentRouteHandlers;
   readonly membership: MembershipRouteHandlers;
+  readonly media: MediaRouteHandlers;
+  readonly localStorage: LocalStorageHandlers;
 }
 
 export interface AppVariables extends HttpContextVariables {

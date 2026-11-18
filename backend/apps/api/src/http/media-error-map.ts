@@ -1,0 +1,58 @@
+import { HTTP_STATUS } from '@stanmieszkania/http-contracts';
+import type { HttpErrorMappingEntry } from './http.constants';
+
+export const MEDIA_HTTP_ERROR_CODES = {
+  VIDEO_DISABLED_IN_MVP: 'VIDEO_DISABLED_IN_MVP',
+  MEDIA_NOT_FOUND: 'MEDIA_NOT_FOUND',
+  MEDIA_ACCESS_DENIED: 'MEDIA_ACCESS_DENIED',
+  MEDIA_AUTHOR_REQUIRED: 'MEDIA_AUTHOR_REQUIRED',
+  MEDIA_INVALID_SHA256: 'MEDIA_INVALID_SHA256',
+  MEDIA_HASH_MISMATCH: 'MEDIA_HASH_MISMATCH',
+  MEDIA_OBJECT_NOT_UPLOADED: 'MEDIA_OBJECT_NOT_UPLOADED',
+  MEDIA_ALREADY_DELETED: 'MEDIA_ALREADY_DELETED',
+  MEDIA_CONFLICT: 'MEDIA_CONFLICT',
+  MEDIA_VALIDATION_FAILED: 'MEDIA_VALIDATION_FAILED',
+} as const;
+
+export const MEDIA_ERROR_HTTP_MAP: Readonly<Record<string, HttpErrorMappingEntry>> = {
+  [MEDIA_HTTP_ERROR_CODES.VIDEO_DISABLED_IN_MVP]: {
+    status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+    title: 'Video Disabled In MVP',
+  },
+  [MEDIA_HTTP_ERROR_CODES.MEDIA_NOT_FOUND]: {
+    status: HTTP_STATUS.NOT_FOUND,
+    title: 'Media Not Found',
+  },
+  [MEDIA_HTTP_ERROR_CODES.MEDIA_ACCESS_DENIED]: {
+    status: HTTP_STATUS.FORBIDDEN,
+    title: 'Media Access Denied',
+  },
+  [MEDIA_HTTP_ERROR_CODES.MEDIA_AUTHOR_REQUIRED]: {
+    status: HTTP_STATUS.FORBIDDEN,
+    title: 'Media Author Required',
+  },
+  [MEDIA_HTTP_ERROR_CODES.MEDIA_INVALID_SHA256]: {
+    status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+    title: 'Invalid SHA-256 Checksum',
+  },
+  [MEDIA_HTTP_ERROR_CODES.MEDIA_HASH_MISMATCH]: {
+    status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+    title: 'Media Checksum Mismatch',
+  },
+  [MEDIA_HTTP_ERROR_CODES.MEDIA_OBJECT_NOT_UPLOADED]: {
+    status: HTTP_STATUS.CONFLICT,
+    title: 'Media Object Not Uploaded',
+  },
+  [MEDIA_HTTP_ERROR_CODES.MEDIA_ALREADY_DELETED]: {
+    status: HTTP_STATUS.CONFLICT,
+    title: 'Media Already Deleted',
+  },
+  [MEDIA_HTTP_ERROR_CODES.MEDIA_CONFLICT]: {
+    status: HTTP_STATUS.CONFLICT,
+    title: 'Media Conflict',
+  },
+  [MEDIA_HTTP_ERROR_CODES.MEDIA_VALIDATION_FAILED]: {
+    status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+    title: 'Invalid Media Fields',
+  },
+};

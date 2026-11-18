@@ -12,10 +12,7 @@ import {
   createUserGuardInviteRateLimiter,
   createUserGuardMediaCleanup,
 } from '../durable-objects/user-guard.client';
-import type {
-  UserGuardNamespaceLike,
-  UserGuardR2BucketLike,
-} from '../durable-objects/user-guard.types';
+import type { UserGuardNamespaceLike } from '../durable-objects/user-guard.types';
 import {
   createD1AccountDeletionRepository,
   createDeleteMyAccountUseCase,
@@ -29,17 +26,7 @@ import {
   type IdentityProviderDeleterPort,
   type MediaCleanupPort,
 } from '../modules/account-deletion';
-import {
-  createCreateApartmentUseCase,
-  createD1ApartmentRepository,
-  createDeleteOrLeaveApartmentUseCase,
-  createGetApartmentUseCase,
-  createListApartmentChangesUseCase,
-  createListMyApartmentsUseCase,
-  createResetInviteCodeUseCase,
-  createUpdateApartmentUseCase,
-  type ApartmentRepository,
-} from '../modules/apartments';
+import { createD1ApartmentRepository, type ApartmentRepository } from '../modules/apartments';
 import {
   createAuthenticateUserUseCase,
   createD1UserRepository,
@@ -50,15 +37,20 @@ import {
   type UserRepository,
 } from '../modules/identity';
 import {
+  createD1MediaRepository,
+  createFailClosedObjectStorage,
+  createLocalR2ObjectStorage,
+  type LocalR2BucketLike,
+  type MediaRepository,
+  type ObjectStoragePort,
+} from '../modules/media';
+import {
   createAllowAllInviteRateLimiter,
   createD1MembershipRepository,
-  createJoinApartmentByCodeUseCase,
-  createLeaveApartmentUseCase,
-  createListApartmentMembersUseCase,
-  createRevokeMemberAccessUseCase,
   type InviteCodeRateLimiterPort,
   type MembershipRepository,
 } from '../modules/membership';
+import { buildModuleRouteHandlers } from './build-route-handlers';
 import type { RequestContainer } from './hono-variables';
 
 export interface RequestContainerOverrides {
@@ -68,8 +60,10 @@ export interface RequestContainerOverrides {
   readonly userRepository?: UserRepository;
   readonly apartmentRepository?: ApartmentRepository;
   readonly membershipRepository?: MembershipRepository;
+  readonly mediaRepository?: MediaRepository;
   readonly accountDeletionRepository?: AccountDeletionRepository;
   readonly inviteRateLimiter?: InviteCodeRateLimiterPort;
+  readonly objectStorage?: ObjectStoragePort;
   readonly mediaCleanup?: MediaCleanupPort;
   readonly appleTokenRevoker?: AppleTokenRevokerPort;
   readonly identityProviderDeleter?: IdentityProviderDeleterPort;
@@ -80,7 +74,7 @@ export interface CreateRequestContainerInput<
   TStatement extends D1PreparedStatementLike<TStatement>,
 > {
   readonly db: D1Client<TStatement> & D1Queryable;
-  readonly mediaBucket?: UserGuardR2BucketLike;
+  readonly mediaBucket?: LocalR2BucketLike;
   readonly userGuard?: UserGuardNamespaceLike;
   readonly appConfig: AppConfig;
   readonly requestId: string;
@@ -100,8 +94,15 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     input.overrides?.apartmentRepository ?? createD1ApartmentRepository(input.db);
   const membershipRepository =
     input.overrides?.membershipRepository ?? createD1MembershipRepository(input.db);
+  const mediaRepository = input.overrides?.mediaRepository ?? createD1MediaRepository(input.db);
   const accountDeletionRepository =
     input.overrides?.accountDeletionRepository ?? createD1AccountDeletionRepository(input.db);
+
+  const objectStorage =
+    input.overrides?.objectStorage ??
+    (input.appConfig.storageMode === 'local'
+      ? createLocalR2ObjectStorage({ bucket: input.mediaBucket, clock })
+      : createFailClosedObjectStorage());
 
   const inviteRateLimiter =
     input.overrides?.inviteRateLimiter ??
@@ -154,29 +155,18 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     logger,
   });
 
-  const apartments = {
-    createApartment: createCreateApartmentUseCase({ apartmentRepository, clock }),
-    listMyApartments: createListMyApartmentsUseCase({ apartmentRepository }),
-    getApartment: createGetApartmentUseCase({ apartmentRepository }),
-    updateApartment: createUpdateApartmentUseCase({ apartmentRepository, clock, idGenerator }),
-    resetInviteCode: createResetInviteCodeUseCase({ apartmentRepository, clock }),
-    deleteOrLeaveApartment: createDeleteOrLeaveApartmentUseCase({
-      apartmentRepository,
-      mediaCleanup,
-      clock,
-    }),
-    listApartmentChanges: createListApartmentChangesUseCase({ apartmentRepository }),
-  };
-  const membership = {
-    joinApartment: createJoinApartmentByCodeUseCase({
-      membershipRepository,
-      inviteRateLimiter,
-      clock,
-    }),
-    listMembers: createListApartmentMembersUseCase({ membershipRepository }),
-    revokeMember: createRevokeMemberAccessUseCase({ membershipRepository, clock }),
-    leaveApartment: createLeaveApartmentUseCase({ membershipRepository, clock }),
-  };
+  const handlers = buildModuleRouteHandlers({
+    appConfig: input.appConfig,
+    clock,
+    idGenerator,
+    apartmentRepository,
+    membershipRepository,
+    mediaRepository,
+    inviteRateLimiter,
+    objectStorage,
+    mediaCleanup,
+    mediaBucket: input.mediaBucket,
+  });
 
   return {
     clock,
@@ -186,8 +176,10 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     userRepository,
     apartmentRepository,
     membershipRepository,
+    mediaRepository,
     accountDeletionRepository,
     inviteRateLimiter,
+    objectStorage,
     mediaCleanup,
     appleTokenRevoker,
     identityProviderDeleter,
@@ -195,7 +187,6 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     authenticateUser,
     updateDisplayName,
     deleteMyAccount,
-    apartments,
-    membership,
+    ...handlers,
   };
 }

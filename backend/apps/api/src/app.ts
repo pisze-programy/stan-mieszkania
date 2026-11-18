@@ -19,6 +19,7 @@ import { createAccountDeletionRoutes } from './modules/account-deletion';
 import { createAppConfigRoutes } from './modules/app-config';
 import { createApartmentsRoutes } from './modules/apartments';
 import { createIdentityRoutes } from './modules/identity';
+import { createLocalStorageRoutes, createMediaRoutes } from './modules/media';
 import { createMembershipRoutes } from './modules/membership';
 
 export interface CreateAppOptions {
@@ -116,6 +117,14 @@ export function createApp(options: CreateAppOptions = {}): OpenAPIHono<AppHonoEn
   app.route(
     '/v1',
     createAccountDeletionRoutes<AppHonoEnv>((c) => c.get('container').deleteMyAccount),
+  );
+  app.route(
+    '/v1',
+    createLocalStorageRoutes<AppHonoEnv>((c) => c.get('container').localStorage),
+  );
+  app.route(
+    '/v1',
+    createMediaRoutes<AppHonoEnv>((c) => c.get('container').media),
   );
   app.route(
     '/v1',

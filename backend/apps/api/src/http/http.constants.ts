@@ -1,4 +1,5 @@
 import { HTTP_STATUS } from '@stanmieszkania/http-contracts';
+import { MEDIA_ERROR_HTTP_MAP, MEDIA_HTTP_ERROR_CODES } from './media-error-map';
 
 export const COMMON_ERROR_CODES = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
@@ -32,6 +33,7 @@ export const COMMON_ERROR_CODES = {
   ACCOUNT_DELETION_FAILED: 'ACCOUNT_DELETION_FAILED',
   EXTERNAL_AUTH_CLEANUP_FAILED: 'EXTERNAL_AUTH_CLEANUP_FAILED',
   INVALID_APPLE_AUTHORIZATION_CODE: 'INVALID_APPLE_AUTHORIZATION_CODE',
+  ...MEDIA_HTTP_ERROR_CODES,
 } as const;
 
 export type HttpErrorStatusCode =
@@ -169,6 +171,7 @@ export const ERROR_CODE_HTTP_MAP: Readonly<Record<string, HttpErrorMappingEntry>
     status: HTTP_STATUS.BAD_GATEWAY,
     title: 'External Auth Cleanup Failed',
   },
+  ...MEDIA_ERROR_HTTP_MAP,
 };
 
 export const FALLBACK_HTTP_ERROR: HttpErrorMappingEntry = {

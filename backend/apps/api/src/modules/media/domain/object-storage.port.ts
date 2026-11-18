@@ -33,4 +33,5 @@ export interface ObjectStoragePort {
   ): Promise<Result<PresignedUrl, DomainError>>;
   headObject(r2Key: string): Promise<Result<UploadedObjectMetadata | null, DomainError>>;
   readObjectSha256(r2Key: string): Promise<Result<string | null, DomainError>>;
+  deleteObject(r2Key: string): Promise<Result<void, DomainError>>;
 }
