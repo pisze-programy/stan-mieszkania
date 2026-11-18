@@ -39,14 +39,27 @@ describe('domain-error-to-http mapper and OpenAPI validation hook', () => {
     }
   });
 
-  it('maps unknown error codes to 500 Internal Server Error', () => {
+  it('sanitizes unmapped internal errors to 500 INTERNAL_ERROR without leaking SQL or details', () => {
     const mapped = mapDomainErrorToHttp(
-      createDomainError('SOMETHING_UNEXPECTED', 'Unexpected'),
+      createDomainError('DB_QUERY_FAILED', 'SQL syntax error near SELECT * FROM users', {
+        sql: 'SELECT * FROM users',
+        rowIndex: 0,
+      }),
       'req-2',
     );
 
     expect(mapped.status).toBe(HTTP_STATUS.INTERNAL_SERVER_ERROR);
-    expect(mapped.problem.code).toBe('SOMETHING_UNEXPECTED');
+    expect(ProblemDetailsSchema.parse(mapped.problem)).toEqual({
+      type: 'https://stanmieszkania.pl/problems/internal_error',
+      title: 'Internal Server Error',
+      status: 500,
+      detail: 'An unexpected internal error occurred',
+      code: COMMON_ERROR_CODES.INTERNAL_ERROR,
+      requestId: 'req-2',
+    });
+    expect('details' in mapped.problem).toBe(false);
+    expect(JSON.stringify(mapped.problem)).not.toContain('SELECT');
+    expect(JSON.stringify(mapped.problem)).not.toContain('DB_QUERY_FAILED');
   });
 
   it('formats OpenAPI Zod validation failures as 400 application/problem+json', async () => {

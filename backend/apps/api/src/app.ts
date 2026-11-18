@@ -29,7 +29,11 @@ function isLoggerLike(value: unknown): value is Pick<Logger, 'error'> {
   );
 }
 
-function resolveErrorLogger(containerValue: unknown, requestId: string): Pick<Logger, 'error'> {
+function resolveErrorLogger(
+  containerValue: unknown,
+  requestId: string,
+  overrides?: RequestContainerOverrides,
+): Pick<Logger, 'error'> {
   if (
     containerValue !== null &&
     typeof containerValue === 'object' &&
@@ -38,7 +42,13 @@ function resolveErrorLogger(containerValue: unknown, requestId: string): Pick<Lo
   ) {
     return containerValue.logger;
   }
-  return createJsonLogger({ baseContext: { requestId } });
+  if (overrides?.logger !== undefined) {
+    return overrides.logger.child({ requestId });
+  }
+  return createJsonLogger({
+    baseContext: { requestId },
+    ...(overrides?.clock !== undefined ? { clock: overrides.clock } : {}),
+  });
 }
 
 export function createApp(options: CreateAppOptions = {}): OpenAPIHono<AppHonoEnv> {
@@ -72,7 +82,7 @@ export function createApp(options: CreateAppOptions = {}): OpenAPIHono<AppHonoEn
   app.onError((error, c) => {
     const requestIdValue: unknown = c.get('requestId');
     const requestId = typeof requestIdValue === 'string' ? requestIdValue : UNKNOWN_REQUEST_ID;
-    const logger = resolveErrorLogger(c.get('container'), requestId);
+    const logger = resolveErrorLogger(c.get('container'), requestId, options.overrides);
 
     logger.error('Unhandled request error', {
       errorName: error.name,

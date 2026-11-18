@@ -31,15 +31,15 @@ describe('Result', () => {
     const doubled = mapResult(ok(21), (value) => value * 2);
     expect(doubled).toEqual(ok(42));
 
-    const unchanged = mapResult(err('FAIL') as Result<number, string>, (value) => value * 2);
+    const unchanged = mapResult<number, number, string>(err('FAIL'), (value) => value * 2);
     expect(unchanged).toEqual(err('FAIL'));
   });
 
   it('maps Err values and preserves Ok in mapError', () => {
-    const mappedErr = mapError(err('NOT_FOUND') as Result<number, string>, (code) => `ERR:${code}`);
+    const mappedErr = mapError<number, string, string>(err('NOT_FOUND'), (code) => `ERR:${code}`);
     expect(mappedErr).toEqual(err('ERR:NOT_FOUND'));
 
-    const preservedOk = mapError(ok(10) as Result<number, string>, (code) => `ERR:${code}`);
+    const preservedOk = mapError<number, string, string>(ok(10), (code) => `ERR:${code}`);
     expect(preservedOk).toEqual(ok(10));
   });
 
@@ -47,15 +47,18 @@ describe('Result', () => {
     const divide = (dividend: number, divisor: number): Result<number, 'DIV_BY_ZERO'> =>
       divisor === 0 ? err('DIV_BY_ZERO') : ok(dividend / divisor);
 
-    const chainedOk = andThen(ok(20) as Result<number, 'INVALID'>, (value) => divide(value, 4));
+    const chainedOk = andThen<number, number, 'INVALID', 'DIV_BY_ZERO'>(ok(20), (value) =>
+      divide(value, 4),
+    );
     expect(chainedOk).toEqual(ok(5));
 
-    const chainedShortCircuit = andThen(err('INVALID') as Result<number, 'INVALID'>, (value) =>
-      divide(value, 4),
+    const chainedShortCircuit = andThen<number, number, 'INVALID', 'DIV_BY_ZERO'>(
+      err('INVALID'),
+      (value) => divide(value, 4),
     );
     expect(chainedShortCircuit).toEqual(err('INVALID'));
 
-    const chainedInnerErr = andThen(ok(20) as Result<number, 'INVALID'>, (value) =>
+    const chainedInnerErr = andThen<number, number, 'INVALID', 'DIV_BY_ZERO'>(ok(20), (value) =>
       divide(value, 0),
     );
     expect(chainedInnerErr).toEqual(err('DIV_BY_ZERO'));

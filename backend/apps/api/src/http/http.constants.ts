@@ -84,5 +84,5 @@ export const MAX_REQUEST_ID_HEADER_LENGTH = 128;
 export const PUBLIC_CONFIG_ROUTE_PATH = '/v1/config';
 export const SEMVER_RADIX = 10;
 export const SEMVER_PART_COUNT = 3;
-export const SEMVER_SPLIT_LIMIT = 2;
+export const DIGITS_ONLY_REGEX = /^\d+$/;
 export const UNKNOWN_REQUEST_ID = 'unknown';

@@ -2,6 +2,7 @@ import {
   BYTE_MASK,
   HEX_CHARS_PER_BYTE,
   HEX_RADIX,
+  MAX_UUID_V7_TIMESTAMP_MS,
   TIMESTAMP_BYTE_DIVISORS,
   UUID_BYTE_LENGTH,
   UUID_GROUP_BYTE_RANGES,
@@ -32,9 +33,9 @@ function formatUuidBytes(bytes: Uint8Array): string {
 }
 
 export function generateUuidV7(timestampMs: number = Date.now(), randomBytes?: Uint8Array): string {
-  if (!Number.isFinite(timestampMs) || timestampMs < 0) {
+  if (!Number.isFinite(timestampMs) || timestampMs < 0 || timestampMs > MAX_UUID_V7_TIMESTAMP_MS) {
     throw new RangeError(
-      `UUIDv7 timestampMs must be a non-negative finite number: ${String(timestampMs)}`,
+      `UUIDv7 timestampMs must be in [0, ${String(MAX_UUID_V7_TIMESTAMP_MS)}]: ${String(timestampMs)}`,
     );
   }
 

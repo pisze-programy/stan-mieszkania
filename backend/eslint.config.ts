@@ -78,6 +78,7 @@ export default defineConfig(
         'error',
         {
           default: 'disallow',
+          checkAllOrigins: true,
           policies: BOUNDARY_POLICIES,
         },
       ],

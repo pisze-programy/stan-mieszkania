@@ -19,8 +19,33 @@ export interface MappedHttpError {
   readonly problem: ProblemDetails;
 }
 
+function createInternalProblemDetails(
+  status: HttpErrorStatusCode,
+  title: string,
+  requestId: string,
+): ProblemDetails {
+  return createProblemDetails({
+    status,
+    title,
+    detail: 'An unexpected internal error occurred',
+    code: COMMON_ERROR_CODES.INTERNAL_ERROR,
+    requestId,
+  });
+}
+
 export function mapDomainErrorToHttp(error: DomainError, requestId: string): MappedHttpError {
-  const mapping = ERROR_CODE_HTTP_MAP[error.code] ?? FALLBACK_HTTP_ERROR;
+  const mapping = ERROR_CODE_HTTP_MAP[error.code];
+
+  // Never expose unmapped or 5xx internal error messages, codes, or details (e.g. SQL/Zod internals).
+  if (mapping === undefined || mapping.status >= HTTP_STATUS.INTERNAL_SERVER_ERROR) {
+    const status = mapping?.status ?? FALLBACK_HTTP_ERROR.status;
+    const title = mapping?.title ?? FALLBACK_HTTP_ERROR.title;
+    return {
+      status,
+      problem: createInternalProblemDetails(status, title, requestId),
+    };
+  }
+
   const problem = createProblemDetails({
     status: mapping.status,
     title: mapping.title,
@@ -64,13 +89,11 @@ export function notFoundErrorResponse(c: Context, requestId: string): Response {
 }
 
 export function internalServerErrorResponse(c: Context, requestId: string): Response {
-  const problem = createProblemDetails({
-    status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
-    title: 'Internal Server Error',
-    detail: 'An unexpected internal error occurred',
-    code: COMMON_ERROR_CODES.INTERNAL_ERROR,
+  const problem = createInternalProblemDetails(
+    HTTP_STATUS.INTERNAL_SERVER_ERROR,
+    FALLBACK_HTTP_ERROR.title,
     requestId,
-  });
+  );
 
   return problemDetailsResponse(c, HTTP_STATUS.INTERNAL_SERVER_ERROR, problem);
 }

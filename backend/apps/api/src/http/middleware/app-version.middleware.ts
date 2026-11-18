@@ -1,28 +1,39 @@
-import { HEADER_NAMES, HTTP_STATUS, SEMVER_REGEX } from '@stanmieszkania/http-contracts';
+import {
+  APP_VERSION_MAX_LENGTH,
+  HEADER_NAMES,
+  HTTP_STATUS,
+  SEMVER_REGEX,
+} from '@stanmieszkania/http-contracts';
 import { createDomainError } from '@stanmieszkania/shared';
 import { createMiddleware } from 'hono/factory';
 import { mapDomainErrorToHttp } from '../domain-error-to-http.mapper';
 import {
   COMMON_ERROR_CODES,
+  DIGITS_ONLY_REGEX,
   PUBLIC_CONFIG_ROUTE_PATH,
   SEMVER_PART_COUNT,
   SEMVER_RADIX,
-  SEMVER_SPLIT_LIMIT,
 } from '../http.constants';
 import type { HttpContextVariables } from '../http-env';
 import { problemDetailsResponse } from '../problem-details';
 
 interface ParsedSemver {
   readonly core: readonly [number, number, number];
-  readonly prerelease: string | undefined;
+  readonly prerelease: readonly string[];
 }
 
 function parseSemver(version: string): ParsedSemver | null {
-  if (!SEMVER_REGEX.test(version)) {
+  if (version.length > APP_VERSION_MAX_LENGTH || !SEMVER_REGEX.test(version)) {
     return null;
   }
 
-  const [corePart = '', prerelease] = version.split('-', SEMVER_SPLIT_LIMIT);
+  const hyphenIndex = version.indexOf('-');
+  const corePart = hyphenIndex === -1 ? version : version.slice(0, hyphenIndex);
+  const prereleasePart = hyphenIndex === -1 ? undefined : version.slice(hyphenIndex + 1);
+  if (prereleasePart !== undefined && prereleasePart.length === 0) {
+    return null;
+  }
+
   const rawSegments = corePart.split('.');
   if (rawSegments.length !== SEMVER_PART_COUNT) {
     return null;
@@ -35,8 +46,44 @@ function parseSemver(version: string): ParsedSemver | null {
       Number.parseInt(minorRaw, SEMVER_RADIX),
       Number.parseInt(patchRaw, SEMVER_RADIX),
     ],
-    prerelease,
+    prerelease: prereleasePart === undefined ? [] : prereleasePart.split('.'),
   };
+}
+
+function comparePrereleaseIdentifiers(left: readonly string[], right: readonly string[]): number {
+  if (left.length === 0 && right.length === 0) {
+    return 0;
+  }
+  if (left.length === 0) {
+    return 1;
+  }
+  if (right.length === 0) {
+    return -1;
+  }
+
+  const minLen = Math.min(left.length, right.length);
+  for (let index = 0; index < minLen; index += 1) {
+    const a = left[index] ?? '';
+    const b = right[index] ?? '';
+    if (a === b) {
+      continue;
+    }
+
+    const aIsNum = DIGITS_ONLY_REGEX.test(a);
+    const bIsNum = DIGITS_ONLY_REGEX.test(b);
+    if (aIsNum && bIsNum) {
+      return Number.parseInt(a, SEMVER_RADIX) < Number.parseInt(b, SEMVER_RADIX) ? -1 : 1;
+    }
+    if (aIsNum !== bIsNum) {
+      return aIsNum ? -1 : 1;
+    }
+    return a < b ? -1 : 1;
+  }
+
+  if (left.length === right.length) {
+    return 0;
+  }
+  return left.length < right.length ? -1 : 1;
 }
 
 function compareSemver(left: ParsedSemver, right: ParsedSemver): number {
@@ -48,16 +95,7 @@ function compareSemver(left: ParsedSemver, right: ParsedSemver): number {
     }
   }
 
-  if (left.prerelease === undefined && right.prerelease !== undefined) {
-    return 1;
-  }
-  if (left.prerelease !== undefined && right.prerelease === undefined) {
-    return -1;
-  }
-  if (left.prerelease !== undefined && right.prerelease !== undefined) {
-    return left.prerelease.localeCompare(right.prerelease);
-  }
-  return 0;
+  return comparePrereleaseIdentifiers(left.prerelease, right.prerelease);
 }
 
 export function appVersionMiddleware() {

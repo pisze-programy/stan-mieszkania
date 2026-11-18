@@ -92,6 +92,11 @@ const allowModuleIndex = (from: string | string[]): DependenciesPolicy => ({
   },
 });
 
+const allowExternalAndCore = (from: string | string[]): DependenciesPolicy => ({
+  from: { element: { type: from } },
+  allow: { to: { module: { origin: ['external', 'core'] } } },
+});
+
 export const BOUNDARY_ELEMENTS: ElementDescriptors = [
   moduleElement(LAYER_TYPES.DOMAIN, 'domain'),
   moduleElement(LAYER_TYPES.APPLICATION, 'application'),
@@ -156,6 +161,22 @@ export const BOUNDARY_POLICIES: DependenciesPolicy[] = [
   ]),
   allowElements(APP_ORCHESTRATORS, [...APP_RUNTIME_LAYERS, ...CORE_PACKAGES]),
   allowModuleIndex(APP_ORCHESTRATORS),
+  // Architecture A6/3.5: domain, application, and packages/shared stay pure (no external/core imports).
+  allowExternalAndCore([
+    LAYER_TYPES.PACKAGE_D1,
+    LAYER_TYPES.PACKAGE_HTTP_CONTRACTS,
+    LAYER_TYPES.PACKAGE_TESTING,
+    LAYER_TYPES.INFRASTRUCTURE,
+    LAYER_TYPES.HTTP,
+    LAYER_TYPES.MODULE_ENTRY,
+    LAYER_TYPES.MODULE_TESTING,
+    ...APP_RUNTIME_LAYERS,
+    LAYER_TYPES.APP_SCRIPTS,
+  ]),
+  {
+    from: { file: { categories: [FILE_CATEGORIES.TEST] } },
+    allow: { to: { module: { origin: ['external', 'core'] } } },
+  },
   {
     from: { file: { categories: [FILE_CATEGORIES.TEST] } },
     allow: {

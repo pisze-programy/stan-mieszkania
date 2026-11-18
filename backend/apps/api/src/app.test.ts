@@ -1,4 +1,5 @@
 import {
+  APP_VERSION_MAX_LENGTH,
   HEADER_NAMES,
   HTTP_STATUS,
   PROBLEM_JSON_CONTENT_TYPE,
@@ -53,7 +54,7 @@ describe('API app, middlewares, and /v1/config', () => {
     });
   });
 
-  it('enforces X-App-Version format and minimum version on non-config routes', async () => {
+  it('enforces X-App-Version format, max length, and SemVer 2.0.0 prerelease ordering', async () => {
     const app = createApp();
 
     const invalidRes = await app.request(
@@ -68,16 +69,27 @@ describe('API app, middlewares, and /v1/config', () => {
       requestId: 'req-bad',
     });
 
-    const outdatedRes = await app.request(
+    const tooLongVersion = `1.0.0-${'a'.repeat(APP_VERSION_MAX_LENGTH)}`;
+    const tooLongRes = await app.request(
       '/v1/unknown',
-      { headers: { [HEADER_NAMES.APP_VERSION]: '0.9.9', [HEADER_NAMES.REQUEST_ID]: 'req-old' } },
-      { MIN_SUPPORTED_APP_VERSION: '1.0.0' },
+      { headers: { [HEADER_NAMES.APP_VERSION]: tooLongVersion } },
+      {},
     );
-    expect(outdatedRes.status).toBe(HTTP_STATUS.UPGRADE_REQUIRED);
-    expect(ProblemDetailsSchema.parse(await outdatedRes.json())).toMatchObject({
-      code: 'APP_UPDATE_REQUIRED',
-      requestId: 'req-old',
-    });
+    expect(tooLongRes.status).toBe(HTTP_STATUS.BAD_REQUEST);
+
+    const blockedHyphenRes = await app.request(
+      '/v1/unknown',
+      { headers: { [HEADER_NAMES.APP_VERSION]: '1.0.0-rc-1' } },
+      { MIN_SUPPORTED_APP_VERSION: '1.0.0-rc-2' },
+    );
+    expect(blockedHyphenRes.status).toBe(HTTP_STATUS.UPGRADE_REQUIRED);
+
+    const allowedBetaRes = await app.request(
+      '/v1/unknown',
+      { headers: { [HEADER_NAMES.APP_VERSION]: '1.0.0-beta.10' } },
+      { MIN_SUPPORTED_APP_VERSION: '1.0.0-beta.2' },
+    );
+    expect(allowedBetaRes.status).toBe(HTTP_STATUS.NOT_FOUND);
   });
 
   it('returns 404 ROUTE_NOT_FOUND problem+json for unknown routes', async () => {
@@ -97,7 +109,7 @@ describe('API app, middlewares, and /v1/config', () => {
     });
   });
 
-  it('returns 500 INTERNAL_ERROR problem+json without leaking error details on uncaught errors', async () => {
+  it('uses overrides.logger and returns sanitized 500 INTERNAL_ERROR when pre-container config fails', async () => {
     const logger = new RecordingLogger();
     const clock = new FixedClock();
     const app = createApp({ overrides: { logger, clock } });
@@ -118,5 +130,7 @@ describe('API app, middlewares, and /v1/config', () => {
       requestId: 'req-500',
     });
     expect(JSON.stringify(problem)).not.toContain('INVALID_APP_CONFIG');
+    expect(logger.entriesForLevel('error')).toHaveLength(1);
+    expect(logger.entriesForLevel('error')[0]?.context.requestId).toBe('req-500');
   });
 });

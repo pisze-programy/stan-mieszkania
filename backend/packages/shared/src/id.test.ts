@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SystemUuidV7Generator, generateUuidV7, isUuid, isUuidV7 } from './id';
+import { MAX_UUID_V7_TIMESTAMP_MS } from './id.constants';
 
 describe('UUIDv7', () => {
   it('encodes exact 48-bit big-endian timestamp, version 7, and RFC 9562 variant bits', () => {
@@ -43,7 +44,12 @@ describe('UUIDv7', () => {
     expect(first).not.toBe(second);
   });
 
-  it('rejects invalid timestamp or randomBytes length', () => {
+  it('accepts max 48-bit timestamp and rejects overflow, negative, or invalid lengths', () => {
+    const maxUuid = generateUuidV7(MAX_UUID_V7_TIMESTAMP_MS, new Uint8Array(16).fill(0));
+    expect(maxUuid.startsWith('ffffffff-ffff-7')).toBe(true);
+    expect(isUuidV7(maxUuid)).toBe(true);
+
+    expect(() => generateUuidV7(MAX_UUID_V7_TIMESTAMP_MS + 1)).toThrow(RangeError);
     expect(() => generateUuidV7(-1)).toThrow(RangeError);
     expect(() => generateUuidV7(Number.NaN)).toThrow(RangeError);
     expect(() => generateUuidV7(1000, new Uint8Array(8))).toThrow(RangeError);

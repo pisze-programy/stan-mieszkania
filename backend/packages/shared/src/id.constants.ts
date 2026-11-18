@@ -1,4 +1,5 @@
 export const UUID_BYTE_LENGTH = 16;
+export const MAX_UUID_V7_TIMESTAMP_MS = 0xff_ff_ff_ff_ff_ff;
 export const HEX_RADIX = 16;
 export const HEX_CHARS_PER_BYTE = 2;
 
