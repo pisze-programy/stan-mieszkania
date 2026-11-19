@@ -15,6 +15,7 @@ let package = Package(
     .library(name: "ApartmentTimelineFeature", targets: ["ApartmentTimelineFeature"]),
     .library(name: "SharingFeature", targets: ["SharingFeature"]),
     .library(name: "CaptureFeature", targets: ["CaptureFeature"]),
+    .library(name: "MediaSummaryFeature", targets: ["MediaSummaryFeature"]),
   ],
   dependencies: [
     .package(path: "../Core"),
@@ -80,6 +81,17 @@ let package = Package(
         .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
       ]
     ),
+    .target(
+      name: "MediaSummaryFeature",
+      dependencies: [
+        .product(name: "Domain", package: "Core"),
+        .product(name: "DesignSystem", package: "Core"),
+        .product(name: "Database", package: "Core"),
+        .product(name: "MediaStorage", package: "Core"),
+        .product(name: "SyncEngine", package: "Core"),
+        .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+      ]
+    ),
     .testTarget(
       name: "OnboardingFeatureTests",
       dependencies: [
@@ -138,6 +150,18 @@ let package = Package(
         .product(name: "DesignSystem", package: "Core"),
         .product(name: "AppConfigClient", package: "Core"),
         .product(name: "MediaStorage", package: "Core"),
+        .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+      ]
+    ),
+    .testTarget(
+      name: "MediaSummaryFeatureTests",
+      dependencies: [
+        "MediaSummaryFeature",
+        .product(name: "Domain", package: "Core"),
+        .product(name: "DesignSystem", package: "Core"),
+        .product(name: "Database", package: "Core"),
+        .product(name: "MediaStorage", package: "Core"),
+        .product(name: "SyncEngine", package: "Core"),
         .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
       ]
     ),
