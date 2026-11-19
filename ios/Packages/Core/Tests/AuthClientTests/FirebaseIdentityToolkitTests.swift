@@ -48,6 +48,11 @@ struct FirebaseIdentityToolkitTests {
 
     let first = try AppleSignInNonce.generate()
     let second = try AppleSignInNonce.generate()
+    let allowedSet = Set(AppleSignInNonce.charset)
+    #expect(allowedSet.count == AppleSignInNonce.charset.count)
+    #expect(allowedSet.contains("W"))
+    #expect((Int(UInt8.max) + 1).isMultiple(of: AppleSignInNonce.charset.count))
+    #expect(first.rawValue.allSatisfy { allowedSet.contains($0) })
     #expect(first.rawValue.count == AuthClientConstants.appleNonceLength)
     #expect(first.sha256Hex.count == Fixtures.expectedSha256HexLength)
     #expect(first.rawValue != second.rawValue)

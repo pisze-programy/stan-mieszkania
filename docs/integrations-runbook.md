@@ -7,7 +7,7 @@ This runbook gives step-by-step procedures to connect Apple Developer, Firebase 
 - An active Apple Developer Program account.
 - A Google Cloud / Firebase project.
 - A Cloudflare account with Workers Paid, D1, R2, and Durable Objects enabled.
-- macOS with Xcode 26+, Node.js 22+, `pnpm` 9+, and `wrangler` CLI authenticated (`pnpm --filter @stanmieszkania/api exec wrangler login`).
+- macOS with Xcode 26+, Node.js 22+, `pnpm` 9+, and `wrangler` CLI authenticated (`pnpm --dir backend --filter @stanmieszkania/api exec wrangler login`).
 
 ---
 
