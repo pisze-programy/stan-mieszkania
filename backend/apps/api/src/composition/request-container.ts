@@ -126,6 +126,7 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     identityProviderDeleter: adapters.identityProviderDeleter,
     clock,
     logger,
+    requireAppleAuthorizationCode: input.appConfig.authMode === 'firebase',
   });
 
   const handlers = buildModuleRouteHandlers({

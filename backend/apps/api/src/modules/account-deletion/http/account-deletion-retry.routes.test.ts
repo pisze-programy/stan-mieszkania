@@ -6,10 +6,14 @@ import { createApp } from '../../../app';
 import { COMMON_ERROR_CODES } from '../../../http/http.constants';
 import { createD1TestHarness, type D1TestHarness } from '../../../testing/d1-test-harness';
 import { IDENTITY_ERROR_CODES } from '../../identity';
-import { externalAuthCleanupFailedError } from '../domain/account-deletion.errors';
+import {
+  ACCOUNT_DELETION_ERROR_CODES,
+  externalAuthCleanupFailedError,
+} from '../domain/account-deletion.errors';
 
 describe('DELETE /v1/me retryability and empty body (Miniflare D1 + R2 + UserGuard DO)', () => {
   let harness: D1TestHarness | undefined;
+  const idGenerator = new SequentialUuidV7Generator();
   const getHarness = (): D1TestHarness => {
     if (harness === undefined) {
       throw new Error('D1 test harness was not initialized');
@@ -30,7 +34,7 @@ describe('DELETE /v1/me retryability and empty body (Miniflare D1 + R2 + UserGua
     const app = createApp({
       overrides: {
         clock: new FixedClock('2026-11-18T13:00:00.000Z'),
-        idGenerator: new SequentialUuidV7Generator(),
+        idGenerator,
         logger: new RecordingLogger(),
         identityProviderDeleter: {
           deleteProviderUser: () =>
@@ -67,5 +71,44 @@ describe('DELETE /v1/me retryability and empty body (Miniflare D1 + R2 + UserGua
     expect(ProblemDetailsSchema.parse(await blockedRes.json()).code).toBe(
       IDENTITY_ERROR_CODES.USER_DELETED,
     );
+  });
+
+  it('rejects omitted appleAuthorizationCode with 422 in firebase auth mode before touching providers or D1', async () => {
+    let deleterCalled = false;
+    const app = createApp({
+      overrides: {
+        clock: new FixedClock('2026-11-18T14:00:00.000Z'),
+        idGenerator,
+        logger: new RecordingLogger(),
+        tokenVerifier: {
+          verifyIdToken: () =>
+            Promise.resolve(ok({ firebaseUid: 'fb-prod-user-1', displayName: 'Kasia' })),
+        },
+        identityProviderDeleter: {
+          deleteProviderUser: () => {
+            deleterCalled = true;
+            return Promise.resolve(ok());
+          },
+        },
+      },
+    });
+    const env = {
+      DB: getHarness().db,
+      MEDIA_BUCKET: getHarness().r2,
+      USER_GUARD: getHarness().userGuard,
+      AUTH_MODE: 'firebase',
+      FIREBASE_PROJECT_ID: 'demo-stanmieszkania',
+    };
+    const headers = { Authorization: 'Bearer fake-firebase-jwt' };
+
+    expect((await app.request('/v1/me', { headers }, env)).status).toBe(HTTP_STATUS.OK);
+
+    const rejected = await app.request('/v1/me', { method: 'DELETE', headers }, env);
+    expect(rejected.status).toBe(HTTP_STATUS.UNPROCESSABLE_ENTITY);
+    expect(ProblemDetailsSchema.parse(await rejected.json()).code).toBe(
+      ACCOUNT_DELETION_ERROR_CODES.INVALID_APPLE_AUTHORIZATION_CODE,
+    );
+    expect(deleterCalled).toBe(false);
+    expect((await app.request('/v1/me', { headers }, env)).status).toBe(HTTP_STATUS.OK);
   });
 });

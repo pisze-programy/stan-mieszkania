@@ -42,6 +42,7 @@ export interface DeleteMyAccountDeps {
   readonly identityProviderDeleter: IdentityProviderDeleterPort;
   readonly clock: Clock;
   readonly logger: Logger;
+  readonly requireAppleAuthorizationCode?: boolean;
 }
 
 export interface DeleteMyAccountUseCase {
@@ -50,9 +51,12 @@ export interface DeleteMyAccountUseCase {
 
 function normalizeAppleAuthCode(
   rawCode: string | undefined,
+  required: boolean,
 ): Result<string | undefined, DomainError> {
   if (rawCode === undefined) {
-    return ok(undefined);
+    return required
+      ? err(invalidAppleAuthorizationCodeError('Apple authorization code is required'))
+      : ok(undefined);
   }
   const trimmed = rawCode.trim();
   if (trimmed.length < APPLE_AUTH_CODE_MIN_LENGTH || trimmed.length > APPLE_AUTH_CODE_MAX_LENGTH) {
@@ -65,9 +69,14 @@ function normalizeAppleAuthCode(
 
 // Decision Q5 & Q12: Revoke external auth first so 502 failures stay retryable before destructive D1/R2 purge.
 export function createDeleteMyAccountUseCase(deps: DeleteMyAccountDeps): DeleteMyAccountUseCase {
+  const requireAppleCode = deps.requireAppleAuthorizationCode ?? false;
+
   return {
     execute: async (command) => {
-      const normalizedCode = normalizeAppleAuthCode(command.appleAuthorizationCode);
+      const normalizedCode = normalizeAppleAuthCode(
+        command.appleAuthorizationCode,
+        requireAppleCode,
+      );
       if (!normalizedCode.ok) {
         return normalizedCode;
       }

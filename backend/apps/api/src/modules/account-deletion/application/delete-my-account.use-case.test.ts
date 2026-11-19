@@ -170,26 +170,33 @@ describe('createDeleteMyAccountUseCase', () => {
     expect(mediaCleanup.batches).toHaveLength(1);
   });
 
-  it('rejects blank appleAuthorizationCode before mutating state', async () => {
+  it('rejects blank or required omitted appleAuthorizationCode before mutating state', async () => {
     const repo = new InMemoryAccountDeletionRepository();
+    const providerDeleter = new RecordingIdentityProviderDeleter();
     const useCase = createDeleteMyAccountUseCase({
       accountDeletionRepository: repo,
       mediaCleanup: new RecordingMediaCleanup(),
       appleTokenRevoker: new RecordingAppleTokenRevoker(),
-      identityProviderDeleter: new RecordingIdentityProviderDeleter(),
+      identityProviderDeleter: providerDeleter,
       clock: new FixedClock(),
       logger: new RecordingLogger(),
+      requireAppleAuthorizationCode: true,
     });
 
-    const result = await useCase.execute({
-      userId: 'user-1',
-      firebaseUid: 'fb-uid-1',
-      appleAuthorizationCode: '   ',
-    });
-    expect(isErr(result)).toBe(true);
-    if (isErr(result)) {
-      expect(result.error.code).toBe(ACCOUNT_DELETION_ERROR_CODES.INVALID_APPLE_AUTHORIZATION_CODE);
+    for (const appleAuthorizationCode of ['   ', undefined]) {
+      const result = await useCase.execute({
+        userId: 'user-1',
+        firebaseUid: 'fb-uid-1',
+        ...(appleAuthorizationCode !== undefined ? { appleAuthorizationCode } : {}),
+      });
+      expect(isErr(result)).toBe(true);
+      if (isErr(result)) {
+        expect(result.error.code).toBe(
+          ACCOUNT_DELETION_ERROR_CODES.INVALID_APPLE_AUTHORIZATION_CODE,
+        );
+      }
     }
+    expect(providerDeleter.deletedFirebaseUids).toEqual([]);
     expect(repo.anonymizedUsers).toEqual([]);
   });
 });

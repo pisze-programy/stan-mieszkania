@@ -8,7 +8,7 @@ Landlords and tenants record evidence together during move-in, tenancy, and move
 The repository contains four top-level directories:
 
 - `backend/` contains the TypeScript Cloudflare Worker API, D1 SQL migrations, Durable Objects, and deployment scripts.
-- `contracts/` contains the generated OpenAPI 3.1 specification (`contracts/openapi.yaml`).
+- `contracts/` contains the generated OpenAPI 3.0.3 specification (`contracts/openapi.yaml`).
 - `ios/` contains the Swift 6.3 iOS app (`ios/StanMieszkania.xcodeproj`), XcodeGen specification (`ios/project.yml`), and local Swift packages (`Core` and `Features`).
 - `docs/` contains the domain specification, architecture blueprint, and production integrations runbook.
 
