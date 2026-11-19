@@ -17,6 +17,7 @@ let package = Package(
     .library(name: "AuthClient", targets: ["AuthClient"]),
     .library(name: "APIClient", targets: ["APIClient"]),
     .library(name: "AppConfigClient", targets: ["AppConfigClient"]),
+    .library(name: "SyncEngine", targets: ["SyncEngine"]),
   ],
   dependencies: [
     .package(
@@ -99,6 +100,18 @@ let package = Package(
         .product(name: "DependenciesMacros", package: "swift-dependencies"),
       ]
     ),
+    .target(
+      name: "SyncEngine",
+      dependencies: [
+        "Domain",
+        "Database",
+        "MediaStorage",
+        "APIClient",
+        "AppConfigClient",
+        .product(name: "Dependencies", package: "swift-dependencies"),
+        .product(name: "DependenciesMacros", package: "swift-dependencies"),
+      ]
+    ),
     .testTarget(
       name: "DomainTests",
       dependencies: ["Domain"]
@@ -147,6 +160,18 @@ let package = Package(
       dependencies: [
         "AppConfigClient",
         "APIClient",
+        "Domain",
+        .product(name: "Dependencies", package: "swift-dependencies"),
+      ]
+    ),
+    .testTarget(
+      name: "SyncEngineTests",
+      dependencies: [
+        "SyncEngine",
+        "Database",
+        "MediaStorage",
+        "APIClient",
+        "AppConfigClient",
         "Domain",
         .product(name: "Dependencies", package: "swift-dependencies"),
       ]
