@@ -785,6 +785,61 @@
         }
       }
     },
+    "media.detail.metadata.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informacje o zdjęciu"
+          }
+        }
+      }
+    },
+    "media.detail.entry.retract.cta": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wycofaj wpis"
+          }
+        }
+      }
+    },
+    "media.detail.entry.edit.cta": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edytuj wpis"
+          }
+        }
+      }
+    },
+    "media.detail.entry.delete.local.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trwale usunąć lokalny wpis?"
+          }
+        }
+      }
+    },
+    "media.detail.timeline.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak wpisów do tego zdjęcia"
+          }
+        }
+      }
+    },
     "media.detail.role.owner": {
       "extractionState": "manual",
       "localizations": {
