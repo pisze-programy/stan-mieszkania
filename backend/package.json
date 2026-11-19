@@ -16,7 +16,8 @@
     "openapi:generate": "pnpm --filter @stanmieszkania/api run openapi:generate",
     "swift-constants:generate": "pnpm --filter @stanmieszkania/api run swift-constants:generate",
     "deploy:dry-run": "pnpm --filter @stanmieszkania/api exec tsx ../../scripts/deploy.ts --dry-run",
-    "deploy:production": "pnpm --filter @stanmieszkania/api exec tsx ../../scripts/deploy.ts"
+    "deploy:production": "pnpm --filter @stanmieszkania/api exec tsx ../../scripts/deploy.ts",
+    "verify:fullstack": "pnpm --filter @stanmieszkania/api exec tsx ../../scripts/verify-fullstack.ts"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
