@@ -35,17 +35,6 @@
         }
       }
     },
-    "onboarding.dev.login": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lokalne logowanie programistyczne"
-          }
-        }
-      }
-    },
     "apartments.list.title": {
       "extractionState": "manual",
       "localizations": {
@@ -264,61 +253,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stuknij przycisk plusa poniżej, aby dodać pierwsze zdjęcie stanu mieszkania."
-          }
-        }
-      }
-    },
-    "apartment.timeline.capture.camera": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zrób zdjęcie"
-          }
-        }
-      }
-    },
-    "apartment.timeline.capture.gallery": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wybierz z galerii"
-          }
-        }
-      }
-    },
-    "apartment.timeline.capture.files": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wybierz z plików"
-          }
-        }
-      }
-    },
-    "apartment.timeline.capture.video": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wideo"
-          }
-        }
-      }
-    },
-    "apartment.timeline.capture.video.disabled": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dostępne wkrótce"
           }
         }
       }
@@ -543,28 +477,6 @@
         }
       }
     },
-    "permissions.camera.prompt": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aplikacja wymaga dostępu do aparatu w celu dokumentowania stanu mieszkania."
-          }
-        }
-      }
-    },
-    "permissions.photo.prompt": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aplikacja wymaga dostępu do biblioteki zdjęć w celu importu materiałów."
-          }
-        }
-      }
-    },
     "media.summary.marker.toggle": {
       "extractionState": "manual",
       "localizations": {
@@ -594,17 +506,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opisz, co widać na zdjęciu (opcjonalnie)"
-          }
-        }
-      }
-    },
-    "media.summary.timestamp.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Czas zrobienia: %@"
           }
         }
       }
@@ -1881,17 +1782,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kontynuuj bez lokalizacji"
-          }
-        }
-      }
-    },
-    "capture.processing.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Przetwarzanie zdjęć…"
           }
         }
       }

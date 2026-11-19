@@ -113,11 +113,19 @@ public struct CaptureFeature: Sendable {
           finishIfReady(&state)
         )
       case .ingestFailed(let message):
+        state.isPickerPresented = false
         state.isProcessing = false
         state.errorMessage = message
-        return .run { _ in
-          await haptics.error()
-        }
+        let settleEffect: Effect<Action> =
+          (state.source != .camera && !state.isPickerDismissalSettled)
+          ? schedulePresentationSettle()
+          : .none
+        return .merge(
+          settleEffect,
+          .run { _ in
+            await haptics.error()
+          }
+        )
       case .dismissError:
         state.errorMessage = nil
         return .send(.delegate(.didCancel))

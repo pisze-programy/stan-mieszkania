@@ -98,20 +98,18 @@ struct CaptureImportAndErrorTests {
   }
 
   @MainActor
-  @Test("Partial import failure cleans up local files and dismissError finishes capture flow")
+  @Test("Partial file import failure settles dismissal, cleans up files, and dismissError cancels")
   func partialImportFailureCleansUpAndDismissCancels() async {
+    let clock = TestClock()
     let recorder = Recorder()
     let ids = LockIsolated([Fixtures.firstMediaId, Fixtures.secondMediaId])
 
     let store = TestStore(
-      initialState: CaptureFeature.State(
-        apartmentId: Fixtures.apartmentId,
-        source: .files,
-        isPickerDismissalSettled: true
-      )
+      initialState: CaptureFeature.State(apartmentId: Fixtures.apartmentId, source: .files)
     ) {
       CaptureFeature()
     } withDependencies: {
+      $0.continuousClock = clock
       $0.date.now = Fixtures.baseDate
       $0.timeZone = Fixtures.warsawTZ
       $0.idGenerator = ClosureIDGenerator { ids.withValue { $0.removeFirst() } }
@@ -133,7 +131,9 @@ struct CaptureImportAndErrorTests {
       )
     }
 
+    await store.send(.start) { $0.isPickerPresented = true }
     await store.send(.importedPhotosSelected([Fixtures.firstData, Fixtures.secondData])) {
+      $0.isPickerPresented = false
       $0.isProcessing = true
     }
     let expectedError = L10n.string("capture.import.failed")
@@ -141,6 +141,8 @@ struct CaptureImportAndErrorTests {
       $0.isProcessing = false
       $0.errorMessage = expectedError
     }
+    await clock.advance(by: CaptureConstants.presentationSettleDelay)
+    await store.receive(.pickerDismissalSettled) { $0.isPickerDismissalSettled = true }
     await store.send(.dismissError) { $0.errorMessage = nil }
     await store.receive(.delegate(.didCancel))
 

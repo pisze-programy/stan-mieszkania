@@ -44,9 +44,13 @@ extension CaptureFeature {
 
   func handleImportedPhotos(_ state: inout State, rawItems: [Data]) -> Effect<Action> {
     state.isPickerPresented = false
+    let settleEffect: Effect<Action> =
+      (state.source != .camera && !state.isPickerDismissalSettled)
+      ? schedulePresentationSettle()
+      : .none
     guard !rawItems.isEmpty else {
       state.isProcessing = false
-      return state.isPickerDismissalSettled ? finishIfReady(&state) : schedulePresentationSettle()
+      return state.isPickerDismissalSettled ? finishIfReady(&state) : settleEffect
     }
 
     state.isProcessing = true
@@ -57,7 +61,7 @@ extension CaptureFeature {
     let tzIdentifier = timeZone.identifier
     let compression = appConfigClient.loadCachedOrDefault().jpegCompression
 
-    return .run { send in
+    let ingestEffect: Effect<Action> = .run { send in
       var drafts: [CapturedPhotoDraft] = []
       drafts.reserveCapacity(rawItems.count)
       do {
@@ -90,6 +94,8 @@ extension CaptureFeature {
       }
     }
     .cancellable(id: CancelID.ingest, cancelInFlight: true)
+
+    return .merge(settleEffect, ingestEffect)
   }
 
   private func makeDraft(
