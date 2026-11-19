@@ -25,6 +25,7 @@
 		B1F994549FBCF60C9470EB4A /* AppFeature+Modals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC6426C44300437A2B7563A1 /* AppFeature+Modals.swift */; };
 		B38BDA56A3470FB2FAE56AF1 /* Domain in Frameworks */ = {isa = PBXBuildFile; productRef = 14182FAEF0623D974B05D2FC /* Domain */; };
 		C12CAAF042F9958AAF97207B /* AppFeatureCaptureFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 852429CC2F77CB27E28F8C9D /* AppFeatureCaptureFlowTests.swift */; };
+		C6DA8A2BE2940309FAC6FF1A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B6F9554AA0E2AC8A085F8FE8 /* PrivacyInfo.xcprivacy */; };
 		CB60B6047AC34E68CB718880 /* AppFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08ADA417A7FF20E48552E048 /* AppFeatureTests.swift */; };
 		CCFA2CA3EA926F50255E1743 /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = 99085FF73D7ADA2FD8D53261 /* SQLiteData */; };
 		D61CB37DD6FDB2B035902882 /* Database in Frameworks */ = {isa = PBXBuildFile; productRef = 314E5D00553863013C023F3E /* Database */; };
@@ -66,6 +67,7 @@
 		A91240D428DDACC5976AAD83 /* Core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Core; path = Packages/Core; sourceTree = SOURCE_ROOT; };
 		AB7C8FA9AD6AC8A7CED2152F /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
 		AC6426C44300437A2B7563A1 /* AppFeature+Modals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppFeature+Modals.swift"; sourceTree = "<group>"; };
+		B6F9554AA0E2AC8A085F8FE8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		C02ED265EFA4107663302480 /* AppEnvironmentConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironmentConfigTests.swift; sourceTree = "<group>"; };
 		CC756A25488C6808E270882F /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -118,6 +120,7 @@
 				4275CE1EAAB893B589CD7249 /* AppFeature+Navigation.swift */,
 				AB7C8FA9AD6AC8A7CED2152F /* AppRootView.swift */,
 				58D0AEFBA624078FEA068AA5 /* ForceUpdateGateView.swift */,
+				B6F9554AA0E2AC8A085F8FE8 /* PrivacyInfo.xcprivacy */,
 				1CFA8E09C30F2DE40822CBC9 /* StanMieszkaniaApp.swift */,
 			);
 			path = App;
@@ -172,6 +175,7 @@
 			buildConfigurationList = 4CF080E9A35277D4C953E9B8 /* Build configuration list for PBXNativeTarget "StanMieszkania" */;
 			buildPhases = (
 				1543BE04566A3CDF7C86D483 /* Sources */,
+				D5F67BABB47F0F1E3F23BA37 /* Resources */,
 				ED9C9D8B4A9C6E0FBFDC8775 /* Frameworks */,
 			);
 			buildRules = (
@@ -265,6 +269,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D5F67BABB47F0F1E3F23BA37 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C6DA8A2BE2940309FAC6FF1A /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1543BE04566A3CDF7C86D483 /* Sources */ = {

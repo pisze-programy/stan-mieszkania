@@ -40,5 +40,8 @@ struct AppEnvironmentConfigTests {
         .trimmingCharacters(in: .whitespacesAndNewlines)
       #expect(value?.isEmpty == false)
     }
+
+    let manifestURL = bundle.url(forResource: "PrivacyInfo", withExtension: "xcprivacy")
+    #expect(manifestURL != nil)
   }
 }

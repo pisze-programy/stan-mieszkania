@@ -9,9 +9,13 @@ public typealias AppleCredentialProvider =
 public typealias AppleSessionExchanger =
   @Sendable (_ credential: AppleSignInCredential) async throws -> AuthSession
 
+public typealias AuthSessionRefresher =
+  @Sendable (_ session: AuthSession) async throws -> AuthSession
+
 @DependencyClient
 public struct AuthClient: Sendable {
   public var loadStoredSession: @Sendable () async throws -> AuthSession?
+  public var validBearerToken: @Sendable () async throws -> String?
   public var signInWithApple: @Sendable () async throws -> AuthSession
   public var signInLocalDev:
     @Sendable (_ firebaseUid: String, _ displayName: String?) async throws -> AuthSession
@@ -22,11 +26,21 @@ public struct AuthClient: Sendable {
     store: any AuthSessionStore = KeychainAuthSessionStore(),
     appleCredentialProvider: @escaping AppleCredentialProvider = Self
       .defaultAppleCredentialProvider,
-    sessionExchanger: @escaping AppleSessionExchanger = Self.defaultSessionExchanger
+    sessionExchanger: @escaping AppleSessionExchanger = Self.defaultSessionExchanger,
+    sessionRefresher: AuthSessionRefresher? = nil,
+    now: @escaping @Sendable () -> Date = Date.init
   ) -> Self {
-    Self(
+    let coordinator = SessionRefreshCoordinator(
+      store: store,
+      refresher: sessionRefresher,
+      now: now
+    )
+    return Self(
       loadStoredSession: {
         try store.load()
+      },
+      validBearerToken: {
+        try await coordinator.validBearerToken()
       },
       signInWithApple: {
         let credential = try await appleCredentialProvider([.fullName])
@@ -56,20 +70,41 @@ public struct AuthClient: Sendable {
         return credential.authorizationCode
       },
       clearSession: {
+        await coordinator.cancelInFlightRefresh()
         try store.clear()
       }
+    )
+  }
+
+  public static func liveFirebase(
+    store: any AuthSessionStore = KeychainAuthSessionStore(),
+    firebaseClient: FirebaseIdentityToolkitClient,
+    appleCredentialProvider: @escaping AppleCredentialProvider = Self
+      .defaultAppleCredentialProvider,
+    now: @escaping @Sendable () -> Date = Date.init
+  ) -> Self {
+    .live(
+      store: store,
+      appleCredentialProvider: appleCredentialProvider,
+      sessionExchanger: { credential in
+        try await firebaseClient.exchangeAppleCredential(credential)
+      },
+      sessionRefresher: { session in
+        try await firebaseClient.refreshSession(session)
+      },
+      now: now
     )
   }
 
   public static func defaultAppleCredentialProvider(
     scopes: [ASAuthorization.Scope]
   ) async throws -> AppleSignInCredential {
-    try await MainActor.run {
+    let nonce = try AppleSignInNonce.generate()
+    return try await MainActor.run {
       AppleSignInBridge()
-    }.requestCredential(scopes: scopes)
+    }.requestCredential(scopes: scopes, nonce: nonce)
   }
 
-  // Decision Q12: Default exchanger maps Apple credential until Task 8.2 wires FirebaseAuth exchange.
   public static func defaultSessionExchanger(
     credential: AppleSignInCredential
   ) async throws -> AuthSession {
@@ -79,6 +114,51 @@ public struct AuthClient: Sendable {
       bearerToken: credential.identityToken,
       appleAuthorizationCode: credential.authorizationCode
     )
+  }
+}
+
+private actor SessionRefreshCoordinator {
+  private let store: any AuthSessionStore
+  private let refresher: AuthSessionRefresher?
+  private let now: @Sendable () -> Date
+  private var inFlightRefresh: Task<AuthSession, any Error>?
+
+  init(
+    store: any AuthSessionStore,
+    refresher: AuthSessionRefresher?,
+    now: @escaping @Sendable () -> Date
+  ) {
+    self.store = store
+    self.refresher = refresher
+    self.now = now
+  }
+
+  func validBearerToken() async throws -> String? {
+    guard let session = try store.load() else {
+      return nil
+    }
+    if session.bearerToken.hasPrefix(AuthClientConstants.localDevTokenPrefix) {
+      return session.bearerToken
+    }
+    guard let refresher, session.needsRefresh(now: now()) else {
+      return session.bearerToken
+    }
+    if let existingTask = inFlightRefresh {
+      return try await existingTask.value.bearerToken
+    }
+    let task = Task<AuthSession, any Error> {
+      let refreshed = try await refresher(session)
+      try store.save(refreshed)
+      return refreshed
+    }
+    inFlightRefresh = task
+    defer { inFlightRefresh = nil }
+    return try await task.value.bearerToken
+  }
+
+  func cancelInFlightRefresh() {
+    inFlightRefresh?.cancel()
+    inFlightRefresh = nil
   }
 }
 

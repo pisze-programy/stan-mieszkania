@@ -5,19 +5,23 @@ import Foundation
 public final class AppleSignInBridge: NSObject, ASAuthorizationControllerDelegate {
   private var continuation: CheckedContinuation<AppleSignInCredential, any Error>?
   private var activeController: ASAuthorizationController?
+  private var activeRawNonce: String?
 
   public override init() {
     super.init()
   }
 
   public func requestCredential(
-    scopes: [ASAuthorization.Scope] = [.fullName]
+    scopes: [ASAuthorization.Scope] = [.fullName],
+    nonce: AppleSignInNonce? = nil
   ) async throws -> AppleSignInCredential {
     try await withCheckedThrowingContinuation { continuation in
       self.continuation = continuation
+      self.activeRawNonce = nonce?.rawValue
       let provider = ASAuthorizationAppleIDProvider()
       let request = provider.createRequest()
       request.requestedScopes = scopes
+      request.nonce = nonce?.sha256Hex
 
       let controller = ASAuthorizationController(authorizationRequests: [request])
       controller.delegate = self
@@ -31,7 +35,11 @@ public final class AppleSignInBridge: NSObject, ASAuthorizationControllerDelegat
     didCompleteWithAuthorization authorization: ASAuthorization
   ) {
     Task { @MainActor in
-      defer { self.activeController = nil }
+      let rawNonce = self.activeRawNonce
+      defer {
+        self.activeController = nil
+        self.activeRawNonce = nil
+      }
       guard let resume = self.continuation else {
         return
       }
@@ -57,7 +65,8 @@ public final class AppleSignInBridge: NSObject, ASAuthorizationControllerDelegat
           userIdentifier: credential.user,
           identityToken: identityToken,
           authorizationCode: authorizationCode,
-          displayName: displayName
+          displayName: displayName,
+          rawNonce: rawNonce
         )
       )
     }
@@ -68,7 +77,10 @@ public final class AppleSignInBridge: NSObject, ASAuthorizationControllerDelegat
     didCompleteWithError error: any Error
   ) {
     Task { @MainActor in
-      defer { self.activeController = nil }
+      defer {
+        self.activeController = nil
+        self.activeRawNonce = nil
+      }
       guard let resume = self.continuation else {
         return
       }
@@ -92,7 +104,8 @@ public final class AppleSignInBridge: NSObject, ASAuthorizationControllerDelegat
     }
     let formatter = PersonNameComponentsFormatter()
     let formatted = formatter.string(from: components).trimmingCharacters(
-      in: .whitespacesAndNewlines)
+      in: .whitespacesAndNewlines
+    )
     return formatted.isEmpty ? nil : formatted
   }
 }

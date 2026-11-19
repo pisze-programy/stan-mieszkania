@@ -123,7 +123,7 @@ extension APIClient: DependencyKey {
       serverURL: serverURL,
       tokenProvider: {
         @Dependency(\.authClient) var authClient
-        return try? await authClient.loadStoredSession()?.bearerToken
+        return try? await authClient.validBearerToken()
       }
     )
   }

@@ -84,12 +84,12 @@ enum AppDependencies {
     let environment = AppEnvironmentConfig.fromBundle(bundle)
     let database = makeLiveDatabase()
     let mediaStorage = makeLiveMediaStorage()
-    let authClient = AuthClient.live()
+    let authClient = makeLiveAuthClient(environment: environment, bundle: bundle)
     let apiClient = APIClient.live(
       serverURL: environment.apiBaseURL,
       appVersion: environment.appVersion,
       tokenProvider: {
-        try? await authClient.loadStoredSession()?.bearerToken
+        try? await authClient.validBearerToken()
       }
     )
     let appConfigClient = AppConfigClient.live(
@@ -114,6 +114,23 @@ enum AppDependencies {
     dependencies.syncEngine = .live(actor: syncActor)
     dependencies.themePreference = .live
     dependencies.haptics = .live
+  }
+
+  static func makeLiveAuthClient(
+    environment: AppEnvironmentConfig,
+    bundle: Bundle = .main
+  ) -> AuthClient {
+    switch environment.authMode {
+    case .local:
+      return .live()
+    case .firebase:
+      let firebaseClient = FirebaseIdentityToolkitClient(
+        apiKeyProvider: {
+          FirebaseAuthConfiguration.load(from: bundle)?.apiKey
+        }
+      )
+      return .liveFirebase(firebaseClient: firebaseClient)
+    }
   }
 
   private static func makeLiveDatabase() -> any DatabaseWriter {
