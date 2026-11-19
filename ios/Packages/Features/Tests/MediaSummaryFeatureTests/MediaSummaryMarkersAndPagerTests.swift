@@ -86,7 +86,6 @@ struct MediaSummaryMarkersAndPagerTests {
       markerHaptics: LockIsolated(0)
     )
     #expect(store.state.isMultiPhoto)
-    #expect(!store.state.showsCaptureAnotherAction)
 
     let pageOneMarker = SummaryDraftMarker(
       id: MediaSummaryTestFixtures.markerOneId,
@@ -129,7 +128,7 @@ struct MediaSummaryMarkersAndPagerTests {
       drafts: [MediaSummaryTestFixtures.makeDraft()],
       origin: .camera,
       currentUser: MediaSummaryTestFixtures.author,
-      isSaving: true
+      savingMode: .cloud
     )
     initialState.pages[0].description = "Rysa"
     let store = TestStore(initialState: initialState) {

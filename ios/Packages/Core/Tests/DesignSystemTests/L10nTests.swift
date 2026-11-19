@@ -38,12 +38,25 @@ struct L10nTests {
       "verified.info.author.detail",
       "verified.info.footer",
       "local.info.title",
+      "media.summary.save.caption",
+      "media.summary.action.local",
+      "media.summary.action.local.subtitle",
+      "media.summary.action.cloud",
+      "media.summary.action.cloud.subtitle",
+      "media.summary.title.single",
+      "media.summary.pager.format",
+      "media.summary.pager.previous",
+      "media.summary.pager.next",
+      "media.summary.marker.delete",
     ]
     for key in ws2Keys {
       let value = L10n.string(key)
       #expect(!value.isEmpty)
       #expect(value != key)
     }
+    #expect(L10n.string("media.summary.action.cloud") == "Chmura")
+    #expect(L10n.summaryMultiTitle(Fixtures.twoCount) == "2 zdjęcia")
+    #expect(L10n.summaryMultiTitle(Fixtures.fiveCount) == "5 zdjęć")
   }
 
   @Test("Formats Polish plural photo counts for one, few, and many")

@@ -72,7 +72,7 @@ extension MediaSummaryFeature {
     return .none
   }
 
-  // Invariant 8: Clean up unsaved local JPEG files on retake or cancel to avoid orphaned disk files.
+  // Invariant 8: Clean up unsaved local JPEG files on cancel to avoid orphaned disk files.
   func discardAndEmit(_ state: inout State, delegate: Action.Delegate) -> Effect<Action> {
     guard !state.isSaving else {
       return .none
@@ -86,11 +86,7 @@ extension MediaSummaryFeature {
     }
   }
 
-  func startSave(
-    _ state: inout State,
-    mode: MediaSummarySaveMode,
-    captureAnother: Bool
-  ) -> Effect<Action> {
+  func startSave(_ state: inout State, mode: MediaSummarySaveMode) -> Effect<Action> {
     guard !state.isSaving else {
       return .none
     }
@@ -101,7 +97,7 @@ extension MediaSummaryFeature {
         await haptics.warning()
       }
     case .success(let validatedPages):
-      state.isSaving = true
+      state.savingMode = mode
       state.errorMessage = nil
       let request = PersistSummaryRequest(
         pages: validatedPages,
@@ -114,7 +110,7 @@ extension MediaSummaryFeature {
       return .run { send in
         do {
           try MediaSummaryStore.persistPages(request, in: database)
-          await send(.saveSucceeded(mode: mode, captureAnother: captureAnother))
+          await send(.saveSucceeded(mode: mode))
         } catch {
           await send(
             .saveFailed(L10n.errorMessage(for: .unknown(MediaSummaryConstants.unknownErrorCode)))
@@ -125,17 +121,13 @@ extension MediaSummaryFeature {
   }
 
   // Decision S2-7: Return immediately on save and process cloud outbox asynchronously in background.
-  func finishSave(
-    _ state: inout State,
-    mode: MediaSummarySaveMode,
-    captureAnother: Bool
-  ) -> Effect<Action> {
-    state.isSaving = false
+  func finishSave(_ state: inout State, mode: MediaSummarySaveMode) -> Effect<Action> {
+    state.savingMode = nil
     return .merge(
       .run { _ in
         await haptics.actionSucceeded()
       },
-      .send(.delegate(.didSave(mode: mode, captureAnother: captureAnother))),
+      .send(.delegate(.didSave(mode: mode))),
       mode == .cloud
         ? .run { _ in
           _ = await syncEngine.processOutbox()

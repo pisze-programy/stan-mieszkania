@@ -123,16 +123,18 @@ struct ComponentsTests {
   }
 
   @MainActor
-  @Test("GlassActionButton preserves intrinsic width when loading toggles")
+  @Test("GlassActionButton preserves intrinsic width when loading toggles with or without subtitle")
   func glassActionButtonPreservesWidthWhileLoading() throws {
     let idleButton = GlassActionButton(
-      title: "Do chmury",
+      title: "Chmura",
+      subtitle: "Zweryfikowane, widoczne dla wszystkich",
       systemImage: "icloud.and.arrow.up",
       isLoading: false,
       expandsHorizontally: false
     ) {}
     let loadingButton = GlassActionButton(
-      title: "Do chmury",
+      title: "Chmura",
+      subtitle: "Zweryfikowane, widoczne dla wszystkich",
       systemImage: "icloud.and.arrow.up",
       isLoading: true,
       expandsHorizontally: false
@@ -141,6 +143,7 @@ struct ComponentsTests {
     let idleImage = try #require(ImageRenderer(content: idleButton).cgImage)
     let loadingImage = try #require(ImageRenderer(content: loadingButton).cgImage)
     #expect(idleImage.width == loadingImage.width)
+    #expect(idleImage.height == loadingImage.height)
   }
 
   @MainActor

@@ -26,11 +26,14 @@ struct SummaryMarkerControlsView: View {
         Spacer()
       }
 
-      if isPlacementMode {
-        Text(L10n.string("media.summary.marker.hint"))
-          .font(Typography.footnote)
-          .foregroundStyle(.secondary)
+      StableSlot(minHeight: MediaSummaryConstants.markerHintSlotHeight) {
+        if isPlacementMode {
+          Text(L10n.string("media.summary.marker.hint"))
+            .font(Typography.footnote)
+            .foregroundStyle(.secondary)
+        }
       }
+      .animation(Motion.fade, value: isPlacementMode)
 
       if !markers.isEmpty {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -46,28 +49,32 @@ struct SummaryMarkerControlsView: View {
 
   private func markerChip(_ marker: SummaryDraftMarker) -> some View {
     let isSelected = selectedMarkerNumber == marker.number
-    let color = AuthorPalette.color(fromHex: authorColorHex)
-    return HStack(spacing: Spacing.xxs) {
+    let color = MarkerPalette.color(forMarkerNumber: marker.number)
+    return HStack(spacing: 0) {
       Button {
         onSelectMarker(marker.number)
       } label: {
-        Text("[\(marker.number)]")
-          .font(Typography.markerNumber)
-          .foregroundStyle(color)
+        HStack(spacing: MediaSummaryConstants.markerChipSpacing) {
+          Circle()
+            .fill(color)
+            .frame(
+              width: MediaSummaryConstants.markerChipDotSize,
+              height: MediaSummaryConstants.markerChipDotSize
+            )
+          Text("\(marker.number)")
+            .font(.subheadline.weight(.semibold))
+            .monospacedDigit()
+            .foregroundStyle(.primary)
+        }
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, MediaSummaryConstants.markerChipVerticalPadding)
       }
       .buttonStyle(.plain)
 
-      Button {
-        onDeleteMarker(marker.number)
-      } label: {
-        Image(systemName: "xmark.circle.fill")
-          .font(Typography.caption)
-          .foregroundStyle(.secondary)
+      if isPlacementMode {
+        deleteMarkerButton(for: marker.number)
       }
-      .buttonStyle(.plain)
     }
-    .padding(.horizontal, Spacing.xs)
-    .padding(.vertical, Spacing.xxs)
     .background(
       color.opacity(
         isSelected
@@ -76,5 +83,32 @@ struct SummaryMarkerControlsView: View {
       ),
       in: .capsule
     )
+    .contextMenu {
+      Button(role: .destructive) {
+        onDeleteMarker(marker.number)
+      } label: {
+        Label(
+          L10n.format("media.summary.marker.delete", marker.number),
+          systemImage: "trash"
+        )
+      }
+    }
+  }
+
+  private func deleteMarkerButton(for number: Int) -> some View {
+    Button {
+      onDeleteMarker(number)
+    } label: {
+      Image(systemName: "xmark")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+        .frame(
+          width: DesignMetrics.markerHitTargetSize,
+          height: DesignMetrics.markerHitTargetSize
+        )
+        .contentShape(.circle)
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(L10n.format("media.summary.marker.delete", number))
   }
 }

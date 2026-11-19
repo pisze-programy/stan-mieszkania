@@ -7,7 +7,10 @@ public enum GlassActionButtonVariant: Sendable {
 }
 
 public struct GlassActionButton: View {
+  private static let subtitleLineLimit: Int = 2
+
   private let title: String
+  private let subtitle: String?
   private let systemImage: String?
   private let variant: GlassActionButtonVariant
   private let isLoading: Bool
@@ -18,6 +21,7 @@ public struct GlassActionButton: View {
 
   public init(
     title: String,
+    subtitle: String? = nil,
     systemImage: String? = nil,
     variant: GlassActionButtonVariant = .primary,
     isLoading: Bool = false,
@@ -27,6 +31,7 @@ public struct GlassActionButton: View {
     action: @escaping () -> Void
   ) {
     self.title = title
+    self.subtitle = subtitle
     self.systemImage = systemImage
     self.variant = variant
     self.isLoading = isLoading
@@ -61,12 +66,22 @@ public struct GlassActionButton: View {
   private var baseButton: some View {
     Button(action: action) {
       ZStack {
-        HStack(spacing: Spacing.xs) {
-          if let systemImage {
-            Image(systemName: systemImage)
+        VStack(spacing: Spacing.xxs) {
+          HStack(spacing: Spacing.xs) {
+            if let systemImage {
+              Image(systemName: systemImage)
+            }
+            Text(title)
+              .font(Typography.callout.weight(.semibold))
           }
-          Text(title)
-            .font(Typography.callout.weight(.semibold))
+
+          if let subtitle {
+            Text(subtitle)
+              .font(.caption2)
+              .foregroundStyle(.secondary)
+              .multilineTextAlignment(.center)
+              .lineLimit(Self.subtitleLineLimit)
+          }
         }
         .opacity(isLoading ? 0 : 1)
 

@@ -565,28 +565,6 @@
         }
       }
     },
-    "capture.retake.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Odrzuć i wybierz ponownie"
-          }
-        }
-      }
-    },
-    "capture.next.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapisz i zrób kolejne"
-          }
-        }
-      }
-    },
     "media.summary.marker.toggle": {
       "extractionState": "manual",
       "localizations": {
@@ -615,7 +593,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Opisz stan widoczny na zdjęciu..."
+            "value": "Opisz, co widać na zdjęciu (opcjonalnie)"
           }
         }
       }
@@ -648,7 +626,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Do chmury"
+            "value": "Chmura"
           }
         }
       }
@@ -2145,6 +2123,129 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tylko na tym telefonie"
+          }
+        }
+      }
+    },
+    "media.summary.save.caption": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapisz w:"
+          }
+        }
+      }
+    },
+    "media.summary.action.local.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tylko na tym telefonie"
+          }
+        }
+      }
+    },
+    "media.summary.action.cloud.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zweryfikowane, widoczne dla wszystkich"
+          }
+        }
+      }
+    },
+    "media.summary.title.single": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nowe zdjęcie"
+          }
+        }
+      }
+    },
+    "media.summary.pager.format": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld z %lld"
+          }
+        }
+      }
+    },
+    "media.summary.pager.previous": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poprzednie zdjęcie"
+          }
+        }
+      }
+    },
+    "media.summary.pager.next": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Następne zdjęcie"
+          }
+        }
+      }
+    },
+    "media.summary.marker.delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuń znacznik %lld"
+          }
+        }
+      }
+    },
+    "media.summary.title.multi": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zdjęcie"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zdjęcia"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zdjęć"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zdjęć"
+                }
+              }
+            }
           }
         }
       }

@@ -73,23 +73,14 @@ extension AppFeature {
     _ state: inout State,
     delegate: MediaSummaryFeature.Action.Delegate
   ) -> Effect<Action> {
-    guard case .mediaSummary(let summaryState) = state.modal else {
+    guard case .mediaSummary = state.modal else {
       state.modal = nil
       return .none
     }
     switch delegate {
-    case .didSave(_, let captureAnother):
+    case .didSave:
       state.modal = nil
-      if captureAnother {
-        return .merge(
-          reloadLocalData(in: state),
-          startCapture(&state, apartmentId: summaryState.apartmentId, source: .camera)
-        )
-      }
       return reloadLocalData(in: state)
-    case .didRequestRetake(let origin):
-      state.modal = nil
-      return startCapture(&state, apartmentId: summaryState.apartmentId, source: origin)
     case .didCancel:
       state.modal = nil
       return .none

@@ -16,9 +16,13 @@ public struct MediaSummaryFeature: Sendable {
     public var pages: [MediaSummaryPageState]
     public var selectedIndex: Int
     public var isMarkerPlacementMode: Bool
-    public var isSaving: Bool
+    public var savingMode: MediaSummarySaveMode?
     public var errorMessage: String?
     public var now: Date?
+
+    public var isSaving: Bool {
+      savingMode != nil
+    }
 
     public var currentPage: MediaSummaryPageState? {
       guard pages.indices.contains(selectedIndex) else {
@@ -31,10 +35,6 @@ public struct MediaSummaryFeature: Sendable {
       pages.count > 1
     }
 
-    public var showsCaptureAnotherAction: Bool {
-      origin == .camera
-    }
-
     public init(
       apartmentId: String,
       drafts: [CapturedPhotoDraft],
@@ -42,7 +42,7 @@ public struct MediaSummaryFeature: Sendable {
       currentUser: AuthorSummary,
       selectedIndex: Int = 0,
       isMarkerPlacementMode: Bool = false,
-      isSaving: Bool = false,
+      savingMode: MediaSummarySaveMode? = nil,
       errorMessage: String? = nil,
       now: Date? = nil
     ) {
@@ -53,7 +53,7 @@ public struct MediaSummaryFeature: Sendable {
       let clampedIndex = drafts.isEmpty ? 0 : min(max(0, selectedIndex), drafts.count - 1)
       self.selectedIndex = clampedIndex
       self.isMarkerPlacementMode = isMarkerPlacementMode
-      self.isSaving = isSaving
+      self.savingMode = savingMode
       self.errorMessage = errorMessage
       self.now = now
     }
@@ -68,18 +68,16 @@ public struct MediaSummaryFeature: Sendable {
     case markerSelectionCleared
     case markerDeleted(Int)
     case descriptionChanged(String)
-    case retakeTapped
     case cancelTapped
-    case saveTapped(mode: MediaSummarySaveMode, captureAnother: Bool)
-    case saveSucceeded(mode: MediaSummarySaveMode, captureAnother: Bool)
+    case saveTapped(mode: MediaSummarySaveMode)
+    case saveSucceeded(mode: MediaSummarySaveMode)
     case saveFailed(String)
     case dismissError
     case delegate(Delegate)
 
     @CasePathable
     public enum Delegate: Equatable, Sendable {
-      case didSave(mode: MediaSummarySaveMode, captureAnother: Bool)
-      case didRequestRetake(CaptureSourceKind)
+      case didSave(mode: MediaSummarySaveMode)
       case didCancel
     }
   }
@@ -119,16 +117,14 @@ public struct MediaSummaryFeature: Sendable {
         return deleteMarker(&state, number: number)
       case .descriptionChanged(let value):
         return updateDescription(&state, value: value)
-      case .retakeTapped:
-        return discardAndEmit(&state, delegate: .didRequestRetake(state.origin))
       case .cancelTapped:
         return discardAndEmit(&state, delegate: .didCancel)
-      case .saveTapped(let mode, let captureAnother):
-        return startSave(&state, mode: mode, captureAnother: captureAnother)
-      case .saveSucceeded(let mode, let captureAnother):
-        return finishSave(&state, mode: mode, captureAnother: captureAnother)
+      case .saveTapped(let mode):
+        return startSave(&state, mode: mode)
+      case .saveSucceeded(let mode):
+        return finishSave(&state, mode: mode)
       case .saveFailed(let message):
-        state.isSaving = false
+        state.savingMode = nil
         state.errorMessage = message
         return .run { _ in
           await haptics.error()

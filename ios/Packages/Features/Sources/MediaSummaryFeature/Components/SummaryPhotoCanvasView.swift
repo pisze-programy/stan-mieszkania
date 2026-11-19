@@ -49,7 +49,7 @@ struct SummaryPhotoCanvasView: View {
         onAddMarkerAtNormalizedPoint: isMarkerPlacementMode ? onAddMarker : nil
       )
     }
-    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
+    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.photo, style: .continuous))
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .task(id: page.draft.id) {
       await loadPreview()

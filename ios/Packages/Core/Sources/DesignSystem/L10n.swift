@@ -8,6 +8,7 @@ public enum L10n: Sendable {
   public static let networkUnavailableErrorCode: String = "NETWORK_UNAVAILABLE"
 
   private static let photoCountKey: String = "apartments.card.photo.count"
+  private static let summaryMultiTitleKey: String = "media.summary.title.multi"
   private static let errorKeyPrefix: String = "error."
   private static let networkUnavailableKey: String = "error.NETWORK_UNAVAILABLE"
   private static let unknownErrorKey: String = "error.UNKNOWN"
@@ -43,8 +44,16 @@ public enum L10n: Sendable {
   }
 
   public static func photoCount(_ count: Int) -> String {
+    pluralized(key: photoCountKey, count: count)
+  }
+
+  public static func summaryMultiTitle(_ count: Int) -> String {
+    pluralized(key: summaryMultiTitleKey, count: count)
+  }
+
+  private static func pluralized(key: String, count: Int) -> String {
     let bundleValue = designSystemBundle.localizedString(
-      forKey: photoCountKey,
+      forKey: key,
       value: missingSentinel,
       table: nil
     )
@@ -52,11 +61,11 @@ public enum L10n: Sendable {
       return String(format: bundleValue, locale: polishLocale, count)
     }
 
-    if let plural = catalogFallback?.strings[photoCountKey]?.localizations?.pl?.variations?.plural {
-      let pattern = selectPolishPlural(count: count, forms: plural) ?? photoCountKey
+    if let plural = catalogFallback?.strings[key]?.localizations?.pl?.variations?.plural {
+      let pattern = selectPolishPlural(count: count, forms: plural) ?? key
       return String(format: pattern, locale: polishLocale, count)
     }
-    return photoCountKey
+    return key
   }
 
   public static func errorMessage(for code: ServerErrorCode) -> String {

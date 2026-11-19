@@ -6,97 +6,77 @@ import SwiftUI
 public struct MediaSummaryView: View {
   @Bindable private var store: StoreOf<MediaSummaryFeature>
   @FocusState private var isDescriptionFocused: Bool
-  @State private var isClosing = false
 
   public init(store: StoreOf<MediaSummaryFeature>) {
     self.store = store
   }
 
-  private var isDescriptionInteractive: Bool {
-    !store.isSaving && !isClosing
+  private var navigationTitle: String {
+    store.isMultiPhoto
+      ? L10n.summaryMultiTitle(store.pages.count)
+      : L10n.string("media.summary.title.single")
   }
 
   public var body: some View {
-    VStack(spacing: 0) {
-      ScrollView {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-          SummaryHeaderBarView(
-            isSaving: store.isSaving,
-            isMultiPhoto: store.isMultiPhoto,
-            selectedIndex: store.selectedIndex,
-            pageCount: store.pages.count,
-            onRetake: {
-              isDescriptionFocused = false
-              isClosing = true
-              store.send(.retakeTapped)
-            },
-            onSelectPage: { store.send(.pageSelected($0)) }
+    ScrollView {
+      VStack(alignment: .leading, spacing: Spacing.md) {
+        photoPagerSection
+
+        if let page = store.currentPage {
+          metadataRow(for: page)
+          SummaryMarkerControlsView(
+            markers: page.markers,
+            selectedMarkerNumber: page.selectedMarkerNumber,
+            authorColorHex: store.currentUser.color,
+            isPlacementMode: store.isMarkerPlacementMode,
+            onTogglePlacement: { store.send(.toggleMarkerPlacementMode) },
+            onSelectMarker: { store.send(.markerSelected($0)) },
+            onDeleteMarker: { store.send(.markerDeleted($0)) }
           )
-
-          if let errorMessage = store.errorMessage {
-            errorBanner(errorMessage)
-          }
-
-          photoPagerSection
-
-          if let page = store.currentPage {
-            metadataRow(for: page)
-            SummaryMarkerControlsView(
-              markers: page.markers,
-              selectedMarkerNumber: page.selectedMarkerNumber,
-              authorColorHex: store.currentUser.color,
-              isPlacementMode: store.isMarkerPlacementMode,
-              onTogglePlacement: { store.send(.toggleMarkerPlacementMode) },
-              onSelectMarker: { store.send(.markerSelected($0)) },
-              onDeleteMarker: { store.send(.markerDeleted($0)) }
-            )
-            SummaryDescriptionSectionView(
-              description: page.description,
-              markers: page.markers,
-              selectedMarkerNumber: page.selectedMarkerNumber,
-              authorColorHex: store.currentUser.color,
-              isInteractive: isDescriptionInteractive,
-              isFocused: $isDescriptionFocused,
-              onDescriptionChanged: { store.send(.descriptionChanged($0)) }
-            )
-          }
+          SummaryDescriptionSectionView(
+            description: page.description,
+            isInteractive: !store.isSaving,
+            isFocused: $isDescriptionFocused,
+            onDescriptionChanged: { store.send(.descriptionChanged($0)) }
+          )
         }
-        .padding(.horizontal, Spacing.md)
-        .padding(.vertical, Spacing.sm)
       }
-
-      SummaryActionBarView(
-        isSaving: store.isSaving,
-        showsCaptureAnother: store.showsCaptureAnotherAction,
-        onSaveLocal: { triggerSave(mode: .localOnly, captureAnother: false) },
-        onSaveCloud: { triggerSave(mode: .cloud, captureAnother: false) },
-        onSaveAndCaptureNext: { triggerSave(mode: .cloud, captureAnother: true) }
-      )
+      .padding(.horizontal, Spacing.md)
+      .padding(.vertical, Spacing.sm)
     }
     .appCanvas()
+    .safeAreaInset(edge: .bottom) {
+      SummaryActionBarView(
+        savingMode: store.savingMode,
+        onSaveLocal: { triggerSave(mode: .localOnly) },
+        onSaveCloud: { triggerSave(mode: .cloud) }
+      )
+    }
+    .overlay(alignment: .top) {
+      if let errorMessage = store.errorMessage {
+        ToastBanner(message: errorMessage, style: .error) {
+          store.send(.dismissError)
+        }
+        .padding(.horizontal, Spacing.md)
+        .padding(.top, Spacing.xs)
+        .transition(.move(edge: .top).combined(with: .opacity))
+      }
+    }
+    .animation(Motion.smooth, value: store.errorMessage)
     .task {
       await store.send(.task).finish()
     }
-    .onChange(of: store.isSaving) { _, isSaving in
-      if isSaving {
-        isDescriptionFocused = false
-        isClosing = true
-      }
-    }
-    .onChange(of: store.errorMessage) { _, errorMessage in
-      if errorMessage != nil {
-        isClosing = false
-      }
-    }
     .onDisappear {
       isDescriptionFocused = false
-      isClosing = true
     }
+    .navigationTitle(navigationTitle)
+    #if os(iOS)
+      .navigationBarTitleDisplayMode(.inline)
+    #endif
     .toolbar {
       ToolbarItem(placement: .cancellationAction) {
-        Button(L10n.string("apartments.create.cancel.cta")) {
+        Button(role: .cancel) {
           isDescriptionFocused = false
-          isClosing = true
           store.send(.cancelTapped)
         }
         .disabled(store.isSaving)
@@ -104,42 +84,56 @@ public struct MediaSummaryView: View {
     }
   }
 
-  private func triggerSave(mode: MediaSummarySaveMode, captureAnother: Bool) {
+  private func triggerSave(mode: MediaSummarySaveMode) {
     isDescriptionFocused = false
-    isClosing = true
-    store.send(.saveTapped(mode: mode, captureAnother: captureAnother))
-    if !store.isSaving {
-      isClosing = false
-    }
+    store.send(.saveTapped(mode: mode))
   }
 
   @ViewBuilder
   private var photoPagerSection: some View {
-    #if os(iOS)
-      TabView(
-        selection: Binding(
-          get: { store.selectedIndex },
-          set: { newIndex in
-            guard isDescriptionInteractive, newIndex != store.selectedIndex else {
-              return
+    let basePager = Group {
+      #if os(iOS)
+        TabView(
+          selection: Binding(
+            get: { store.selectedIndex },
+            set: { newIndex in
+              guard !store.isSaving, newIndex != store.selectedIndex else {
+                return
+              }
+              store.send(.pageSelected(newIndex))
             }
-            store.send(.pageSelected(newIndex))
+          )
+        ) {
+          ForEach(Array(store.pages.enumerated()), id: \.element.id) { index, page in
+            canvas(for: page)
+              .tag(index)
           }
-        )
-      ) {
-        ForEach(Array(store.pages.enumerated()), id: \.element.id) { index, page in
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+      #else
+        if let page = store.currentPage {
           canvas(for: page)
-            .tag(index)
+        }
+      #endif
+    }
+
+    basePager
+      .containerRelativeFrame(.vertical) { containerHeight, _ in
+        min(
+          containerHeight * MediaSummaryConstants.photoHeightRatio,
+          MediaSummaryConstants.photoMaxHeightCap
+        )
+      }
+      .overlay(alignment: .bottom) {
+        if store.isMultiPhoto {
+          SummaryPagerCapsuleView(
+            selectedIndex: store.selectedIndex,
+            pageCount: store.pages.count,
+            onSelectPage: { store.send(.pageSelected($0)) }
+          )
+          .padding(.bottom, Spacing.sm)
         }
       }
-      .tabViewStyle(.page(indexDisplayMode: .never))
-      .frame(height: MediaSummaryConstants.photoMaxHeight)
-    #else
-      if let page = store.currentPage {
-        canvas(for: page)
-          .frame(height: MediaSummaryConstants.photoMaxHeight)
-      }
-    #endif
   }
 
   private func canvas(for page: MediaSummaryPageState) -> some View {
@@ -159,28 +153,15 @@ public struct MediaSummaryView: View {
       now: store.now ?? Date()
     )
     return HStack(spacing: Spacing.sm) {
-      Text(L10n.format("media.summary.timestamp.label", formattedDate))
-        .font(Typography.footnote)
+      Label(formattedDate, systemImage: "clock")
+        .font(.footnote)
         .foregroundStyle(.secondary)
       Spacer()
-      MediaSourceBadgeView(
-        source: page.draft.source,
-        capturedAtFromImport: page.draft.capturedAtFromImport
-      )
-    }
-  }
-
-  private func errorBanner(_ message: String) -> some View {
-    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
-      HStack(spacing: Spacing.sm) {
-        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
-        Text(message).font(Typography.callout).frame(maxWidth: .infinity, alignment: .leading)
-        Button {
-          store.send(.dismissError)
-        } label: {
-          Image(systemName: "xmark")
-        }
-        .buttonStyle(.plain)
+      if page.draft.source == .imported {
+        MediaSourceBadgeView(
+          source: page.draft.source,
+          capturedAtFromImport: page.draft.capturedAtFromImport
+        )
       }
     }
   }

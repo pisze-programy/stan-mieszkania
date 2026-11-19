@@ -17,7 +17,7 @@ struct MediaSummarySaveAndCleanupTests {
   private static let twoPhotosCount = 2
 
   @MainActor
-  @Test("Lokalnie saves media + initial entry to SQLiteData without queueing cloud outbox ops")
+  @Test("Lokalnie tracks savingMode=.localOnly and saves to SQLiteData without outbox ops")
   func saveLocalOnlyPersistsWithoutOutbox() async throws {
     let database = try MediaSummaryTestFixtures.seedApartmentDatabase()
     let successHaptics = LockIsolated(0)
@@ -51,11 +51,10 @@ struct MediaSummarySaveAndCleanupTests {
       $0.haptics.actionSucceeded = { successHaptics.withValue { $0 += 1 } }
     }
 
-    await store.send(.saveTapped(mode: .localOnly, captureAnother: false)) { $0.isSaving = true }
-    await store.receive(.saveSucceeded(mode: .localOnly, captureAnother: false)) {
-      $0.isSaving = false
-    }
-    await store.receive(.delegate(.didSave(mode: .localOnly, captureAnother: false)))
+    await store.send(.saveTapped(mode: .localOnly)) { $0.savingMode = .localOnly }
+    #expect(store.state.isSaving)
+    await store.receive(.saveSucceeded(mode: .localOnly)) { $0.savingMode = nil }
+    await store.receive(.delegate(.didSave(mode: .localOnly)))
 
     let mediaRows = try await database.read { try MediaRecord.fetchAll($0) }
     let entryRows = try await database.read { try EntryRecord.fetchAll($0) }
@@ -72,7 +71,7 @@ struct MediaSummarySaveAndCleanupTests {
   }
 
   @MainActor
-  @Test("Do chmury queues upload + entry outbox ops and triggers background processOutbox")
+  @Test("Chmura tracks savingMode=.cloud, queues outbox ops, and triggers processOutbox")
   func saveToCloudQueuesOutboxAndReturnsImmediately() async throws {
     let database = try MediaSummaryTestFixtures.seedApartmentDatabase()
     let outboxCalls = LockIsolated(0)
@@ -107,9 +106,9 @@ struct MediaSummarySaveAndCleanupTests {
       $0.haptics.actionSucceeded = { successHaptics.withValue { $0 += 1 } }
     }
 
-    await store.send(.saveTapped(mode: .cloud, captureAnother: true)) { $0.isSaving = true }
-    await store.receive(.saveSucceeded(mode: .cloud, captureAnother: true)) { $0.isSaving = false }
-    await store.receive(.delegate(.didSave(mode: .cloud, captureAnother: true)))
+    await store.send(.saveTapped(mode: .cloud)) { $0.savingMode = .cloud }
+    await store.receive(.saveSucceeded(mode: .cloud)) { $0.savingMode = nil }
+    await store.receive(.delegate(.didSave(mode: .cloud)))
 
     let mediaRows = try await database.read { try MediaRecord.fetchAll($0) }
     let outboxRows = try OutboxRepository(database: database).fetchAllOperations()
@@ -124,23 +123,29 @@ struct MediaSummarySaveAndCleanupTests {
   }
 
   @MainActor
-  @Test("Retake cleans up all unsaved local files and emits retake delegate")
-  func retakeCleansUpDiskFiles() async {
-    let deletedFiles = LockIsolated<[String]>([])
-    let drafts = [
-      MediaSummaryTestFixtures.makeDraft(id: MediaSummaryTestFixtures.draftOneId),
-      MediaSummaryTestFixtures.makeDraft(id: MediaSummaryTestFixtures.draftTwoId),
-    ]
-    let store = makeCleanupStore(drafts: drafts, origin: .camera, deletedFiles: deletedFiles)
+  @Test("saveFailed clears savingMode and surfaces error toast message")
+  func saveFailedClearsSavingMode() async {
+    let errorHaptics = LockIsolated(0)
+    let store = TestStore(
+      initialState: MediaSummaryFeature.State(
+        apartmentId: MediaSummaryTestFixtures.apartmentId,
+        drafts: [MediaSummaryTestFixtures.makeDraft(origin: .camera)],
+        origin: .camera,
+        currentUser: MediaSummaryTestFixtures.author,
+        savingMode: .cloud
+      )
+    ) {
+      MediaSummaryFeature()
+    } withDependencies: {
+      $0.haptics.error = { errorHaptics.withValue { $0 += 1 } }
+    }
 
-    await store.send(.retakeTapped)
-    await store.receive(.delegate(.didRequestRetake(.camera)))
-    #expect(
-      deletedFiles.value == [
-        MediaSummaryTestFixtures.draftOneId,
-        MediaSummaryTestFixtures.draftTwoId,
-      ]
-    )
+    await store.send(.saveFailed("Błąd zapisu")) {
+      $0.savingMode = nil
+      $0.errorMessage = "Błąd zapisu"
+    }
+    #expect(!store.state.isSaving)
+    #expect(errorHaptics.value == 1)
   }
 
   @MainActor
