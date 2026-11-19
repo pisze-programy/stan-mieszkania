@@ -96,8 +96,7 @@ struct MediaDetailSyncAndMediaDeletionTests {
         mediaAuthorName: snapshot.mediaAuthorName,
         mediaAuthorColorHex: snapshot.mediaAuthorColorHex,
         entries: snapshot.entries,
-        currentUser: snapshot.currentUser,
-        hasOtherMembers: snapshot.hasOtherMembers
+        currentUser: snapshot.currentUser
       )
     ) {
       MediaDetailFeature()

@@ -4,43 +4,40 @@ import Domain
 import SwiftUI
 
 extension ProfileView {
-  private static let headerAvatarSize: CGFloat = 60
-  private static let headerTextSpacing: CGFloat = 2
-  private static let headerVerticalPadding: CGFloat = 6
+  private static let heroAvatarSize: CGFloat = 88
   private static let savedIndicatorSize: CGFloat = 22
 
-  var identityHeaderSection: some View {
-    Section {
-      HStack(spacing: Spacing.md) {
-        AuthorAvatarView(
-          displayName: store.user?.displayName ?? DomainConstants.fallbackUserDisplayPrefix,
-          colorHex: store.user?.color ?? DomainConstants.defaultAuthorColor,
-          size: Self.headerAvatarSize
-        )
-        VStack(alignment: .leading, spacing: Self.headerTextSpacing) {
-          Text(store.user?.displayName ?? DomainConstants.fallbackUserDisplayPrefix)
-            .font(.title3.weight(.semibold))
-          if let user = store.user, user.hasCustomDisplayName {
-            Text("#\(user.shortTag)")
-              .font(.subheadline)
-              .foregroundStyle(.secondary)
-          }
-        }
-      }
-      .padding(.vertical, Self.headerVerticalPadding)
+  var avatarHeaderSection: some View {
+    let fallbackName = store.user?.displayName ?? DomainConstants.fallbackUserDisplayPrefix
+    let previewName = store.displayNameInput.isEmpty ? fallbackName : store.displayNameInput
+    return Section {
+      AuthorAvatarView(
+        displayName: previewName,
+        colorHex: store.user?.color ?? DomainConstants.defaultAuthorColor,
+        size: Self.heroAvatarSize
+      )
+      .frame(maxWidth: .infinity)
+      .padding(.top, Spacing.sm)
     }
+    .listRowBackground(Color.clear)
+    .listRowInsets(EdgeInsets())
   }
 
   var displayNameSection: some View {
     Section {
       HStack(spacing: Spacing.xs) {
+        Color.clear
+          .frame(width: Self.savedIndicatorSize, height: 1)
+
         TextField(
-          L10n.string("profile.name.label"),
+          "",
           text: Binding(
             get: { store.displayNameInput },
             set: { store.send(.displayNameChanged($0)) }
-          )
+          ),
+          prompt: Text(L10n.string("profile.name.label"))
         )
+        .multilineTextAlignment(.center)
         .submitLabel(.done)
         .onSubmit {
           if store.isNameDirty && !store.isSavingName {
@@ -58,8 +55,6 @@ extension ProfileView {
         .frame(width: Self.savedIndicatorSize)
         .animation(Motion.fade, value: store.showNameSavedFeedback)
       }
-    } header: {
-      Text(L10n.string("profile.name.label"))
     } footer: {
       Text(L10n.string("profile.name.footer"))
     }
@@ -97,20 +92,6 @@ extension ProfileView {
         }
       }
       .disabled(store.isBusy)
-      .confirmationDialog(
-        L10n.string("profile.sign.out.confirm.title"),
-        isPresented: signOutConfirmationBinding,
-        titleVisibility: .visible
-      ) {
-        Button(L10n.string("profile.sign.out"), role: .destructive) {
-          store.send(.signOutConfirmed)
-        }
-        Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
-          store.send(.signOutConfirmationDismissed)
-        }
-      } message: {
-        Text(L10n.string("profile.sign.out.confirm.message"))
-      }
     }
   }
 
@@ -129,20 +110,6 @@ extension ProfileView {
         }
       }
       .disabled(store.isBusy)
-      .confirmationDialog(
-        L10n.string("profile.delete.step2.title"),
-        isPresented: deleteFinalConfirmationBinding,
-        titleVisibility: .visible
-      ) {
-        Button(L10n.string("profile.delete.step2.confirm"), role: .destructive) {
-          store.send(.deleteAccountConfirmed)
-        }
-        Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
-          store.send(.deleteFinalConfirmationDismissed)
-        }
-      } message: {
-        Text(L10n.string("profile.delete.step2.message"))
-      }
     } footer: {
       Text(L10n.string("profile.delete.footer"))
     }

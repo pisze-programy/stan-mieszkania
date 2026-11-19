@@ -83,28 +83,48 @@ struct L10nTests {
     #expect(L10n.summaryMultiTitle(Fixtures.fiveCount) == "5 zdjęć")
   }
 
-  @Test("Resolves sharing, profile, and join sheet Polish keys")
-  func resolvesWS6PolishStrings() {
-    let ws6Keys = [
+  @Test("Resolves sharing, profile, confirmation, and join sheet Polish keys")
+  func resolvesWS6AndWS8PolishStrings() {
+    let keys = [
       "sharing.share.cta",
-      "sharing.code.tapToCopy",
       "sharing.code.copied.short",
+      "sharing.code.reset.footer",
+      "sharing.code.reset.done",
+      "sharing.code.copy.a11yHint",
+      "sharing.members.empty",
+      "sharing.member.revoke.sheet.message",
       "profile.name.label",
       "profile.name.save",
       "profile.name.footer",
       "profile.theme.section",
       "profile.theme.picker",
       "profile.delete.footer",
+      "profile.sign.out.message.safe",
       "apartments.join.code.prompt",
       "apartments.join.code.footer",
+      "apartment.menu.delete",
+      "apartment.menu.leave",
+      "apartment.delete.sheet.message",
+      "apartment.leave.owner.message",
+      "apartment.leave.confirm.full",
+      "apartment.delete.confirm.full",
+      "media.detail.delete.synced.message",
+      "media.detail.delete.local.message",
+      "media.detail.delete.cta",
+      "media.detail.entry.delete.local.message",
+      "media.detail.entry.delete.cta",
+      "confirmation.cancel",
     ]
-    for key in ws6Keys {
+    for key in keys {
       let value = L10n.string(key)
       #expect(!value.isEmpty)
       #expect(value != key)
     }
     #expect(L10n.string("apartments.join.code.prompt") == "K7QM-4XPB")
     #expect(L10n.string("sharing.share.cta") == "Udostępnij")
+    #expect(L10n.signOutLocalOnlyMessage(Fixtures.oneCount).contains("1 zdjęcie"))
+    #expect(L10n.signOutLocalOnlyMessage(Fixtures.twoCount).contains("2 zdjęcia"))
+    #expect(L10n.signOutLocalOnlyMessage(Fixtures.fiveCount).contains("5 zdjęć"))
   }
 
   @Test("Formats Polish plural photo counts for one, few, and many")

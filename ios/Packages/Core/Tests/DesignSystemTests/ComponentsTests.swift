@@ -115,14 +115,49 @@ struct ComponentsTests {
     #expect(idleImage.height == loadingImage.height)
   }
 
+  @Test("ConfirmationSheetContent supports Equatable and maps tone to button variant")
+  func confirmationSheetContentToneAndEquality() {
+    let destructive = ConfirmationSheetContent(
+      systemImage: "trash",
+      title: "Usunąć zdjęcie?",
+      message: "Tego nie da się cofnąć.",
+      confirmTitle: "Usuń zdjęcie",
+      tone: .destructive
+    )
+    let identical = ConfirmationSheetContent(
+      systemImage: "trash",
+      title: "Usunąć zdjęcie?",
+      message: "Tego nie da się cofnąć.",
+      confirmTitle: "Usuń zdjęcie",
+      tone: .destructive
+    )
+    let neutral = ConfirmationSheetContent(
+      systemImage: "rectangle.portrait.and.arrow.right",
+      title: "Wylogować się?",
+      message: "Twoje zdjęcia w chmurze czekają.",
+      confirmTitle: "Wyloguj się",
+      tone: .neutral
+    )
+
+    #expect(destructive == identical)
+    #expect(destructive != neutral)
+    #expect(destructive.confirmButtonVariant == .destructive)
+    #expect(neutral.confirmButtonVariant == .primary)
+  }
+
   @MainActor
-  @Test("Instantiates SurfaceCard, badges, ToastBanner, StableSlot, and VerifiedInfoSheetView")
+  @Test("Instantiates SurfaceCard, badges, ToastBanner, StableSlot, and sheets")
   func instantiatesAllComponents() {
     let card = SurfaceCard { Text("Karta") }
     let fab = GlassFloatingActionButton(accessibilityLabel: "Dodaj zdjęcie") {}
     let iconButton = GlassIconButton(systemImage: "xmark", accessibilityLabel: "Zamknij") {}
     let photoInfoSheet = VerifiedInfoSheetView(subject: .photo)
     let entryInfoSheet = VerifiedInfoSheetView(subject: .entry)
+    let confirmSheet = ConfirmationSheetView(
+      content: ConfirmationSheetContent(title: "Usunąć?", confirmTitle: "Usuń"),
+      onConfirm: {},
+      onCancel: {}
+    )
     let stableSlot = StableSlot { Text("Skopiowano") }
     let toast = ToastBanner(message: "Błąd sieci", style: .error, onDismiss: {})
     let uploading = SyncStatusIndicatorView(
@@ -133,10 +168,7 @@ struct ComponentsTests {
       syncState: .localOnly, isVerified: false, placement: .labeled, onLocalOnlyTap: {}
     )
     let sourceBadge = MediaSourceBadgeView(source: .imported, capturedAtFromImport: true)
-    let avatar = AuthorAvatarView(
-      displayName: "Jan Kowalski", colorHex: Fixtures.authorColor,
-      role: .owner, showsRoleBadge: false
-    )
+    let avatar = AuthorAvatarView(displayName: "Jan Kowalski", colorHex: Fixtures.authorColor)
     let markerItem = MarkerOverlayItem(
       id: Fixtures.markerId, number: 1,
       x: Fixtures.quarterNormalized, y: Fixtures.halfNormalized,
@@ -152,8 +184,8 @@ struct ComponentsTests {
     )
 
     _ = (
-      card, fab, iconButton, photoInfoSheet, entryInfoSheet, stableSlot, toast, uploading, local,
-      sourceBadge, avatar, overlay, entryText,
+      card, fab, iconButton, photoInfoSheet, entryInfoSheet, confirmSheet, stableSlot, toast,
+      uploading, local, sourceBadge, avatar, overlay, entryText,
     )
   }
 }

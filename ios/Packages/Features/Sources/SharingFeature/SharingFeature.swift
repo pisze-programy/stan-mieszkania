@@ -11,13 +11,14 @@ public struct SharingFeature: Sendable {
   @ObservableState
   public struct State: Equatable, Sendable {
     public let apartmentId: String
+    public let currentUserId: String?
     public var apartment: Apartment?
     public var members: [ApartmentMember]
     public var isLoading: Bool
     public var isResettingCode: Bool
     public var revokingUserId: String?
     public var showCopiedFeedback: Bool
-    public var isResetConfirmationPresented: Bool
+    public var showResetFeedback: Bool
     public var pendingRevokeMember: ApartmentMember?
     public var errorMessage: String?
 
@@ -27,7 +28,12 @@ public struct SharingFeature: Sendable {
     }
     public var isOwner: Bool { apartment?.role == .owner }
     public var activeMembers: [ApartmentMember] { members.filter(\.isActive) }
-    public var departedMembers: [ApartmentMember] { members.filter { !$0.isActive } }
+    public var sharedWithMembers: [ApartmentMember] {
+      activeMembers.filter { $0.userId != currentUserId }
+    }
+    public var departedMembers: [ApartmentMember] {
+      members.filter { !$0.isActive && $0.userId != currentUserId }
+    }
 
     public var shareMessageText: String? {
       guard let apartment, let code = apartment.inviteCode else {
@@ -38,24 +44,26 @@ public struct SharingFeature: Sendable {
 
     public init(
       apartmentId: String,
+      currentUserId: String? = nil,
       apartment: Apartment? = nil,
       members: [ApartmentMember] = [],
       isLoading: Bool = false,
       isResettingCode: Bool = false,
       revokingUserId: String? = nil,
       showCopiedFeedback: Bool = false,
-      isResetConfirmationPresented: Bool = false,
+      showResetFeedback: Bool = false,
       pendingRevokeMember: ApartmentMember? = nil,
       errorMessage: String? = nil
     ) {
       self.apartmentId = apartmentId
+      self.currentUserId = currentUserId
       self.apartment = apartment
       self.members = members
       self.isLoading = isLoading
       self.isResettingCode = isResettingCode
       self.revokingUserId = revokingUserId
       self.showCopiedFeedback = showCopiedFeedback
-      self.isResetConfirmationPresented = isResetConfirmationPresented
+      self.showResetFeedback = showResetFeedback
       self.pendingRevokeMember = pendingRevokeMember
       self.errorMessage = errorMessage
     }
@@ -70,10 +78,9 @@ public struct SharingFeature: Sendable {
     case copyCodeTapped
     case dismissCopiedFeedback
     case resetCodeTapped
-    case resetConfirmationDismissed
-    case resetCodeConfirmed
     case resetCodeSucceeded(Apartment)
     case resetCodeFailed(String)
+    case dismissResetFeedback
     case revokeMemberTapped(ApartmentMember)
     case revokeConfirmationDismissed
     case revokeMemberConfirmed
@@ -91,6 +98,7 @@ public struct SharingFeature: Sendable {
 
   enum CancelID: Hashable, Sendable {
     case copyFeedback
+    case resetFeedback
   }
 
   static let copyFeedbackDurationSeconds: Int = 2
@@ -128,8 +136,7 @@ public struct SharingFeature: Sendable {
       case .dismissCopiedFeedback:
         state.showCopiedFeedback = false
         return .none
-      case .resetCodeTapped, .resetConfirmationDismissed, .resetCodeConfirmed,
-        .resetCodeSucceeded, .resetCodeFailed:
+      case .resetCodeTapped, .resetCodeSucceeded, .resetCodeFailed, .dismissResetFeedback:
         return handleResetAction(&state, action: action)
       case .revokeMemberTapped, .revokeConfirmationDismissed, .revokeMemberConfirmed,
         .revokeMemberSucceeded, .revokeMemberFailed:

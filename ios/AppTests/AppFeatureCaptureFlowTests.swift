@@ -49,9 +49,10 @@ struct AppFeatureCaptureFlowTests {
           .delegate(.didTapShare(apartmentId: AppFeatureTests.apartmentId)))
       )
     )
-    await store.send(shareAction) {
-      $0.modal = .sharing(SharingFeature.State(apartmentId: AppFeatureTests.apartmentId))
-    }
+    let expectedSharing = SharingFeature.State(
+      apartmentId: AppFeatureTests.apartmentId, currentUserId: AppFeatureTests.userId
+    )
+    await store.send(shareAction) { $0.modal = .sharing(expectedSharing) }
     await store.send(.modal(.presented(.sharing(.delegate(.didDismiss))))) { $0.modal = nil }
     await store.receive(.apartmentsList(.reloadLocalState))
     await store.receive(

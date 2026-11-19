@@ -17,7 +17,6 @@ public struct MediaDetailFeature: Sendable {
     public var mediaAuthorColorHex: String
     public var entries: [MediaDetailEntryItem]
     public var currentUser: AuthorSummary?
-    public var hasOtherMembers: Bool
     public var selectedMarkerNumber: Int?
     public var areMarkersHidden: Bool
     public var isLightboxPresented: Bool
@@ -41,7 +40,6 @@ public struct MediaDetailFeature: Sendable {
       mediaAuthorColorHex: String = DomainConstants.defaultAuthorColor,
       entries: [MediaDetailEntryItem] = [],
       currentUser: AuthorSummary? = nil,
-      hasOtherMembers: Bool = false,
       selectedMarkerNumber: Int? = nil,
       areMarkersHidden: Bool = false,
       isLightboxPresented: Bool = false,
@@ -64,7 +62,6 @@ public struct MediaDetailFeature: Sendable {
       self.mediaAuthorColorHex = mediaAuthorColorHex
       self.entries = entries
       self.currentUser = currentUser
-      self.hasOtherMembers = hasOtherMembers
       self.selectedMarkerNumber = selectedMarkerNumber
       self.areMarkersHidden = areMarkersHidden
       self.isLightboxPresented = isLightboxPresented

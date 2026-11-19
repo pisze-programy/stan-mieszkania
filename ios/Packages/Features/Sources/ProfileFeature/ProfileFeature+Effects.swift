@@ -9,12 +9,13 @@ extension ProfileFeature {
     switch action {
     case .task:
       return loadProfile(&state)
-    case .localProfileLoaded(let user, let theme):
+    case .localProfileLoaded(let user, let theme, let localOnlyMediaCount):
       state.user = user
       if state.displayNameInput.isEmpty, let user {
         state.displayNameInput = user.displayName
       }
       state.selectedTheme = theme
+      state.localOnlyMediaCount = localOnlyMediaCount
       return .none
     case .remoteProfileLoaded(let profile):
       state.isLoading = false
@@ -86,7 +87,10 @@ extension ProfileFeature {
     return .run { send in
       let localUser = try? ProfileStore.fetchCurrentUser(from: database)
       let savedTheme = themePreference.load()
-      await send(.localProfileLoaded(localUser, theme: savedTheme))
+      let localOnlyCount = (try? ProfileStore.fetchLocalOnlyMediaCount(from: database)) ?? 0
+      await send(
+        .localProfileLoaded(localUser, theme: savedTheme, localOnlyMediaCount: localOnlyCount)
+      )
 
       do {
         let remoteProfile = try await apiClient.getMyProfile()

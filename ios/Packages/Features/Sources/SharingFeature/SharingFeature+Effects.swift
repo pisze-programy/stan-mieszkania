@@ -46,14 +46,18 @@ extension SharingFeature {
     guard let code = state.inviteCode else {
       return .none
     }
+    state.showResetFeedback = false
     state.showCopiedFeedback = true
-    return .run { send in
-      await pasteboard.copyString(code)
-      await haptics.selection()
-      try await clock.sleep(for: .seconds(Self.copyFeedbackDurationSeconds))
-      await send(.dismissCopiedFeedback)
-    }
-    .cancellable(id: CancelID.copyFeedback, cancelInFlight: true)
+    return .merge(
+      .cancel(id: CancelID.resetFeedback),
+      .run { send in
+        await pasteboard.copyString(code)
+        await haptics.selection()
+        try await clock.sleep(for: .seconds(Self.copyFeedbackDurationSeconds))
+        await send(.dismissCopiedFeedback)
+      }
+      .cancellable(id: CancelID.copyFeedback, cancelInFlight: true)
+    )
   }
 
   func handleResetAction(_ state: inout State, action: Action) -> Effect<Action> {
@@ -62,18 +66,6 @@ extension SharingFeature {
       guard state.isOwner, !state.isResettingCode else {
         return .none
       }
-      state.isResetConfirmationPresented = true
-      return .none
-
-    case .resetConfirmationDismissed:
-      state.isResetConfirmationPresented = false
-      return .none
-
-    case .resetCodeConfirmed:
-      guard state.isOwner, !state.isResettingCode else {
-        return .none
-      }
-      state.isResetConfirmationPresented = false
       state.isResettingCode = true
       state.errorMessage = nil
       let apartmentId = state.apartmentId
@@ -91,11 +83,17 @@ extension SharingFeature {
       state.isResettingCode = false
       state.apartment = updated
       state.showCopiedFeedback = false
+      state.showResetFeedback = true
       return .merge(
         .cancel(id: CancelID.copyFeedback),
         .run { _ in
           await haptics.actionSucceeded()
+        },
+        .run { send in
+          try await clock.sleep(for: .seconds(Self.copyFeedbackDurationSeconds))
+          await send(.dismissResetFeedback)
         }
+        .cancellable(id: CancelID.resetFeedback, cancelInFlight: true)
       )
 
     case .resetCodeFailed(let message):
@@ -104,6 +102,10 @@ extension SharingFeature {
       return .run { _ in
         await haptics.error()
       }
+
+    case .dismissResetFeedback:
+      state.showResetFeedback = false
+      return .none
 
     default:
       return .none

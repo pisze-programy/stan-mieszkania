@@ -95,6 +95,15 @@ public struct ApartmentTimelineView: View {
         referenceDate: store.now ?? Date()
       )
     }
+    .confirmationSheet(
+      isPresented: Binding(
+        get: { store.leaveConfirmationMode != nil },
+        set: { if !$0 { store.send(.leaveConfirmationDismissed) } }
+      ),
+      isConfirming: store.isLeavingOrDeleting,
+      content: { store.leaveOrDeleteConfirmationContent },
+      onConfirm: { store.send(.leaveOrDeleteConfirmed) }
+    )
   }
 
   @ViewBuilder

@@ -107,62 +107,10 @@ extension ApartmentTimelineView {
       Button(role: .destructive) {
         store.send(.leaveOrDeleteMenuTapped)
       } label: {
-        Label(
-          store.isOwner
-            ? L10n.string("apartment.delete.confirmation.title")
-            : L10n.string("apartment.leave.confirmation.title"),
-          systemImage: store.isOwner ? "trash" : "rectangle.portrait.and.arrow.right"
-        )
+        Label(store.leaveOrDeleteMenuTitle, systemImage: store.leaveOrDeleteMenuIcon)
       }
     } label: {
       Image(systemName: "ellipsis")
-    }
-    .confirmationDialog(
-      leaveDialogTitle,
-      isPresented: Binding(
-        get: { store.leaveConfirmationMode != nil },
-        set: { if !$0 { store.send(.leaveConfirmationDismissed) } }
-      ),
-      titleVisibility: .visible
-    ) {
-      Button(leaveDialogConfirmLabel, role: .destructive) {
-        store.send(.leaveOrDeleteConfirmed)
-      }
-      Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
-        store.send(.leaveConfirmationDismissed)
-      }
-    } message: {
-      Text(leaveDialogMessage)
-    }
-  }
-
-  var leaveDialogTitle: String {
-    switch store.leaveConfirmationMode {
-    case .ownerDeleteOrLeave:
-      L10n.string("apartment.delete.confirmation.title")
-    case .contributorLeave, .none:
-      L10n.string("apartment.leave.confirmation.title")
-    }
-  }
-
-  var leaveDialogMessage: String {
-    switch store.leaveConfirmationMode {
-    case .ownerDeleteOrLeave:
-      if store.hasOtherMembers {
-        return L10n.string("apartment.delete.confirmation.message.transfer")
-      }
-      return L10n.string("apartment.delete.confirmation.message")
-    case .contributorLeave, .none:
-      return L10n.string("apartment.leave.confirmation.message")
-    }
-  }
-
-  var leaveDialogConfirmLabel: String {
-    switch store.leaveConfirmationMode {
-    case .ownerDeleteOrLeave:
-      L10n.string("apartment.delete.confirm.cta")
-    case .contributorLeave, .none:
-      L10n.string("apartment.leave.confirm.cta")
     }
   }
 }

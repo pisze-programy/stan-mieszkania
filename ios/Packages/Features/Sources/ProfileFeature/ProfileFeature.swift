@@ -7,6 +7,11 @@ import Domain
 import Foundation
 import MediaStorage
 
+public enum DeleteAccountStep: Equatable, Sendable {
+  case impact
+  case finalConfirm
+}
+
 @Reducer
 public struct ProfileFeature: Sendable {
   @ObservableState
@@ -14,14 +19,14 @@ public struct ProfileFeature: Sendable {
     public var user: UserProfile?
     public var displayNameInput: String
     public var selectedTheme: AppThemePreference
+    public var localOnlyMediaCount: Int
     public var isLoading: Bool
     public var isSavingName: Bool
     public var showNameSavedFeedback: Bool
     public var isSigningOut: Bool
     public var isDeletingAccount: Bool
     public var isSignOutConfirmationPresented: Bool
-    public var isDeleteImpactSheetPresented: Bool
-    public var isDeleteFinalConfirmationPresented: Bool
+    public var deleteAccountStep: DeleteAccountStep?
     public var errorMessage: String?
 
     public var isBusy: Bool {
@@ -39,38 +44,57 @@ public struct ProfileFeature: Sendable {
       return trimmed != user?.displayName
     }
 
+    public var signOutConfirmationContent: ConfirmationSheetContent {
+      if localOnlyMediaCount > 0 {
+        return ConfirmationSheetContent(
+          systemImage: "exclamationmark.triangle.fill",
+          title: L10n.string("profile.sign.out.confirm.title"),
+          message: L10n.signOutLocalOnlyMessage(localOnlyMediaCount),
+          confirmTitle: L10n.string("profile.sign.out"),
+          tone: .destructive
+        )
+      }
+      return ConfirmationSheetContent(
+        systemImage: "rectangle.portrait.and.arrow.right",
+        title: L10n.string("profile.sign.out.confirm.title"),
+        message: L10n.string("profile.sign.out.message.safe"),
+        confirmTitle: L10n.string("profile.sign.out"),
+        tone: .neutral
+      )
+    }
+
     public init(
       user: UserProfile? = nil,
       displayNameInput: String? = nil,
       selectedTheme: AppThemePreference = .system,
+      localOnlyMediaCount: Int = 0,
       isLoading: Bool = false,
       isSavingName: Bool = false,
       showNameSavedFeedback: Bool = false,
       isSigningOut: Bool = false,
       isDeletingAccount: Bool = false,
       isSignOutConfirmationPresented: Bool = false,
-      isDeleteImpactSheetPresented: Bool = false,
-      isDeleteFinalConfirmationPresented: Bool = false,
+      deleteAccountStep: DeleteAccountStep? = nil,
       errorMessage: String? = nil
     ) {
       self.user = user
       self.displayNameInput = displayNameInput ?? user?.displayName ?? ""
       self.selectedTheme = selectedTheme
+      self.localOnlyMediaCount = localOnlyMediaCount
       self.isLoading = isLoading
       self.isSavingName = isSavingName
       self.showNameSavedFeedback = showNameSavedFeedback
       self.isSigningOut = isSigningOut
       self.isDeletingAccount = isDeletingAccount
       self.isSignOutConfirmationPresented = isSignOutConfirmationPresented
-      self.isDeleteImpactSheetPresented = isDeleteImpactSheetPresented
-      self.isDeleteFinalConfirmationPresented = isDeleteFinalConfirmationPresented
+      self.deleteAccountStep = deleteAccountStep
       self.errorMessage = errorMessage
     }
   }
 
   public enum Action: Equatable, Sendable {
     case task
-    case localProfileLoaded(UserProfile?, theme: AppThemePreference)
+    case localProfileLoaded(UserProfile?, theme: AppThemePreference, localOnlyMediaCount: Int)
     case remoteProfileLoaded(UserProfile)
     case profileLoadFailed(String)
     case displayNameChanged(String)
@@ -85,9 +109,8 @@ public struct ProfileFeature: Sendable {
     case signOutCompleted
     case signOutFailed(String)
     case deleteAccountTapped
-    case deleteImpactSheetDismissed
     case deleteImpactContinueTapped
-    case deleteFinalConfirmationDismissed
+    case deleteAccountSheetDismissed
     case deleteAccountConfirmed
     case deleteAccountCancelled
     case deleteAccountSucceeded
@@ -131,9 +154,9 @@ public struct ProfileFeature: Sendable {
       case .signOutTapped, .signOutConfirmationDismissed, .signOutConfirmed,
         .signOutCompleted, .signOutFailed:
         return handleSignOutAction(&state, action: action)
-      case .deleteAccountTapped, .deleteImpactSheetDismissed, .deleteImpactContinueTapped,
-        .deleteFinalConfirmationDismissed, .deleteAccountConfirmed,
-        .deleteAccountCancelled, .deleteAccountSucceeded, .deleteAccountFailed:
+      case .deleteAccountTapped, .deleteImpactContinueTapped, .deleteAccountSheetDismissed,
+        .deleteAccountConfirmed, .deleteAccountCancelled, .deleteAccountSucceeded,
+        .deleteAccountFailed:
         return handleDeleteAccountAction(&state, action: action)
       case .dismissError:
         state.errorMessage = nil

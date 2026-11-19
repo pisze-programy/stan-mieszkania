@@ -105,10 +105,6 @@ struct SharingFeatureRevokeAndErrorTests {
     }
 
     await store.send(.resetCodeTapped) {
-      $0.isResetConfirmationPresented = true
-    }
-    await store.send(.resetCodeConfirmed) {
-      $0.isResetConfirmationPresented = false
       $0.isResettingCode = true
     }
     let expectedError = L10n.errorMessage(for: .apartmentOwnerRequired)

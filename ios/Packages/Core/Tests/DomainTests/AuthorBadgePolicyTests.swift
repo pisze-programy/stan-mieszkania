@@ -12,23 +12,6 @@ struct AuthorBadgePolicyTests {
     #expect(AuthorBadgePolicy.initials(for: "Usunięty użytkownik") == "UU")
     #expect(AuthorBadgePolicy.initials(for: "Anna") == "AN")
     #expect(AuthorBadgePolicy.initials(for: "   ") == "?")
-
-    let fallbackUser = UserProfile(
-      id: "u1",
-      displayName: "Użytkownik #DCSG",
-      shortTag: "DCSG",
-      color: DomainConstants.defaultAuthorColor,
-      createdAt: .distantPast
-    )
-    let customUser = UserProfile(
-      id: "u2",
-      displayName: "Jan Kowalski",
-      shortTag: "DCSG",
-      color: DomainConstants.defaultAuthorColor,
-      createdAt: .distantPast
-    )
-    #expect(!fallbackUser.hasCustomDisplayName)
-    #expect(customUser.hasCustomDisplayName)
   }
 
   @Test("Validates hex color with ContractConstants palette fallback and deterministic seeding")

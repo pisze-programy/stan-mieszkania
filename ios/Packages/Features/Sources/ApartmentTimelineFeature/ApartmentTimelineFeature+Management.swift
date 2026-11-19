@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import Database
+import DesignSystem
 import Domain
 import Foundation
 
@@ -75,6 +76,9 @@ extension ApartmentTimelineFeature {
       state.leaveConfirmationMode = state.isOwner ? .ownerDeleteOrLeave : .contributorLeave
       return .none
     case .leaveConfirmationDismissed:
+      guard !state.isLeavingOrDeleting else {
+        return .none
+      }
       state.leaveConfirmationMode = nil
       return .none
     case .leaveOrDeleteConfirmed:
@@ -127,6 +131,48 @@ extension ApartmentTimelineFeature {
       } catch {
         await send(.leaveOrDeleteFailed(mapError(error)))
       }
+    }
+  }
+}
+
+extension ApartmentTimelineFeature.State {
+  public var leaveOrDeleteMenuTitle: String {
+    if isOwner && !hasOtherMembers {
+      return L10n.string("apartment.menu.delete")
+    }
+    return L10n.string("apartment.menu.leave")
+  }
+
+  public var leaveOrDeleteMenuIcon: String {
+    isOwner && !hasOtherMembers ? "trash" : "rectangle.portrait.and.arrow.right"
+  }
+
+  public var leaveOrDeleteConfirmationContent: ConfirmationSheetContent {
+    switch leaveConfirmationMode {
+    case .ownerDeleteOrLeave where !hasOtherMembers:
+      return ConfirmationSheetContent(
+        systemImage: "trash",
+        title: L10n.string("apartment.delete.confirmation.title"),
+        message: L10n.format("apartment.delete.sheet.message", navigationTitle),
+        confirmTitle: L10n.string("apartment.delete.confirm.full"),
+        tone: .destructive
+      )
+    case .ownerDeleteOrLeave:
+      return ConfirmationSheetContent(
+        systemImage: "rectangle.portrait.and.arrow.right",
+        title: L10n.string("apartment.leave.confirmation.title"),
+        message: L10n.string("apartment.leave.owner.message"),
+        confirmTitle: L10n.string("apartment.leave.confirm.full"),
+        tone: .destructive
+      )
+    case .contributorLeave, .none:
+      return ConfirmationSheetContent(
+        systemImage: "rectangle.portrait.and.arrow.right",
+        title: L10n.string("apartment.leave.confirmation.title"),
+        message: L10n.string("apartment.leave.confirmation.message"),
+        confirmTitle: L10n.string("apartment.leave.confirm.full"),
+        tone: .destructive
+      )
     }
   }
 }

@@ -6,19 +6,12 @@ struct DetailEntryRowView: View {
   let item: MediaDetailEntryItem
   let referenceDate: Date
   let selectedMarkerNumber: Int?
-  let hasOtherMembers: Bool
   let canEditOrHardDelete: Bool
   let canRetract: Bool
-  let isConfirmingDelete: Bool
-  let deleteConfirmationTitle: String
-  let deleteConfirmationMessage: String?
-  let deleteConfirmButtonLabel: String
   let onMarkerTapped: (Int) -> Void
   let onVerifiedTap: () -> Void
   let onEditLocal: () -> Void
   let onDeleteOrRetract: () -> Void
-  let onConfirmDelete: () -> Void
-  let onDismissDelete: () -> Void
 
   var body: some View {
     SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
@@ -36,11 +29,11 @@ struct DetailEntryRowView: View {
         AuthorAvatarView(
           displayName: item.authorDisplayName,
           colorHex: item.authorColorHex,
-          role: item.authorRole,
-          size: DesignMetrics.entryAuthorAvatarSize,
-          showsRoleBadge: false
+          size: DesignMetrics.entryAuthorAvatarSize
         )
-        authorTitle
+        Text(item.authorDisplayName)
+          .font(Typography.subheadline.weight(.semibold))
+          .lineLimit(1)
         Spacer()
         if item.entry.isVerified {
           VerifiedBadgeView(style: .inline, onTap: onVerifiedTap)
@@ -59,20 +52,6 @@ struct DetailEntryRowView: View {
       Text(PolishDateFormatters.formatHumanTimestamp(item.entry.createdAt, now: referenceDate))
         .font(Typography.caption)
         .foregroundStyle(.secondary)
-    }
-  }
-
-  private var authorTitle: some View {
-    HStack(spacing: 0) {
-      Text(item.authorDisplayName)
-        .font(Typography.subheadline.weight(.semibold))
-        .lineLimit(1)
-      if hasOtherMembers, item.authorRole == .owner {
-        Text(" · \(L10n.string("media.detail.role.owner"))")
-          .font(Typography.subheadline)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-      }
     }
   }
 
@@ -99,25 +78,6 @@ struct DetailEntryRowView: View {
         Image(systemName: "ellipsis")
           .foregroundStyle(.secondary)
           .padding(Spacing.xxs)
-      }
-      .confirmationDialog(
-        deleteConfirmationTitle,
-        isPresented: Binding(
-          get: { isConfirmingDelete },
-          set: { if !$0 { onDismissDelete() } }
-        ),
-        titleVisibility: .visible
-      ) {
-        Button(deleteConfirmButtonLabel, role: .destructive, action: onConfirmDelete)
-        Button(
-          L10n.string("apartments.create.cancel.cta"),
-          role: .cancel,
-          action: onDismissDelete
-        )
-      } message: {
-        if let deleteConfirmationMessage {
-          Text(deleteConfirmationMessage)
-        }
       }
     }
   }

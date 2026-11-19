@@ -95,55 +95,62 @@ struct TimelineHydrationAndRecoveryTests {
     }
   }
 
-  @MainActor
-  @Test("Computes showsAuthor and owner delete confirmation copy from distinct authors and members")
-  func showsAuthorAndMemberDeleteCopy() throws {
+  @Test("Computes showsAuthor and hasOtherMembers from distinct authors and active members")
+  func showsAuthorAndHasOtherMembers() throws {
     let singleAuthorDb = try seedSingleOwnerDatabase()
     let singleSnapshot = try ApartmentTimelineStore.fetchSnapshot(
-      apartmentId: TimelineTestFixtures.apartmentId,
-      from: singleAuthorDb,
+      apartmentId: TimelineTestFixtures.apartmentId, from: singleAuthorDb,
       now: TimelineTestFixtures.thursdayLaterDate,
-      calendar: TimelineTestFixtures.warsawCalendar,
-      timeZone: TimelineTestFixtures.warsawTimeZone
+      calendar: TimelineTestFixtures.warsawCalendar, timeZone: TimelineTestFixtures.warsawTimeZone
     )
     #expect(!singleSnapshot.showsAuthor)
     #expect(!singleSnapshot.hasOtherMembers)
 
     let multiAuthorDb = try TimelineTestFixtures.seedTimelineDatabase()
     let multiSnapshot = try ApartmentTimelineStore.fetchSnapshot(
-      apartmentId: TimelineTestFixtures.apartmentId,
-      from: multiAuthorDb,
+      apartmentId: TimelineTestFixtures.apartmentId, from: multiAuthorDb,
       now: TimelineTestFixtures.thursdayLaterDate,
-      calendar: TimelineTestFixtures.warsawCalendar,
-      timeZone: TimelineTestFixtures.warsawTimeZone
+      calendar: TimelineTestFixtures.warsawCalendar, timeZone: TimelineTestFixtures.warsawTimeZone
     )
     #expect(multiSnapshot.showsAuthor)
     #expect(multiSnapshot.hasOtherMembers)
+  }
 
-    let soloView = ApartmentTimelineView(
-      store: Store(
-        initialState: ApartmentTimelineFeature.State(
-          apartmentId: TimelineTestFixtures.apartmentId,
-          apartment: TimelineTestFixtures.makeApartment(role: .owner),
-          hasOtherMembers: false,
-          leaveConfirmationMode: .ownerDeleteOrLeave
-        )
-      ) { ApartmentTimelineFeature() }
+  @Test("Menu title and confirmation sheet content switch across owner solo, shared, contributor")
+  func menuTitleAndConfirmationSheetContent() {
+    let soloState = ApartmentTimelineFeature.State(
+      apartmentId: TimelineTestFixtures.apartmentId,
+      apartment: TimelineTestFixtures.makeApartment(role: .owner),
+      hasOtherMembers: false,
+      leaveConfirmationMode: .ownerDeleteOrLeave
     )
-    let sharedView = ApartmentTimelineView(
-      store: Store(
-        initialState: ApartmentTimelineFeature.State(
-          apartmentId: TimelineTestFixtures.apartmentId,
-          apartment: TimelineTestFixtures.makeApartment(role: .owner),
-          hasOtherMembers: true,
-          leaveConfirmationMode: .ownerDeleteOrLeave
-        )
-      ) { ApartmentTimelineFeature() }
+    let sharedOwnerState = ApartmentTimelineFeature.State(
+      apartmentId: TimelineTestFixtures.apartmentId,
+      apartment: TimelineTestFixtures.makeApartment(role: .owner),
+      hasOtherMembers: true,
+      leaveConfirmationMode: .ownerDeleteOrLeave
     )
-    #expect(soloView.leaveDialogMessage == L10n.string("apartment.delete.confirmation.message"))
+    let contributorState = ApartmentTimelineFeature.State(
+      apartmentId: TimelineTestFixtures.apartmentId,
+      apartment: TimelineTestFixtures.makeApartment(role: .contributor),
+      hasOtherMembers: true,
+      leaveConfirmationMode: .contributorLeave
+    )
+
+    #expect(soloState.leaveOrDeleteMenuTitle == L10n.string("apartment.menu.delete"))
+    #expect(sharedOwnerState.leaveOrDeleteMenuTitle == L10n.string("apartment.menu.leave"))
+    #expect(contributorState.leaveOrDeleteMenuTitle == L10n.string("apartment.menu.leave"))
     #expect(
-      sharedView.leaveDialogMessage
-        == L10n.string("apartment.delete.confirmation.message.transfer")
+      soloState.leaveOrDeleteConfirmationContent.message
+        == L10n.format("apartment.delete.sheet.message", soloState.navigationTitle)
+    )
+    #expect(
+      sharedOwnerState.leaveOrDeleteConfirmationContent.message
+        == L10n.string("apartment.leave.owner.message")
+    )
+    #expect(
+      contributorState.leaveOrDeleteConfirmationContent.message
+        == L10n.string("apartment.leave.confirmation.message")
     )
   }
 

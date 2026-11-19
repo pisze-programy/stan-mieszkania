@@ -23,21 +23,6 @@ extension MediaDetailView {
           Image(systemName: "trash")
         }
         .accessibilityLabel(L10n.string("apartment.delete.confirm.cta"))
-        .confirmationDialog(
-          mediaDeleteTitle,
-          isPresented: Binding(
-            get: { store.mediaDeleteConfirmation != nil },
-            set: { if !$0 { store.send(.mediaDeleteConfirmationDismissed) } }
-          ),
-          titleVisibility: .visible
-        ) {
-          Button(L10n.string("apartment.delete.confirm.cta"), role: .destructive) {
-            store.send(.mediaDeleteConfirmed)
-          }
-          Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
-            store.send(.mediaDeleteConfirmationDismissed)
-          }
-        }
       }
     }
   }
@@ -103,24 +88,16 @@ extension MediaDetailView {
           .font(.headline)
 
         ForEach(store.entries) { item in
-          let isConfirming = store.entryDeleteConfirmation?.entryId == item.id
           DetailEntryRowView(
             item: item,
             referenceDate: store.now ?? Date(),
             selectedMarkerNumber: store.selectedMarkerNumber,
-            hasOtherMembers: store.hasOtherMembers,
             canEditOrHardDelete: store.state.canEditOrHardDeleteEntry(item),
             canRetract: store.state.canRetractEntry(item),
-            isConfirmingDelete: isConfirming,
-            deleteConfirmationTitle: entryDeleteTitle,
-            deleteConfirmationMessage: entryDeleteMessage,
-            deleteConfirmButtonLabel: entryDeleteConfirmLabel,
             onMarkerTapped: { store.send(.markerTapped($0)) },
             onVerifiedTap: { verifiedInfoSubject = .entry },
             onEditLocal: { store.send(.editLocalEntryTapped(item.id)) },
-            onDeleteOrRetract: { store.send(.entryDeleteTapped(item.id)) },
-            onConfirmDelete: { store.send(.entryDeleteConfirmed) },
-            onDismissDelete: { store.send(.entryDeleteConfirmationDismissed) }
+            onDeleteOrRetract: { store.send(.entryDeleteTapped(item.id)) }
           )
           .id(item.id)
         }
@@ -128,30 +105,41 @@ extension MediaDetailView {
     }
   }
 
-  var mediaDeleteTitle: String {
-    store.mediaDeleteConfirmation == .hardDeleteLocal
-      ? L10n.string("media.detail.delete.local.title")
-      : L10n.string("media.detail.delete.cloud.title")
+  var mediaDeleteConfirmationContent: ConfirmationSheetContent {
+    if store.mediaDeleteConfirmation == .hardDeleteLocal {
+      return ConfirmationSheetContent(
+        systemImage: "trash",
+        title: L10n.string("media.detail.delete.local.title"),
+        message: L10n.string("media.detail.delete.local.message"),
+        confirmTitle: L10n.string("media.detail.delete.cta"),
+        tone: .destructive
+      )
+    }
+    return ConfirmationSheetContent(
+      systemImage: "trash",
+      title: L10n.string("media.detail.delete.cloud.title"),
+      message: L10n.string("media.detail.delete.synced.message"),
+      confirmTitle: L10n.string("media.detail.delete.cta"),
+      tone: .destructive
+    )
   }
 
-  var entryDeleteTitle: String {
+  var entryDeleteConfirmationContent: ConfirmationSheetContent {
     if case .hardDeleteLocal = store.entryDeleteConfirmation {
-      return L10n.string("media.detail.entry.delete.local.title")
+      return ConfirmationSheetContent(
+        systemImage: "trash",
+        title: L10n.string("media.detail.entry.delete.local.title"),
+        message: L10n.string("media.detail.entry.delete.local.message"),
+        confirmTitle: L10n.string("media.detail.entry.delete.cta"),
+        tone: .destructive
+      )
     }
-    return L10n.string("media.detail.entry.retract.confirm.title")
-  }
-
-  var entryDeleteMessage: String? {
-    if case .retractSynced = store.entryDeleteConfirmation {
-      return L10n.string("media.detail.entry.retract.confirm.message")
-    }
-    return nil
-  }
-
-  var entryDeleteConfirmLabel: String {
-    if case .retractSynced = store.entryDeleteConfirmation {
-      return L10n.string("media.detail.entry.retract.cta")
-    }
-    return L10n.string("apartment.delete.confirm.cta")
+    return ConfirmationSheetContent(
+      systemImage: "arrow.uturn.backward",
+      title: L10n.string("media.detail.entry.retract.confirm.title"),
+      message: L10n.string("media.detail.entry.retract.confirm.message"),
+      confirmTitle: L10n.string("media.detail.entry.retract.cta"),
+      tone: .destructive
+    )
   }
 }

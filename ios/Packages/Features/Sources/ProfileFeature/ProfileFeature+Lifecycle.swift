@@ -45,25 +45,39 @@ extension ProfileFeature {
       guard !state.isBusy else {
         return .none
       }
-      state.isDeleteImpactSheetPresented = true
-      return .none
-    case .deleteImpactSheetDismissed:
-      state.isDeleteImpactSheetPresented = false
+      state.deleteAccountStep = .impact
       return .none
     case .deleteImpactContinueTapped:
-      state.isDeleteImpactSheetPresented = false
-      state.isDeleteFinalConfirmationPresented = true
+      guard state.deleteAccountStep == .impact else {
+        return .none
+      }
+      state.deleteAccountStep = .finalConfirm
       return .none
-    case .deleteFinalConfirmationDismissed:
-      state.isDeleteFinalConfirmationPresented = false
+    case .deleteAccountSheetDismissed:
+      guard !state.isDeletingAccount else {
+        return .none
+      }
+      state.deleteAccountStep = nil
       return .none
     case .deleteAccountConfirmed:
       return executeDeleteAccount(&state)
+    default:
+      return handleDeleteAccountOutcome(&state, action: action)
+    }
+  }
+
+  private func handleDeleteAccountOutcome(
+    _ state: inout State,
+    action: Action
+  ) -> Effect<Action> {
+    switch action {
     case .deleteAccountCancelled:
       state.isDeletingAccount = false
+      state.deleteAccountStep = nil
       return .none
     case .deleteAccountSucceeded:
       state.isDeletingAccount = false
+      state.deleteAccountStep = nil
       state.user = nil
       return .merge(
         .run { _ in
@@ -73,6 +87,7 @@ extension ProfileFeature {
       )
     case .deleteAccountFailed(let message):
       state.isDeletingAccount = false
+      state.deleteAccountStep = nil
       state.errorMessage = message
       return .run { _ in
         await haptics.error()
@@ -104,7 +119,6 @@ extension ProfileFeature {
     guard !state.isBusy else {
       return .none
     }
-    state.isDeleteFinalConfirmationPresented = false
     state.isDeletingAccount = true
     state.errorMessage = nil
     return .run { send in

@@ -110,6 +110,22 @@ public struct MediaDetailView: View {
         }
       )
     }
+    .confirmationSheet(
+      isPresented: Binding(
+        get: { store.mediaDeleteConfirmation != nil },
+        set: { if !$0 { store.send(.mediaDeleteConfirmationDismissed) } }
+      ),
+      content: { mediaDeleteConfirmationContent },
+      onConfirm: { store.send(.mediaDeleteConfirmed) }
+    )
+    .confirmationSheet(
+      isPresented: Binding(
+        get: { store.entryDeleteConfirmation != nil },
+        set: { if !$0 { store.send(.entryDeleteConfirmationDismissed) } }
+      ),
+      content: { entryDeleteConfirmationContent },
+      onConfirm: { store.send(.entryDeleteConfirmed) }
+    )
     #if os(iOS)
       .fullScreenCover(isPresented: lightboxBinding) {
         lightboxView.navigationTransition(

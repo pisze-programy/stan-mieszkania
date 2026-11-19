@@ -4,6 +4,8 @@ import Domain
 import SwiftUI
 
 public struct SharingView: View {
+  private static let resetIconWidth: CGFloat = 22
+
   @Bindable private var store: StoreOf<SharingFeature>
 
   public init(store: StoreOf<SharingFeature>) {
@@ -40,6 +42,14 @@ public struct SharingView: View {
           }
         }
       }
+      .confirmationSheet(
+        isPresented: Binding(
+          get: { store.pendingRevokeMember != nil },
+          set: { if !$0 { store.send(.revokeConfirmationDismissed) } }
+        ),
+        content: { revokeConfirmationContent },
+        onConfirm: { store.send(.revokeMemberConfirmed) }
+      )
   }
 
   private var sharingList: some View {
@@ -48,11 +58,33 @@ public struct SharingView: View {
         securityAlertSection
       }
 
-      inviteCodeSection
+      Section(L10n.string("sharing.code.label")) {
+        InviteCodeCardView(
+          inviteCode: store.inviteCode,
+          shareMessageText: store.shareMessageText,
+          showCopiedFeedback: store.showCopiedFeedback,
+          showResetFeedback: store.showResetFeedback,
+          onCopyTapped: { store.send(.copyCodeTapped) }
+        )
+        .listRowSeparator(.hidden)
+      }
+
+      if store.isOwner {
+        Section {
+          resetCodeRow
+        } footer: {
+          Text(L10n.string("sharing.code.reset.footer"))
+        }
+      }
 
       Section(L10n.string("sharing.members.header")) {
-        ForEach(store.activeMembers) { member in
-          activeMemberRow(member)
+        if store.sharedWithMembers.isEmpty {
+          Label(L10n.string("sharing.members.empty"), systemImage: "person.badge.plus")
+            .foregroundStyle(.secondary)
+        } else {
+          ForEach(store.sharedWithMembers) { member in
+            activeMemberRow(member)
+          }
         }
       }
 
@@ -91,55 +123,25 @@ public struct SharingView: View {
     }
   }
 
-  private var inviteCodeSection: some View {
-    Section(L10n.string("sharing.code.label")) {
-      InviteCodeCardView(
-        inviteCode: store.inviteCode,
-        shareMessageText: store.shareMessageText,
-        showCopiedFeedback: store.showCopiedFeedback,
-        onCopyTapped: { store.send(.copyCodeTapped) }
-      )
-
-      if store.isOwner {
-        resetCodeRow
-      }
-    }
-  }
-
   private var resetCodeRow: some View {
     Button {
       store.send(.resetCodeTapped)
     } label: {
-      HStack(spacing: Spacing.xs) {
-        if store.isResettingCode {
-          ProgressView()
-            .controlSize(.small)
-        } else {
+      HStack(spacing: Spacing.sm) {
+        ZStack {
           Image(systemName: "arrow.clockwise")
+            .opacity(store.isResettingCode ? 0 : 1)
+          if store.isResettingCode {
+            ProgressView()
+              .controlSize(.small)
+          }
         }
+        .frame(width: Self.resetIconWidth)
+
         Text(L10n.string("sharing.code.reset.cta"))
       }
-      .font(.subheadline)
-      .foregroundStyle(.secondary)
     }
     .disabled(store.isResettingCode)
-    .confirmationDialog(
-      L10n.string("sharing.code.reset.confirm.title"),
-      isPresented: Binding(
-        get: { store.isResetConfirmationPresented },
-        set: { if !$0 { store.send(.resetConfirmationDismissed) } }
-      ),
-      titleVisibility: .visible
-    ) {
-      Button(L10n.string("sharing.security.reset.cta"), role: .destructive) {
-        store.send(.resetCodeConfirmed)
-      }
-      Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
-        store.send(.resetConfirmationDismissed)
-      }
-    } message: {
-      Text(L10n.string("sharing.code.reset.confirm.message"))
-    }
   }
 
   @ViewBuilder
@@ -149,23 +151,6 @@ public struct SharingView: View {
       member: member,
       isRevoking: store.revokingUserId == member.userId
     )
-    .confirmationDialog(
-      L10n.string("sharing.member.revoke.confirm.title"),
-      isPresented: Binding(
-        get: { store.pendingRevokeMember?.id == member.id },
-        set: { if !$0 { store.send(.revokeConfirmationDismissed) } }
-      ),
-      titleVisibility: .visible
-    ) {
-      Button(L10n.string("sharing.member.revoke.cta"), role: .destructive) {
-        store.send(.revokeMemberConfirmed)
-      }
-      Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
-        store.send(.revokeConfirmationDismissed)
-      }
-    } message: {
-      Text(L10n.string("sharing.member.revoke.confirm.message"))
-    }
 
     if canRevoke {
       row
@@ -187,5 +172,17 @@ public struct SharingView: View {
     } else {
       row
     }
+  }
+
+  private var revokeConfirmationContent: ConfirmationSheetContent {
+    let memberName =
+      store.pendingRevokeMember?.displayName ?? L10n.string("media.detail.user.anonymous")
+    return ConfirmationSheetContent(
+      systemImage: "person.badge.minus",
+      title: L10n.string("sharing.member.revoke.confirm.title"),
+      message: L10n.format("sharing.member.revoke.sheet.message", memberName),
+      confirmTitle: L10n.string("sharing.member.revoke.cta"),
+      tone: .destructive
+    )
   }
 }

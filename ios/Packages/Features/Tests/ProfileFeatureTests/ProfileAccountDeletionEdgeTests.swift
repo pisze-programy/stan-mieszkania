@@ -23,7 +23,7 @@ struct ProfileAccountDeletionEdgeTests {
     let store = TestStore(
       initialState: ProfileFeature.State(
         user: ProfileTestFixtures.initialUser,
-        isDeleteFinalConfirmationPresented: true
+        deleteAccountStep: .finalConfirm
       )
     ) {
       ProfileFeature()
@@ -36,11 +36,11 @@ struct ProfileAccountDeletionEdgeTests {
     }
 
     await store.send(.deleteAccountConfirmed) {
-      $0.isDeleteFinalConfirmationPresented = false
       $0.isDeletingAccount = true
     }
     await store.receive(.deleteAccountCancelled) {
       $0.isDeletingAccount = false
+      $0.deleteAccountStep = nil
     }
 
     let counts = try ProfileTestFixtures.tableCounts(in: database)
@@ -59,7 +59,7 @@ struct ProfileAccountDeletionEdgeTests {
     let store = TestStore(
       initialState: ProfileFeature.State(
         user: ProfileTestFixtures.initialUser,
-        isDeleteFinalConfirmationPresented: true
+        deleteAccountStep: .finalConfirm
       )
     ) {
       ProfileFeature()
@@ -80,13 +80,13 @@ struct ProfileAccountDeletionEdgeTests {
     }
 
     await store.send(.deleteAccountConfirmed) {
-      $0.isDeleteFinalConfirmationPresented = false
       $0.isDeletingAccount = true
     }
     await store.receive(
       .deleteAccountFailed(L10n.errorMessage(for: .accountDeletionFailed))
     ) {
       $0.isDeletingAccount = false
+      $0.deleteAccountStep = nil
       $0.errorMessage = L10n.errorMessage(for: .accountDeletionFailed)
     }
 
@@ -106,7 +106,7 @@ struct ProfileAccountDeletionEdgeTests {
     let store = TestStore(
       initialState: ProfileFeature.State(
         user: ProfileTestFixtures.initialUser,
-        isDeleteFinalConfirmationPresented: true
+        deleteAccountStep: .finalConfirm
       )
     ) {
       ProfileFeature()
@@ -123,11 +123,11 @@ struct ProfileAccountDeletionEdgeTests {
     }
 
     await store.send(.deleteAccountConfirmed) {
-      $0.isDeleteFinalConfirmationPresented = false
       $0.isDeletingAccount = true
     }
     await store.receive(.deleteAccountSucceeded) {
       $0.isDeletingAccount = false
+      $0.deleteAccountStep = nil
       $0.user = nil
     }
     await store.receive(\.delegate.didDeleteAccount)

@@ -25,7 +25,9 @@ struct ProfileNameAndThemeTests {
     }
 
     await store.send(.task) { $0.isLoading = true }
-    await store.receive(.localProfileLoaded(ProfileTestFixtures.initialUser, theme: .light)) {
+    await store.receive(
+      .localProfileLoaded(ProfileTestFixtures.initialUser, theme: .light, localOnlyMediaCount: 0)
+    ) {
       $0.user = ProfileTestFixtures.initialUser
       $0.displayNameInput = ProfileTestFixtures.initialUser.displayName
       $0.selectedTheme = .light
@@ -163,6 +165,15 @@ struct ProfileNameAndThemeTests {
     ) {
       ProfileFeature()
     }
-    _ = (ProfileView(store: viewStore), DeleteAccountImpactSheetView(onContinueTapped: {}))
+    _ = (
+      ProfileView(store: viewStore),
+      DeleteAccountImpactSheetView(
+        step: .impact,
+        isDeleting: false,
+        onContinue: {},
+        onConfirm: {},
+        onCancel: {}
+      ),
+    )
   }
 }

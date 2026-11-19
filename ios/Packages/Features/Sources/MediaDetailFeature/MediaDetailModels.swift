@@ -65,22 +65,19 @@ public struct MediaDetailSnapshot: Equatable, Sendable {
   public let mediaAuthorColorHex: String
   public let entries: [MediaDetailEntryItem]
   public let currentUser: AuthorSummary?
-  public let hasOtherMembers: Bool
 
   public init(
     media: MediaItem?,
     mediaAuthorName: String,
     mediaAuthorColorHex: String,
     entries: [MediaDetailEntryItem],
-    currentUser: AuthorSummary?,
-    hasOtherMembers: Bool = false
+    currentUser: AuthorSummary?
   ) {
     self.media = media
     self.mediaAuthorName = mediaAuthorName
     self.mediaAuthorColorHex = mediaAuthorColorHex
     self.entries = entries
     self.currentUser = currentUser
-    self.hasOtherMembers = hasOtherMembers
   }
 }
 

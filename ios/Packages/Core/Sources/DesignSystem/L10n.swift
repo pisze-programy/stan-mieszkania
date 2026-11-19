@@ -9,6 +9,7 @@ public enum L10n: Sendable {
 
   private static let photoCountKey: String = "apartments.card.photo.count"
   private static let summaryMultiTitleKey: String = "media.summary.title.multi"
+  private static let signOutLocalOnlyKey: String = "profile.sign.out.message.localOnly"
   private static let errorKeyPrefix: String = "error."
   private static let networkUnavailableKey: String = "error.NETWORK_UNAVAILABLE"
   private static let unknownErrorKey: String = "error.UNKNOWN"
@@ -49,6 +50,10 @@ public enum L10n: Sendable {
 
   public static func summaryMultiTitle(_ count: Int) -> String {
     pluralized(key: summaryMultiTitleKey, count: count)
+  }
+
+  public static func signOutLocalOnlyMessage(_ count: Int) -> String {
+    pluralized(key: signOutLocalOnlyKey, count: count)
   }
 
   private static func pluralized(key: String, count: Int) -> String {

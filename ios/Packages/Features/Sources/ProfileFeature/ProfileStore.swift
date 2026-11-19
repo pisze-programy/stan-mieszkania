@@ -8,6 +8,16 @@ enum ProfileStore {
     try ApartmentMutationStore(database: database).fetchCurrentUser()
   }
 
+  static func fetchLocalOnlyMediaCount(from database: any DatabaseWriter) throws -> Int {
+    try database.read { db in
+      try MediaRecord
+        .where {
+          $0.syncState.eq(MediaSyncState.localOnly.rawValue) && $0.deletedAt.is(nil)
+        }
+        .fetchCount(db)
+    }
+  }
+
   static func saveUpdatedUser(
     _ profile: UserProfile,
     in database: any DatabaseWriter

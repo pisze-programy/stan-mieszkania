@@ -12,10 +12,6 @@ public struct UserProfile: Identifiable, Codable, Sendable, Equatable, Hashable 
   public let color: String
   public let createdAt: Date
 
-  public var hasCustomDisplayName: Bool {
-    !displayName.hasPrefix("\(DomainConstants.fallbackUserDisplayPrefix) #")
-  }
-
   public init(
     id: String,
     displayName: String,

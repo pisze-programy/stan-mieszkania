@@ -38,16 +38,28 @@ public struct ProfileView: View {
         }
       }
       .animation(Motion.fade, value: store.isNameDirty)
-      .sheet(isPresented: deleteImpactSheetBinding) {
-        DeleteAccountImpactSheetView(
-          onContinueTapped: { store.send(.deleteImpactContinueTapped) }
-        )
+      .confirmationSheet(
+        isPresented: signOutConfirmationBinding,
+        isConfirming: store.isSigningOut,
+        content: { store.signOutConfirmationContent },
+        onConfirm: { store.send(.signOutConfirmed) }
+      )
+      .sheet(isPresented: deleteAccountSheetBinding) {
+        if let step = store.deleteAccountStep {
+          DeleteAccountImpactSheetView(
+            step: step,
+            isDeleting: store.isDeletingAccount,
+            onContinue: { store.send(.deleteImpactContinueTapped) },
+            onConfirm: { store.send(.deleteAccountConfirmed) },
+            onCancel: { store.send(.deleteAccountSheetDismissed) }
+          )
+        }
       }
   }
 
   private var settingsForm: some View {
     Form {
-      identityHeaderSection
+      avatarHeaderSection
       displayNameSection
       appearanceSection
       signOutSection
@@ -56,24 +68,17 @@ public struct ProfileView: View {
     .formStyle(.grouped)
   }
 
-  var signOutConfirmationBinding: Binding<Bool> {
+  private var signOutConfirmationBinding: Binding<Bool> {
     Binding(
       get: { store.isSignOutConfirmationPresented },
       set: { if !$0 { store.send(.signOutConfirmationDismissed) } }
     )
   }
 
-  private var deleteImpactSheetBinding: Binding<Bool> {
+  private var deleteAccountSheetBinding: Binding<Bool> {
     Binding(
-      get: { store.isDeleteImpactSheetPresented },
-      set: { if !$0 { store.send(.deleteImpactSheetDismissed) } }
-    )
-  }
-
-  var deleteFinalConfirmationBinding: Binding<Bool> {
-    Binding(
-      get: { store.isDeleteFinalConfirmationPresented },
-      set: { if !$0 { store.send(.deleteFinalConfirmationDismissed) } }
+      get: { store.deleteAccountStep != nil },
+      set: { if !$0 { store.send(.deleteAccountSheetDismissed) } }
     )
   }
 }

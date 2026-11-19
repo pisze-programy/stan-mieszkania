@@ -26,8 +26,7 @@ struct MediaDetailViewerAndLightboxTests {
       mediaId: MediaDetailTestFixtures.mediaId,
       media: snapshot.media,
       entries: snapshot.entries,
-      currentUser: snapshot.currentUser,
-      hasOtherMembers: snapshot.hasOtherMembers
+      currentUser: snapshot.currentUser
     )
 
     let overlay = state.overlayMarkers
@@ -35,7 +34,6 @@ struct MediaDetailViewerAndLightboxTests {
     #expect(overlay[0].colorHex == MarkerPalette.hex(forMarkerNumber: 1))
     #expect(overlay[1].colorHex == MarkerPalette.hex(forMarkerNumber: Self.markerTwoNumber))
     #expect(overlay[0].colorHex != overlay[1].colorHex)
-    #expect(state.hasOtherMembers)
   }
 
   @MainActor
@@ -55,8 +53,7 @@ struct MediaDetailViewerAndLightboxTests {
         mediaId: MediaDetailTestFixtures.mediaId,
         media: snapshot.media,
         entries: snapshot.entries,
-        currentUser: snapshot.currentUser,
-        hasOtherMembers: snapshot.hasOtherMembers
+        currentUser: snapshot.currentUser
       )
     ) {
       MediaDetailFeature()
@@ -109,7 +106,6 @@ struct MediaDetailViewerAndLightboxTests {
         media: snapshot.media,
         entries: snapshot.entries,
         currentUser: snapshot.currentUser,
-        hasOtherMembers: snapshot.hasOtherMembers,
         areMarkersHidden: true
       )
     ) {

@@ -106,7 +106,12 @@ extension AppFeature {
       )
       return .none
     case .didTapShare(let apartmentId):
-      state.modal = .sharing(SharingFeature.State(apartmentId: apartmentId))
+      state.modal = .sharing(
+        SharingFeature.State(
+          apartmentId: apartmentId,
+          currentUserId: state.currentUser?.id ?? state.apartmentsList.currentUser?.id
+        )
+      )
       return .none
     case .didSelectCaptureSource(let apartmentId, let source):
       return startCapture(&state, apartmentId: apartmentId, source: source)

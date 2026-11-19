@@ -43,7 +43,6 @@ extension MediaDetailFeature {
     state.mediaAuthorColorHex = snapshot.mediaAuthorColorHex
     state.entries = snapshot.entries
     state.currentUser = snapshot.currentUser
-    state.hasOtherMembers = snapshot.hasOtherMembers
     if let selected = state.selectedMarkerNumber, state.entryId(owningMarker: selected) == nil {
       state.selectedMarkerNumber = nil
     }

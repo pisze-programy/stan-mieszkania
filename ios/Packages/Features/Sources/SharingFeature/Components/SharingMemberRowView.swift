@@ -11,21 +11,13 @@ struct SharingMemberRowView: View {
       AuthorAvatarView(
         displayName: member.displayName,
         colorHex: member.color,
-        role: member.role,
-        size: DesignMetrics.avatarMediumSize,
-        showsRoleBadge: false
+        size: DesignMetrics.avatarMediumSize
       )
 
-      VStack(alignment: .leading, spacing: Spacing.xxs) {
-        Text(member.displayName)
-          .font(Typography.callout.weight(.semibold))
-          .foregroundStyle(member.isActive ? .primary : .secondary)
-
-        Text(roleTitle)
-          .font(Typography.caption)
-          .foregroundStyle(.secondary)
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
+      Text(member.displayName)
+        .font(.body)
+        .foregroundStyle(member.isActive ? .primary : .secondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
 
       if isRevoking {
         ProgressView()
@@ -33,14 +25,5 @@ struct SharingMemberRowView: View {
       }
     }
     .opacity(member.isActive ? 1 : DesignMetrics.disabledOpacity)
-  }
-
-  private var roleTitle: String {
-    switch member.role {
-    case .owner:
-      return L10n.string("media.detail.role.owner")
-    case .contributor:
-      return L10n.string("media.detail.role.contributor")
-    }
   }
 }
