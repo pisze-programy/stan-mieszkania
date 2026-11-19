@@ -28,7 +28,6 @@ extension AppPath.Action: Equatable, Sendable {}
 @Reducer
 public enum AppModalDestination {
   case sharing(SharingFeature)
-  case capture(CaptureFeature)
   case mediaSummary(MediaSummaryFeature)
 }
 
@@ -48,6 +47,7 @@ public struct AppFeature: Sendable {
     public var onboarding: OnboardingFeature.State
     public var apartmentsList: ApartmentsListFeature.State
     public var path: StackState<AppPath.State>
+    public var capture: CaptureFeature.State?
     @Presents public var modal: AppModalDestination.State?
 
     public init(
@@ -60,6 +60,7 @@ public struct AppFeature: Sendable {
       onboarding: OnboardingFeature.State = OnboardingFeature.State(),
       apartmentsList: ApartmentsListFeature.State = ApartmentsListFeature.State(),
       path: StackState<AppPath.State> = StackState(),
+      capture: CaptureFeature.State? = nil,
       modal: AppModalDestination.State? = nil
     ) {
       self.isBootstrapping = isBootstrapping
@@ -71,6 +72,7 @@ public struct AppFeature: Sendable {
       self.onboarding = onboarding
       self.apartmentsList = apartmentsList
       self.path = path
+      self.capture = capture
       self.modal = modal
     }
   }
@@ -87,6 +89,7 @@ public struct AppFeature: Sendable {
     case onboarding(OnboardingFeature.Action)
     case apartmentsList(ApartmentsListFeature.Action)
     case path(StackActionOf<AppPath>)
+    case capture(CaptureFeature.Action)
     case modal(PresentationAction<AppModalDestination.Action>)
   }
 
@@ -113,43 +116,59 @@ public struct AppFeature: Sendable {
     }
     Reduce { state, action in
       switch action {
-      case .task:
-        return startBootstrap(&state)
-      case .bootstrapResolved(let isAuthenticated, let currentUser, let theme):
-        state.isBootstrapping = false
-        state.isAuthenticated = isAuthenticated
-        state.currentUser = currentUser
-        state.themePreference = theme
-        return .none
-      case .appConfigResolved(let resolved):
-        // Architecture A19: Trigger force-update gate without deleting local SQLiteData or outbox.
-        if case .forceUpdateRequired(let minVersion) = resolved.updateStatus {
-          state.isForceUpdateRequired = true
-          state.forceUpdateMinVersion = minVersion
-        }
-        return .none
-      case .syncEventReceived(let event):
-        if case .forceUpdateRequired(let minVersion) = event {
-          state.isForceUpdateRequired = true
-          state.forceUpdateMinVersion = minVersion
-        }
-        return .none
+      case .task, .bootstrapResolved, .appConfigResolved, .syncEventReceived:
+        return handleAppLifecycle(&state, action: action)
       case .onboarding(.delegate(let delegate)):
         return handleOnboardingDelegate(&state, delegate: delegate)
       case .apartmentsList(.delegate(let delegate)):
         return handleApartmentsListDelegate(&state, delegate: delegate)
       case .path(.element(id: let id, action: let pathAction)):
         return handlePathDelegate(&state, id: id, action: pathAction)
+      case .path(.popFrom(id: let id)):
+        return handlePathPop(&state, id: id)
+      case .capture(.delegate(let delegate)):
+        return handleCaptureDelegate(&state, delegate: delegate)
       case .modal(.presented(let modalAction)):
         return handleModalDelegate(&state, action: modalAction)
       case .modal(.dismiss):
         return handleModalDismiss(&state)
-      case .onboarding, .apartmentsList, .path:
+      case .onboarding, .apartmentsList, .path, .capture:
         return .none
       }
     }
     .forEach(\.path, action: \.path)
+    .ifLet(\.capture, action: \.capture) {
+      CaptureFeature()
+    }
     .ifLet(\.$modal, action: \.modal)
+  }
+
+  private func handleAppLifecycle(_ state: inout State, action: Action) -> Effect<Action> {
+    switch action {
+    case .task:
+      return startBootstrap(&state)
+    case .bootstrapResolved(let isAuthenticated, let currentUser, let theme):
+      state.isBootstrapping = false
+      state.isAuthenticated = isAuthenticated
+      state.currentUser = currentUser
+      state.themePreference = theme
+      return .none
+    case .appConfigResolved(let resolved):
+      // Architecture A19: Trigger force-update gate without deleting local SQLiteData or outbox.
+      if case .forceUpdateRequired(let minVersion) = resolved.updateStatus {
+        state.isForceUpdateRequired = true
+        state.forceUpdateMinVersion = minVersion
+      }
+      return .none
+    case .syncEventReceived(let event):
+      if case .forceUpdateRequired(let minVersion) = event {
+        state.isForceUpdateRequired = true
+        state.forceUpdateMinVersion = minVersion
+      }
+      return .none
+    default:
+      return .none
+    }
   }
 
   private func startBootstrap(_ state: inout State) -> Effect<Action> {

@@ -5,53 +5,6 @@ import Foundation
 import MediaStorage
 
 extension CaptureFeature {
-  func handleStart(_ state: inout State) -> Effect<Action> {
-    guard !state.isPickerPresented, !state.isLocationPromptPresented, !state.isProcessing else {
-      return .none
-    }
-
-    guard state.source == .camera else {
-      state.isPickerPresented = true
-      return .none
-    }
-
-    // Decision Q10: Show optional GPS explanation once when undetermined; never block capture.
-    let status = locationCapture.authorizationStatus()
-    switch status {
-    case .notDetermined where !locationCapture.hasDismissedPrompt():
-      state.isLocationPromptPresented = true
-      return .none
-    case .authorized:
-      state.isPickerPresented = true
-      return .run { send in
-        let location = await locationCapture.captureCurrentLocation()
-        await send(.locationResolved(location))
-      }
-    case .notDetermined, .denied, .restricted:
-      state.isPickerPresented = true
-      return .none
-    }
-  }
-
-  func handleAllowLocation(_ state: inout State) -> Effect<Action> {
-    state.isLocationPromptPresented = false
-    return .run { send in
-      locationCapture.markPromptDismissed()
-      let updatedStatus = await locationCapture.requestWhenInUseAuthorization()
-      let location: CaptureLocationMetadata? =
-        updatedStatus == .authorized ? await locationCapture.captureCurrentLocation() : nil
-      await send(.locationResolved(location))
-    }
-  }
-
-  func handleSkipLocation(_ state: inout State) -> Effect<Action> {
-    state.isLocationPromptPresented = false
-    state.isPickerPresented = true
-    return .run { _ in
-      locationCapture.markPromptDismissed()
-    }
-  }
-
   func handleCameraCapture(_ state: inout State, rawData: Data) -> Effect<Action> {
     state.isPickerPresented = false
     state.isProcessing = true
@@ -65,9 +18,8 @@ extension CaptureFeature {
 
     return .run { send in
       do {
-        let mediaId = idGenerator.generate()
         let request = PhotoIngestRequest(
-          mediaId: mediaId,
+          mediaId: idGenerator.generate(),
           rawData: rawData,
           source: .camera,
           compression: compression,
@@ -87,12 +39,14 @@ extension CaptureFeature {
         await send(.ingestFailed(L10n.string("capture.import.failed")))
       }
     }
+    .cancellable(id: CancelID.ingest, cancelInFlight: true)
   }
 
   func handleImportedPhotos(_ state: inout State, rawItems: [Data]) -> Effect<Action> {
     state.isPickerPresented = false
     guard !rawItems.isEmpty else {
-      return .send(.delegate(.didCancel))
+      state.isProcessing = false
+      return state.isPickerDismissalSettled ? finishIfReady(&state) : schedulePresentationSettle()
     }
 
     state.isProcessing = true
@@ -108,9 +62,8 @@ extension CaptureFeature {
       drafts.reserveCapacity(rawItems.count)
       do {
         for rawData in rawItems {
-          let mediaId = idGenerator.generate()
           let request = PhotoIngestRequest(
-            mediaId: mediaId,
+            mediaId: idGenerator.generate(),
             rawData: rawData,
             source: .imported,
             compression: compression,
@@ -136,6 +89,7 @@ extension CaptureFeature {
         await send(.ingestFailed(L10n.string("capture.import.failed")))
       }
     }
+    .cancellable(id: CancelID.ingest, cancelInFlight: true)
   }
 
   private func makeDraft(

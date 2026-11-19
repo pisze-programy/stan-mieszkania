@@ -71,29 +71,14 @@ public struct ApartmentTimelineView: View {
       await store.send(.task).finish()
     }
     .overlay(alignment: .bottomTrailing) {
-      GlassFloatingActionButton(
-        accessibilityLabel: L10n.string("apartment.timeline.capture.camera")
-      ) {
-        store.send(.captureButtonTapped)
+      TimelineCaptureMenuButtonView(isDisabled: store.isCaptureInProgress) { source in
+        store.send(.captureSourceSelected(source))
       }
       .padding(Spacing.lg)
     }
     .navigationTitle(store.navigationTitle)
     .toolbar {
       timelineToolbar
-    }
-    .sheet(
-      isPresented: Binding(
-        get: { store.isCaptureSourceSheetPresented },
-        set: { if !$0 { store.send(.captureSourceSheetDismissed) } }
-      )
-    ) {
-      CaptureSourceSheetView { source in
-        store.send(.captureSourceSelected(source))
-      } onCancel: {
-        store.send(.captureSourceSheetDismissed)
-      }
-      .presentationDetents([.medium])
     }
     .sheet(
       item: Binding(

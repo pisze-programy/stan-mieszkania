@@ -19,6 +19,7 @@ extension AppFeature {
       state.isAuthenticated = true
       state.currentUser = profile
       state.path = StackState()
+      state.capture = nil
       state.modal = nil
       state.apartmentsList = ApartmentsListFeature.State(currentUser: profile)
       return .none
@@ -45,6 +46,18 @@ extension AppFeature {
       )
       return .none
     }
+  }
+
+  func handlePathPop(_ state: inout State, id: StackElementID) -> Effect<Action> {
+    guard
+      let activeCapture = state.capture,
+      case .apartmentTimeline(let timeline) = state.path[id: id],
+      timeline.apartmentId == activeCapture.apartmentId
+    else {
+      return .none
+    }
+    state.capture = nil
+    return .none
   }
 
   func handlePathDelegate(
@@ -88,9 +101,13 @@ extension AppFeature {
       state.modal = .sharing(SharingFeature.State(apartmentId: apartmentId))
       return .none
     case .didSelectCaptureSource(let apartmentId, let source):
-      state.modal = .capture(CaptureFeature.State(apartmentId: apartmentId, source: source))
-      return .none
+      return startCapture(&state, apartmentId: apartmentId, source: source)
     case .didLeaveOrDeleteApartment:
+      if case .apartmentTimeline(let timeline) = state.path[id: id] {
+        if state.capture?.apartmentId == timeline.apartmentId {
+          state.capture = nil
+        }
+      }
       state.path.pop(from: id)
       return .send(.apartmentsList(.pulledToRefresh))
     }
@@ -112,6 +129,7 @@ extension AppFeature {
       state.isAuthenticated = false
       state.currentUser = nil
       state.path = StackState()
+      state.capture = nil
       state.modal = nil
       state.apartmentsList = ApartmentsListFeature.State()
       state.onboarding = OnboardingFeature.State()

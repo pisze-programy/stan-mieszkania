@@ -23,7 +23,7 @@ public struct ApartmentTimelineFeature: Sendable {
     public var isSyncingAllLocal: Bool
     public var errorMessage: String?
     public var quotaNoticeMessage: String?
-    public var isCaptureSourceSheetPresented: Bool
+    public var isCaptureInProgress: Bool
     public var editSheet: EditApartmentSheetState?
     public var historySheet: ApartmentHistorySheetState?
     public var leaveConfirmationMode: LeaveOrDeleteMode?
@@ -50,7 +50,7 @@ public struct ApartmentTimelineFeature: Sendable {
       isSyncingAllLocal: Bool = false,
       errorMessage: String? = nil,
       quotaNoticeMessage: String? = nil,
-      isCaptureSourceSheetPresented: Bool = false,
+      isCaptureInProgress: Bool = false,
       editSheet: EditApartmentSheetState? = nil,
       historySheet: ApartmentHistorySheetState? = nil,
       leaveConfirmationMode: LeaveOrDeleteMode? = nil,
@@ -67,7 +67,7 @@ public struct ApartmentTimelineFeature: Sendable {
       self.isSyncingAllLocal = isSyncingAllLocal
       self.errorMessage = errorMessage
       self.quotaNoticeMessage = quotaNoticeMessage
-      self.isCaptureSourceSheetPresented = isCaptureSourceSheetPresented
+      self.isCaptureInProgress = isCaptureInProgress
       self.editSheet = editSheet
       self.historySheet = historySheet
       self.leaveConfirmationMode = leaveConfirmationMode
@@ -90,8 +90,6 @@ public struct ApartmentTimelineFeature: Sendable {
     case dismissQuotaNotice
     case mediaTapped(String)
     case shareTapped
-    case captureButtonTapped
-    case captureSourceSheetDismissed
     case captureSourceSelected(CaptureSource)
     case editMenuTapped
     case editSheetDismissed
@@ -158,14 +156,10 @@ public struct ApartmentTimelineFeature: Sendable {
           return .none
         }
         return .send(.delegate(.didTapShare(apartmentId: state.apartmentId)))
-      case .captureButtonTapped:
-        state.isCaptureSourceSheetPresented = true
-        return .none
-      case .captureSourceSheetDismissed:
-        state.isCaptureSourceSheetPresented = false
-        return .none
       case .captureSourceSelected(let source):
-        state.isCaptureSourceSheetPresented = false
+        guard !state.isCaptureInProgress else {
+          return .none
+        }
         return .send(
           .delegate(.didSelectCaptureSource(apartmentId: state.apartmentId, source: source))
         )

@@ -38,23 +38,26 @@ public struct AppRootView: View {
 
   // Decision S2-13: Single NavigationStack rooted at ApartmentsList with no tab bar.
   private var authenticatedStack: some View {
-    NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-      ApartmentsListView(store: store.scope(state: \.apartmentsList, action: \.apartmentsList))
-    } destination: { pathStore in
-      switch pathStore.case {
-      case .apartmentTimeline(let timelineStore):
-        ApartmentTimelineView(store: timelineStore, zoomNamespace: timelineZoomNamespace)
-      case .mediaDetail(let detailStore):
-        MediaDetailView(store: detailStore)
-          .navigationTransition(
-            .zoom(
-              sourceID: "\(AppConstants.zoomTransitionSourcePrefix)\(detailStore.mediaId)",
-              in: timelineZoomNamespace
+    Group {
+      NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+        ApartmentsListView(store: store.scope(state: \.apartmentsList, action: \.apartmentsList))
+      } destination: { pathStore in
+        switch pathStore.case {
+        case .apartmentTimeline(let timelineStore):
+          ApartmentTimelineView(store: timelineStore, zoomNamespace: timelineZoomNamespace)
+        case .mediaDetail(let detailStore):
+          MediaDetailView(store: detailStore)
+            .navigationTransition(
+              .zoom(
+                sourceID: "\(AppConstants.zoomTransitionSourcePrefix)\(detailStore.mediaId)",
+                in: timelineZoomNamespace
+              )
             )
-          )
-      case .profile(let profileStore):
-        ProfileView(store: profileStore)
+        case .profile(let profileStore):
+          ProfileView(store: profileStore)
+        }
       }
+      .captureFlow(store.scope(state: \.capture, action: \.capture))
     }
     .sheet(item: $store.scope(state: \.modal, action: \.modal)) { modalStore in
       switch modalStore.case {
@@ -62,8 +65,6 @@ public struct AppRootView: View {
         NavigationStack {
           SharingView(store: sharingStore)
         }
-      case .capture(let captureStore):
-        CaptureView(store: captureStore)
       case .mediaSummary(let summaryStore):
         NavigationStack {
           MediaSummaryView(store: summaryStore)

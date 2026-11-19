@@ -23,8 +23,8 @@ struct AppFeatureCaptureFlowTests {
   private static let draft = CapturedPhotoDraft(
     id: AppFeatureTests.mediaId,
     apartmentId: AppFeatureTests.apartmentId,
-    origin: .camera,
-    source: .camera,
+    origin: .photoLibrary,
+    source: .imported,
     localFilePath: "/tmp/\(AppFeatureTests.mediaId).jpg",
     sha256: sha256,
     width: width,
@@ -65,88 +65,92 @@ struct AppFeatureCaptureFlowTests {
   }
 
   @MainActor
-  @Test("Interactive swipe-dismiss of MediaSummary deletes unsaved draft JPEGs on disk")
-  func interactiveSummaryDismissCleansUpDraftFiles() async throws {
+  @Test("Direct capture enforces re-entrancy, opens summary on finish, and cleans swipe-dismiss")
+  func directCaptureReentrancySummaryAndDismissCleanup() async throws {
     let deletedIds = LockIsolated<[String]>([])
     let store = try makeTimelineStore(deletedMediaIds: deletedIds)
-    let expectedSummary = MediaSummaryFeature.State(
-      apartmentId: AppFeatureTests.apartmentId,
-      drafts: [Self.draft],
-      origin: .camera,
-      currentUser: AppFeatureTests.author
-    )
     let timelineId = try #require(store.state.path.ids.first)
-    await store.send(
-      .path(
-        .element(
-          id: timelineId,
-          action: .apartmentTimeline(
-            .delegate(
-              .didSelectCaptureSource(apartmentId: AppFeatureTests.apartmentId, source: .camera)
+    let selectLibrary = AppFeature.Action.path(
+      .element(
+        id: timelineId,
+        action: .apartmentTimeline(
+          .delegate(
+            .didSelectCaptureSource(
+              apartmentId: AppFeatureTests.apartmentId,
+              source: .photoLibrary
             )
           )
         )
       )
-    ) {
-      $0.modal = .capture(
-        CaptureFeature.State(apartmentId: AppFeatureTests.apartmentId, source: .camera)
-      )
+    )
+    let expectedCapture = CaptureFeature.State(
+      apartmentId: AppFeatureTests.apartmentId,
+      source: .photoLibrary
+    )
+    let expectedSummary = MediaSummaryFeature.State(
+      apartmentId: AppFeatureTests.apartmentId,
+      drafts: [Self.draft],
+      origin: .photoLibrary,
+      currentUser: AppFeatureTests.author
+    )
+
+    await store.send(selectLibrary) {
+      $0.capture = expectedCapture
+      $0.path[id: timelineId, case: \.apartmentTimeline]?.isCaptureInProgress = true
     }
+    await store.receive(.capture(.start)) {
+      $0.capture?.isPickerPresented = true
+    }
+
+    await store.send(selectLibrary)
+    #expect(store.state.modal == nil)
+
     await store.send(
-      .modal(.presented(.capture(.delegate(.didFinishCapture([Self.draft], origin: .camera)))))
+      .capture(.delegate(.didFinishCapture([Self.draft], origin: .photoLibrary)))
     ) {
+      $0.capture = nil
+      $0.path[id: timelineId, case: \.apartmentTimeline]?.isCaptureInProgress = false
       $0.modal = .mediaSummary(expectedSummary)
     }
-    await store.send(.modal(.dismiss)) {
-      $0.modal = nil
-    }
+    await store.send(.modal(.dismiss)) { $0.modal = nil }
     #expect(deletedIds.value == [Self.draft.id])
   }
 
   @MainActor
-  @Test("Routes Capture -> Summary -> Retake -> CaptureAnother and reloads local state")
-  func captureSummaryRetakeLoopFlow() async throws {
+  @Test("Popping timeline clears active capture and didCancel unlocks timeline menu")
+  func popTimelineAndCancelClearCaptureState() async throws {
     let store = try makeTimelineStore()
-    store.exhaustivity = .off
     let timelineId = try #require(store.state.path.ids.first)
-    let expectedCapture = CaptureFeature.State(
-      apartmentId: AppFeatureTests.apartmentId,
-      source: .camera
-    )
-    let expectedSummary = MediaSummaryFeature.State(
-      apartmentId: AppFeatureTests.apartmentId,
-      drafts: [Self.draft],
-      origin: .camera,
-      currentUser: AppFeatureTests.author
-    )
-
-    await store.send(
-      .path(
-        .element(
-          id: timelineId,
-          action: .apartmentTimeline(
-            .delegate(
-              .didSelectCaptureSource(apartmentId: AppFeatureTests.apartmentId, source: .camera)
-            )
+    let selectFiles = AppFeature.Action.path(
+      .element(
+        id: timelineId,
+        action: .apartmentTimeline(
+          .delegate(
+            .didSelectCaptureSource(apartmentId: AppFeatureTests.apartmentId, source: .files)
           )
         )
       )
-    ) { $0.modal = .capture(expectedCapture) }
-    await store.send(
-      .modal(.presented(.capture(.delegate(.didFinishCapture([Self.draft], origin: .camera)))))
-    ) { $0.modal = .mediaSummary(expectedSummary) }
-    await store.send(.modal(.presented(.mediaSummary(.delegate(.didRequestRetake(.camera)))))) {
-      $0.modal = .capture(expectedCapture)
+    )
+
+    await store.send(selectFiles) {
+      $0.capture = CaptureFeature.State(apartmentId: AppFeatureTests.apartmentId, source: .files)
+      $0.path[id: timelineId, case: \.apartmentTimeline]?.isCaptureInProgress = true
     }
-    await store.send(
-      .modal(.presented(.capture(.delegate(.didFinishCapture([Self.draft], origin: .camera)))))
-    ) { $0.modal = .mediaSummary(expectedSummary) }
-    await store.send(
-      .modal(.presented(.mediaSummary(.delegate(.didSave(mode: .localOnly, captureAnother: true)))))
-    ) { $0.modal = .capture(expectedCapture) }
-    await store.receive(.apartmentsList(.reloadLocalState))
-    await store.receive(
-      .path(.element(id: timelineId, action: .apartmentTimeline(.reloadLocalState))))
+    await store.receive(.capture(.start)) { $0.capture?.isPickerPresented = true }
+    await store.send(.capture(.delegate(.didCancel))) {
+      $0.capture = nil
+      $0.path[id: timelineId, case: \.apartmentTimeline]?.isCaptureInProgress = false
+    }
+
+    await store.send(selectFiles) {
+      $0.capture = CaptureFeature.State(apartmentId: AppFeatureTests.apartmentId, source: .files)
+      $0.path[id: timelineId, case: \.apartmentTimeline]?.isCaptureInProgress = true
+    }
+    await store.receive(.capture(.start)) { $0.capture?.isPickerPresented = true }
+    await store.send(.path(.popFrom(id: timelineId))) {
+      $0.capture = nil
+      $0.path.pop(from: timelineId)
+    }
   }
 
   @MainActor

@@ -4,11 +4,12 @@ import DesignSystem
 import Domain
 import Foundation
 import MediaStorage
+import SwiftUI
 import Testing
 
 @testable import CaptureFeature
 
-@Suite("CaptureFeature Multi-Photo Import, Error, and Cancellation Tests")
+@Suite("CaptureFeature Multi-Photo Import, Error, and Settle Sequencing Tests")
 struct CaptureImportAndErrorTests {
   private enum Fixtures {
     static let apartmentId = "01933e2a-7b40-7000-8000-000000000010"
@@ -36,8 +37,9 @@ struct CaptureImportAndErrorTests {
   }
 
   @MainActor
-  @Test("Multi-photo gallery import ingests sequentially preserving order")
-  func multiPhotoImportPreservesOrder() async {
+  @Test("Photo selection starts processing so settle does not cancel before ingest finishes")
+  func multiPhotoImportPreservesOrderAcrossSettle() async {
+    let clock = TestClock()
     let recorder = Recorder()
     let ids = LockIsolated([Fixtures.firstMediaId, Fixtures.secondMediaId])
     let expectedDrafts = [
@@ -50,6 +52,7 @@ struct CaptureImportAndErrorTests {
     ) {
       CaptureFeature()
     } withDependencies: {
+      $0.continuousClock = clock
       $0.date.now = Fixtures.baseDate
       $0.timeZone = Fixtures.warsawTZ
       $0.idGenerator = ClosureIDGenerator { ids.withValue { $0.removeFirst() } }
@@ -60,28 +63,52 @@ struct CaptureImportAndErrorTests {
       }
     }
 
-    await store.send(.task) {
-      $0.isPickerPresented = true
-    }
-    await store.send(.importedPhotosSelected([Fixtures.firstData, Fixtures.secondData])) {
-      $0.isPickerPresented = false
-      $0.isProcessing = true
-    }
-    await store.receive(.ingestSucceeded(expectedDrafts)) {
-      $0.isProcessing = false
-    }
+    await store.send(.start) { $0.isPickerPresented = true }
+    await store.send(.photoSelectionStarted) { $0.isProcessing = true }
+    await store.send(.pickerDismissed) { $0.isPickerPresented = false }
+    await clock.advance(by: CaptureConstants.presentationSettleDelay)
+    await store.receive(.pickerDismissalSettled) { $0.isPickerDismissalSettled = true }
+
+    await store.send(.importedPhotosSelected([Fixtures.firstData, Fixtures.secondData]))
+    await store.receive(.ingestSucceeded(expectedDrafts)) { $0.isProcessing = false }
     await store.receive(.delegate(.didFinishCapture(expectedDrafts, origin: .photoLibrary)))
     #expect(await recorder.ingestedOrder == [Fixtures.firstMediaId, Fixtures.secondMediaId])
   }
 
   @MainActor
-  @Test("Partial import failure cleans up earlier local files and reports localized error")
-  func partialImportFailureCleansUp() async {
+  @Test("Picker dismiss without selection waits 450ms settle before emitting didCancel")
+  func pickerCancelWaitsForPresentationSettle() async {
+    let clock = TestClock()
+    let store = TestStore(
+      initialState: CaptureFeature.State(
+        apartmentId: Fixtures.apartmentId,
+        source: .photoLibrary,
+        isPickerPresented: true
+      )
+    ) {
+      CaptureFeature()
+    } withDependencies: {
+      $0.continuousClock = clock
+    }
+
+    await store.send(.pickerDismissed) { $0.isPickerPresented = false }
+    await clock.advance(by: CaptureConstants.presentationSettleDelay)
+    await store.receive(.pickerDismissalSettled) { $0.isPickerDismissalSettled = true }
+    await store.receive(.delegate(.didCancel))
+  }
+
+  @MainActor
+  @Test("Partial import failure cleans up local files and dismissError finishes capture flow")
+  func partialImportFailureCleansUpAndDismissCancels() async {
     let recorder = Recorder()
     let ids = LockIsolated([Fixtures.firstMediaId, Fixtures.secondMediaId])
 
     let store = TestStore(
-      initialState: CaptureFeature.State(apartmentId: Fixtures.apartmentId, source: .files)
+      initialState: CaptureFeature.State(
+        apartmentId: Fixtures.apartmentId,
+        source: .files,
+        isPickerDismissalSettled: true
+      )
     ) {
       CaptureFeature()
     } withDependencies: {
@@ -114,40 +141,26 @@ struct CaptureImportAndErrorTests {
       $0.isProcessing = false
       $0.errorMessage = expectedError
     }
-    await store.send(.dismissError) {
-      $0.errorMessage = nil
-    }
+    await store.send(.dismissError) { $0.errorMessage = nil }
+    await store.receive(.delegate(.didCancel))
 
     #expect(await recorder.deletedMediaIds == [Fixtures.firstMediaId])
     #expect(await recorder.errorHaptics == 1)
   }
 
   @MainActor
-  @Test("Cancellation emits didCancel delegate and CaptureView instantiates cleanly")
-  func cancellationAndViews() async {
-    let store = TestStore(
-      initialState: CaptureFeature.State(
-        apartmentId: Fixtures.apartmentId,
-        source: .photoLibrary,
-        isPickerPresented: true
-      )
-    ) {
-      CaptureFeature()
-    }
-
-    await store.send(.pickerCancelled) {
-      $0.isPickerPresented = false
-    }
-    await store.receive(.delegate(.didCancel))
-
+  @Test("CaptureFlowModifier and supporting capture views instantiate cleanly")
+  func captureFlowViewsInstantiateCleanly() {
     let viewStore = Store(
       initialState: CaptureFeature.State(apartmentId: Fixtures.apartmentId, source: .camera)
     ) {
       CaptureFeature()
     }
-    let view = CaptureView(store: viewStore)
-    let promptView = LocationPermissionSheetView(onAllowTapped: {}, onSkipTapped: {})
-    _ = (view, promptView)
+    _ = (
+      EmptyView().captureFlow(viewStore),
+      LocationPermissionSheetView(onAllowTapped: {}, onSkipTapped: {}),
+      CaptureProcessingHUDView(),
+    )
   }
 
   private func makeArtifact(id: String) -> ProcessedPhotoArtifact {

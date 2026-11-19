@@ -455,13 +455,79 @@
         }
       }
     },
-    "apartment.timeline.capture.sheet.title": {
+    "capture.menu.camera": {
       "extractionState": "manual",
       "localizations": {
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dodaj materiał"
+            "value": "Zrób zdjęcie"
+          }
+        }
+      }
+    },
+    "capture.menu.library": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wybierz z galerii"
+          }
+        }
+      }
+    },
+    "capture.menu.files": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importuj z Plików"
+          }
+        }
+      }
+    },
+    "capture.menu.video.disabled": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wideo — wkrótce"
+          }
+        }
+      }
+    },
+    "capture.processing.hud": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przygotowuję zdjęcie…"
+          }
+        }
+      }
+    },
+    "capture.import.failed.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się dodać zdjęcia"
+          }
+        }
+      }
+    },
+    "common.ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
           }
         }
       }

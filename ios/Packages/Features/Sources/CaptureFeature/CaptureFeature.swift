@@ -13,8 +13,11 @@ public struct CaptureFeature: Sendable {
     public let source: CaptureSourceKind
     public var isLocationPromptPresented: Bool
     public var isPickerPresented: Bool
+    public var isPickerDismissalSettled: Bool
     public var isProcessing: Bool
     public var pendingDeviceLocation: CaptureLocationMetadata?
+    public var pendingDrafts: [CapturedPhotoDraft]?
+    public var shouldPresentCameraAfterPrompt: Bool
     public var errorMessage: String?
 
     public init(
@@ -22,28 +25,38 @@ public struct CaptureFeature: Sendable {
       source: CaptureSourceKind,
       isLocationPromptPresented: Bool = false,
       isPickerPresented: Bool = false,
+      isPickerDismissalSettled: Bool = false,
       isProcessing: Bool = false,
       pendingDeviceLocation: CaptureLocationMetadata? = nil,
+      pendingDrafts: [CapturedPhotoDraft]? = nil,
+      shouldPresentCameraAfterPrompt: Bool = false,
       errorMessage: String? = nil
     ) {
       self.apartmentId = apartmentId
       self.source = source
       self.isLocationPromptPresented = isLocationPromptPresented
       self.isPickerPresented = isPickerPresented
+      self.isPickerDismissalSettled = isPickerDismissalSettled
       self.isProcessing = isProcessing
       self.pendingDeviceLocation = pendingDeviceLocation
+      self.pendingDrafts = pendingDrafts
+      self.shouldPresentCameraAfterPrompt = shouldPresentCameraAfterPrompt
       self.errorMessage = errorMessage
     }
   }
 
   public enum Action: Equatable, Sendable {
-    case task
+    case start
     case allowLocationTapped
     case skipLocationTapped
+    case locationPromptDidDismiss
     case locationResolved(CaptureLocationMetadata?)
+    case photoSelectionStarted
     case cameraPhotoCaptured(Data)
     case importedPhotosSelected([Data])
     case pickerCancelled
+    case pickerDismissed
+    case pickerDismissalSettled
     case ingestSucceeded([CapturedPhotoDraft])
     case ingestFailed(String)
     case dismissError
@@ -57,6 +70,12 @@ public struct CaptureFeature: Sendable {
     }
   }
 
+  enum CancelID: Hashable, Sendable {
+    case settle
+    case location
+    case ingest
+  }
+
   @Dependency(\.locationCapture) var locationCapture
   @Dependency(\.mediaStorage) var mediaStorage
   @Dependency(\.appConfigClient) var appConfigClient
@@ -64,39 +83,34 @@ public struct CaptureFeature: Sendable {
   @Dependency(\.haptics) var haptics
   @Dependency(\.date.now) var now
   @Dependency(\.timeZone) var timeZone
+  @Dependency(\.continuousClock) var clock
 
   public init() {}
 
   public var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .task:
+      case .start:
         return handleStart(&state)
-      case .allowLocationTapped:
-        return handleAllowLocation(&state)
-      case .skipLocationTapped:
-        return handleSkipLocation(&state)
-      case .locationResolved(let location):
-        state.pendingDeviceLocation = location
-        if state.source == .camera, !state.isProcessing, !state.isPickerPresented {
-          state.isPickerPresented = true
-        }
+      case .allowLocationTapped, .skipLocationTapped, .locationPromptDidDismiss, .locationResolved:
+        return handleLocationAction(&state, action: action)
+      case .photoSelectionStarted:
+        state.isProcessing = true
         return .none
       case .cameraPhotoCaptured(let rawData):
         return handleCameraCapture(&state, rawData: rawData)
       case .importedPhotosSelected(let rawItems):
         return handleImportedPhotos(&state, rawItems: rawItems)
-      case .pickerCancelled, .cancelTapped:
-        state.isPickerPresented = false
-        state.isLocationPromptPresented = false
-        return .send(.delegate(.didCancel))
+      case .pickerCancelled, .pickerDismissed, .pickerDismissalSettled, .cancelTapped:
+        return handlePresentationLifecycle(&state, action: action)
       case .ingestSucceeded(let drafts):
         state.isProcessing = false
+        state.pendingDrafts = drafts
         return .merge(
           .run { _ in
             await haptics.actionSucceeded()
           },
-          .send(.delegate(.didFinishCapture(drafts, origin: state.source)))
+          finishIfReady(&state)
         )
       case .ingestFailed(let message):
         state.isProcessing = false
@@ -106,7 +120,7 @@ public struct CaptureFeature: Sendable {
         }
       case .dismissError:
         state.errorMessage = nil
-        return .none
+        return .send(.delegate(.didCancel))
       case .delegate:
         return .none
       }

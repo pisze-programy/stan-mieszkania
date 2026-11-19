@@ -6,6 +6,36 @@ import Foundation
 import MediaSummaryFeature
 
 extension AppFeature {
+  func handleCaptureDelegate(
+    _ state: inout State,
+    delegate: CaptureFeature.Action.Delegate
+  ) -> Effect<Action> {
+    let apartmentId = state.capture?.apartmentId
+    state.capture = nil
+    if let apartmentId {
+      setTimelineCaptureInProgress(&state, apartmentId: apartmentId, inProgress: false)
+    }
+
+    switch delegate {
+    case .didFinishCapture(let drafts, let origin):
+      guard let apartmentId, !drafts.isEmpty, state.modal == nil else {
+        return .none
+      }
+      let author = resolveCurrentAuthorSummary(for: state)
+      state.modal = .mediaSummary(
+        MediaSummaryFeature.State(
+          apartmentId: apartmentId,
+          drafts: drafts,
+          origin: origin,
+          currentUser: author
+        )
+      )
+      return .none
+    case .didCancel:
+      return .none
+    }
+  }
+
   func handleModalDismiss(_ state: inout State) -> Effect<Action> {
     switch state.modal {
     case .mediaSummary(let summaryState):
@@ -19,7 +49,7 @@ extension AppFeature {
       }
     case .sharing:
       return reloadLocalData(in: state)
-    case .capture, nil:
+    case nil:
       return .none
     }
   }
@@ -32,37 +62,9 @@ extension AppFeature {
     case .sharing(.delegate(.didDismiss)):
       state.modal = nil
       return reloadLocalData(in: state)
-    case .capture(.delegate(let delegate)):
-      return handleCaptureDelegate(&state, delegate: delegate)
     case .mediaSummary(.delegate(let delegate)):
       return handleSummaryDelegate(&state, delegate: delegate)
     default:
-      return .none
-    }
-  }
-
-  private func handleCaptureDelegate(
-    _ state: inout State,
-    delegate: CaptureFeature.Action.Delegate
-  ) -> Effect<Action> {
-    switch delegate {
-    case .didFinishCapture(let drafts, let origin):
-      guard !drafts.isEmpty, case .capture(let captureState) = state.modal else {
-        state.modal = nil
-        return .none
-      }
-      let author = resolveCurrentAuthorSummary(for: state)
-      state.modal = .mediaSummary(
-        MediaSummaryFeature.State(
-          apartmentId: captureState.apartmentId,
-          drafts: drafts,
-          origin: origin,
-          currentUser: author
-        )
-      )
-      return .none
-    case .didCancel:
-      state.modal = nil
       return .none
     }
   }
@@ -77,22 +79,48 @@ extension AppFeature {
     }
     switch delegate {
     case .didSave(_, let captureAnother):
-      if captureAnother {
-        state.modal = .capture(
-          CaptureFeature.State(apartmentId: summaryState.apartmentId, source: .camera)
-        )
-        return reloadLocalData(in: state)
-      }
       state.modal = nil
+      if captureAnother {
+        return .merge(
+          reloadLocalData(in: state),
+          startCapture(&state, apartmentId: summaryState.apartmentId, source: .camera)
+        )
+      }
       return reloadLocalData(in: state)
     case .didRequestRetake(let origin):
-      state.modal = .capture(
-        CaptureFeature.State(apartmentId: summaryState.apartmentId, source: origin)
-      )
-      return .none
+      state.modal = nil
+      return startCapture(&state, apartmentId: summaryState.apartmentId, source: origin)
     case .didCancel:
       state.modal = nil
       return .none
+    }
+  }
+
+  func startCapture(
+    _ state: inout State,
+    apartmentId: String,
+    source: CaptureSourceKind
+  ) -> Effect<Action> {
+    guard state.capture == nil, state.modal == nil else {
+      return .none
+    }
+    state.capture = CaptureFeature.State(apartmentId: apartmentId, source: source)
+    setTimelineCaptureInProgress(&state, apartmentId: apartmentId, inProgress: true)
+    return .send(.capture(.start))
+  }
+
+  func setTimelineCaptureInProgress(
+    _ state: inout State,
+    apartmentId: String,
+    inProgress: Bool
+  ) {
+    for id in state.path.ids {
+      if case .apartmentTimeline(var timelineState) = state.path[id: id] {
+        if timelineState.apartmentId == apartmentId {
+          timelineState.isCaptureInProgress = inProgress
+          state.path[id: id] = .apartmentTimeline(timelineState)
+        }
+      }
     }
   }
 

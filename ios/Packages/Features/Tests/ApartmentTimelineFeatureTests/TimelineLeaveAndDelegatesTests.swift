@@ -109,7 +109,7 @@ struct TimelineLeaveAndDelegatesTests {
   }
 
   @MainActor
-  @Test("Capture source sheet emits camera, photo library, and files delegates")
+  @Test("Capture menu emits source delegates and ignores selection while capture is in progress")
   func captureSourceDelegates() async {
     let store = TestStore(
       initialState: ApartmentTimelineFeature.State(
@@ -120,30 +120,26 @@ struct TimelineLeaveAndDelegatesTests {
       ApartmentTimelineFeature()
     }
 
-    await store.send(.captureButtonTapped) { $0.isCaptureSourceSheetPresented = true }
-    await store.send(.captureSourceSelected(.camera)) { $0.isCaptureSourceSheetPresented = false }
-    await store.receive(
-      .delegate(
-        .didSelectCaptureSource(apartmentId: TimelineTestFixtures.apartmentId, source: .camera)
-      )
-    )
-    await store.send(.captureSourceSelected(.photoLibrary))
-    await store.receive(
-      .delegate(
-        .didSelectCaptureSource(
-          apartmentId: TimelineTestFixtures.apartmentId,
-          source: .photoLibrary
+    for source: CaptureSource in [.camera, .photoLibrary, .files] {
+      await store.send(.captureSourceSelected(source))
+      await store.receive(
+        .delegate(
+          .didSelectCaptureSource(apartmentId: TimelineTestFixtures.apartmentId, source: source)
         )
       )
-    )
-    await store.send(.captureSourceSelected(.files))
-    await store.receive(
-      .delegate(
-        .didSelectCaptureSource(apartmentId: TimelineTestFixtures.apartmentId, source: .files)
+    }
+
+    let busyStore = TestStore(
+      initialState: ApartmentTimelineFeature.State(
+        apartmentId: TimelineTestFixtures.apartmentId,
+        apartment: TimelineTestFixtures.makeApartment(role: .owner),
+        isCaptureInProgress: true
       )
-    )
-    #expect(L10n.string("apartment.timeline.capture.video") == "Wideo")
-    #expect(L10n.string("apartment.timeline.capture.video.disabled") == "Dostępne wkrótce")
+    ) {
+      ApartmentTimelineFeature()
+    }
+    await busyStore.send(.captureSourceSelected(.photoLibrary))
+    #expect(L10n.string("capture.menu.video.disabled") == "Wideo — wkrótce")
   }
 
   @MainActor
@@ -192,7 +188,6 @@ struct TimelineLeaveAndDelegatesTests {
     }
     _ = (
       ApartmentTimelineView(store: viewStore),
-      CaptureSourceSheetView(onSelect: { _ in }, onCancel: {}),
       ApartmentHistorySheetView(sheet: ApartmentHistorySheetState(), onClose: {}),
       TimelineDayHeaderView(title: "17 listopada, czwartek"),
     )
