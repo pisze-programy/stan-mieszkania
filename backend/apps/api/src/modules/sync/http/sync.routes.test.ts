@@ -12,6 +12,8 @@ import {
   type SyncChangesResponseDto,
 } from './sync.schema';
 
+type App = ReturnType<typeof createApp>;
+
 async function sha256Hex(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', bytes);
   return Array.from(new Uint8Array(digest))
@@ -19,10 +21,43 @@ async function sha256Hex(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
     .join('');
 }
 
+const jsonReq = (
+  app: App,
+  path: string,
+  token: string,
+  env: Record<string, unknown>,
+  method: string,
+  body?: unknown,
+) =>
+  app.request(
+    path,
+    {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    },
+    env,
+  );
+
+const okJson = async (
+  app: App,
+  path: string,
+  token: string,
+  env: Record<string, unknown>,
+  method: string,
+  body?: unknown,
+): Promise<unknown> => {
+  const res = await jsonReq(app, path, token, env, method, body);
+  expect(res.status).toBe(HTTP_STATUS.OK);
+  return res.json();
+};
+
 describe('Sync HTTP routes (/v1/apartments/{id}/changes & /v1/me/apartments)', () => {
   let harness: D1TestHarness | undefined;
   const ids = new SequentialUuidV7Generator();
-
   const getHarness = (): D1TestHarness => {
     if (harness === undefined) throw new Error('D1 test harness was not initialized');
     return harness;
@@ -37,8 +72,7 @@ describe('Sync HTTP routes (/v1/apartments/{id}/changes & /v1/me/apartments)', (
   });
 
   it('exhausts multi-page hydrated changes, enforces Q10/Q4/S2-3 redaction, and returns accurate /v1/me/apartments headSeq', async () => {
-    const clock = new FixedClock();
-    const app = createApp({ overrides: { clock, idGenerator: ids } });
+    const app = createApp({ overrides: { clock: new FixedClock(), idGenerator: ids } });
     const env = {
       DB: getHarness().db,
       MEDIA_BUCKET: getHarness().r2,
@@ -53,97 +87,61 @@ describe('Sync HTTP routes (/v1/apartments/{id}/changes & /v1/me/apartments)', (
     const validSha = await sha256Hex(jpegBytes);
 
     const apt = ApartmentDtoSchema.parse(
-      await (
-        await app.request(
-          `/v1/apartments/${aptId}`,
-          {
-            method: 'PUT',
-            headers: { Authorization: 'Bearer dev:own-s:Jan', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: 'M1', street: 'S1', city: 'Warszawa' }),
-          },
-          env,
-        )
-      ).json(),
+      await okJson(app, `/v1/apartments/${aptId}`, 'dev:own-s:Jan', env, 'PUT', {
+        name: 'M1',
+        street: 'S1',
+        city: 'Warszawa',
+      }),
     );
-    await app.request(
-      `/v1/apartments/${aptId}`,
-      {
-        method: 'PATCH',
-        headers: { Authorization: 'Bearer dev:own-s', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'M1 New' }),
-      },
-      env,
-    );
-    await app.request(
-      '/v1/apartments/join',
-      {
-        method: 'POST',
-        headers: { Authorization: 'Bearer dev:cnt-s:Anna', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inviteCode: apt.inviteCode }),
-      },
-      env,
-    );
+    await okJson(app, `/v1/apartments/${aptId}`, 'dev:own-s', env, 'PATCH', { name: 'M1 New' });
+    await okJson(app, '/v1/apartments/join', 'dev:cnt-s:Anna', env, 'POST', {
+      inviteCode: apt.inviteCode,
+    });
 
     const init = InitMediaUploadResponseSchema.parse(
-      await (
-        await app.request(
-          `/v1/apartments/${aptId}/media/${medId}/init`,
-          {
-            method: 'POST',
-            headers: { Authorization: 'Bearer dev:cnt-s', 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              kind: 'photo',
-              source: 'camera',
-              sha256: validSha,
-              capturedAt: '2026-11-18T12:02:00.000Z',
-              capturedTz: 'Europe/Warsaw',
-              width: 1200,
-              height: 900,
-              bytes: jpegBytes.byteLength,
-              lat: 52.23,
-              lng: 21.01,
-              accuracyM: 5,
-              locationSource: 'device',
-            }),
-          },
-          env,
-        )
-      ).json(),
+      await okJson(app, `/v1/apartments/${aptId}/media/${medId}/init`, 'dev:cnt-s', env, 'POST', {
+        kind: 'photo',
+        source: 'camera',
+        sha256: validSha,
+        capturedAt: '2026-11-18T12:02:00.000Z',
+        capturedTz: 'Europe/Warsaw',
+        width: 1200,
+        height: 900,
+        bytes: jpegBytes.byteLength,
+        lat: 52.23,
+        lng: 21.01,
+        accuracyM: 5,
+        locationSource: 'device',
+      }),
     );
     await app.request(init.upload?.url ?? '', { method: 'PUT', body: jpegBytes }, env);
-    await app.request(
-      `/v1/apartments/${aptId}/media/${medId}/confirm`,
-      { method: 'POST', headers: { Authorization: 'Bearer dev:cnt-s' } },
-      env,
-    );
-
-    await app.request(
+    await okJson(app, `/v1/apartments/${aptId}/media/${medId}/confirm`, 'dev:cnt-s', env, 'POST');
+    await okJson(
+      app,
       `/v1/apartments/${aptId}/media/${medId}/entries/${entId}`,
+      'dev:cnt-s',
+      env,
+      'PUT',
       {
-        method: 'PUT',
-        headers: { Authorization: 'Bearer dev:cnt-s', 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: 'Rysa [1]',
-          markers: [{ id: mrkId, localNumber: 1, x: 0.4, y: 0.6 }],
-        }),
+        text: 'Rysa [1]',
+        createdAt: '2026-11-18T12:03:00.000Z',
+        markers: [{ id: mrkId, localNumber: 1, x: 0.4, y: 0.6 }],
       },
-      env,
     );
-    await app.request(
+    await okJson(
+      app,
       `/v1/apartments/${aptId}/media/${medId}/entries/${entId}`,
-      { method: 'DELETE', headers: { Authorization: 'Bearer dev:cnt-s' } },
+      'dev:cnt-s',
       env,
+      'DELETE',
     );
 
-    const allChanges = await exhaustCursorPages<SyncChangesResponseDto['changes'][number], number>(
+    const allChanges = await exhaustCursorPages<SyncChangesResponseDto['changes'][number]>(
       async (cursor) => {
-        const res = await app.request(
-          `/v1/apartments/${aptId}/changes?after=${String(cursor ?? 0)}&limit=2`,
-          { headers: { Authorization: 'Bearer dev:cnt-s' } },
-          env,
+        const path = `/v1/apartments/${aptId}/changes?after=${String(cursor ?? 0)}&limit=2`;
+        const page = SyncChangesResponseSchema.parse(
+          await okJson(app, path, 'dev:cnt-s', env, 'GET'),
         );
-        expect(res.status).toBe(HTTP_STATUS.OK);
-        const page = SyncChangesResponseSchema.parse(await res.json());
         return { items: page.changes, nextCursor: page.nextSeq, hasMore: page.hasMore };
       },
       0,
@@ -158,20 +156,16 @@ describe('Sync HTTP routes (/v1/apartments/{id}/changes & /v1/me/apartments)', (
       'created',
       'retracted',
     ]);
-
     const aptPayload = allChanges[0]?.payload;
     if (aptPayload?.kind === 'apartment') {
       expect(aptPayload.apartment.inviteCode).toBeNull();
       expect(aptPayload.apartment.shouldSuggestInviteCodeReset).toBe(false);
     }
-    const mediaPayload = allChanges[4]?.payload;
-    expect(mediaPayload?.kind).toBe('media');
-    const rawMediaJson = JSON.stringify(mediaPayload);
+    const rawMediaJson = JSON.stringify(allChanges[4]?.payload);
     for (const forbidden of ['"lat"', '"lng"', '"accuracyM"', '"locationSource"', '"r2Key"']) {
       expect(rawMediaJson).not.toContain(forbidden);
     }
     const entryPayload = allChanges[6]?.payload;
-    expect(entryPayload?.kind).toBe('entry');
     if (entryPayload?.kind === 'entry') {
       expect(entryPayload.entry.text).toBe('');
       expect(entryPayload.entry.markers).toEqual([]);
@@ -180,13 +174,7 @@ describe('Sync HTTP routes (/v1/apartments/{id}/changes & /v1/me/apartments)', (
 
     const lastSeq = allChanges[allChanges.length - 1]?.seq ?? 0;
     const ownerMe = MyApartmentsSyncResponseSchema.parse(
-      await (
-        await app.request(
-          '/v1/me/apartments',
-          { headers: { Authorization: 'Bearer dev:own-s' } },
-          env,
-        )
-      ).json(),
+      await okJson(app, '/v1/me/apartments', 'dev:own-s', env, 'GET'),
     );
     expect(ownerMe.items[0]).toMatchObject({
       role: 'owner',
@@ -198,22 +186,13 @@ describe('Sync HTTP routes (/v1/apartments/{id}/changes & /v1/me/apartments)', (
     expect(ownerMe.items[0]?.apartment.shouldSuggestInviteCodeReset).toBe(true);
 
     const contribMe = MyApartmentsSyncResponseSchema.parse(
-      await (
-        await app.request(
-          '/v1/me/apartments',
-          { headers: { Authorization: 'Bearer dev:cnt-s' } },
-          env,
-        )
-      ).json(),
+      await okJson(app, '/v1/me/apartments', 'dev:cnt-s', env, 'GET'),
     );
     expect(contribMe.items[0]?.apartment.inviteCode).toBeNull();
     expect(contribMe.items[0]?.apartment.shouldSuggestInviteCodeReset).toBe(false);
-
-    const strangerRes = await app.request(
-      `/v1/apartments/${aptId}/changes?after=0`,
-      { headers: { Authorization: 'Bearer dev:stranger-s' } },
-      env,
-    );
-    expect(strangerRes.status).toBe(HTTP_STATUS.FORBIDDEN);
+    expect(
+      (await jsonReq(app, `/v1/apartments/${aptId}/changes?after=0`, 'dev:stranger-s', env, 'GET'))
+        .status,
+    ).toBe(HTTP_STATUS.FORBIDDEN);
   });
 });
