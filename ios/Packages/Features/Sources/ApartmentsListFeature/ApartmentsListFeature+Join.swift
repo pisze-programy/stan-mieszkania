@@ -77,3 +77,32 @@ extension ApartmentsListFeature {
     }
   }
 }
+
+extension ApartmentsListFeature.CreateApartmentSheetState {
+  public var isValid: Bool {
+    if case .success = ApartmentsListStore.validateCreateInput(
+      name: name,
+      street: street,
+      city: city
+    ) {
+      return true
+    }
+    return false
+  }
+
+  public var hasUnsavedInput: Bool {
+    !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      || !street.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      || !city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
+}
+
+extension ApartmentsListFeature.JoinApartmentSheetState {
+  public var isCodeValid: Bool {
+    InviteCodeFormatter.validate(inviteCode) != nil
+  }
+
+  public var hasUnsavedInput: Bool {
+    !inviteCode.isEmpty
+  }
+}

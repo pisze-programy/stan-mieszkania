@@ -6,17 +6,20 @@ import Foundation
 #endif
 
 public struct HapticsClient: Sendable {
+  public var selection: @MainActor @Sendable () -> Void
   public var markerDropped: @MainActor @Sendable () -> Void
   public var actionSucceeded: @MainActor @Sendable () -> Void
   public var warning: @MainActor @Sendable () -> Void
   public var error: @MainActor @Sendable () -> Void
 
   public init(
+    selection: @escaping @MainActor @Sendable () -> Void = {},
     markerDropped: @escaping @MainActor @Sendable () -> Void,
     actionSucceeded: @escaping @MainActor @Sendable () -> Void,
     warning: @escaping @MainActor @Sendable () -> Void,
     error: @escaping @MainActor @Sendable () -> Void
   ) {
+    self.selection = selection
     self.markerDropped = markerDropped
     self.actionSucceeded = actionSucceeded
     self.warning = warning
@@ -24,6 +27,7 @@ public struct HapticsClient: Sendable {
   }
 
   public static let noop = HapticsClient(
+    selection: {},
     markerDropped: {},
     actionSucceeded: {},
     warning: {},
@@ -33,6 +37,10 @@ public struct HapticsClient: Sendable {
   public static let live: HapticsClient = {
     #if os(iOS)
       return HapticsClient(
+        selection: {
+          let generator = UISelectionFeedbackGenerator()
+          generator.selectionChanged()
+        },
         markerDropped: {
           let generator = UIImpactFeedbackGenerator(style: .medium)
           generator.impactOccurred()

@@ -89,11 +89,18 @@ public struct SharingFeature: Sendable {
     }
   }
 
+  enum CancelID: Hashable, Sendable {
+    case copyFeedback
+  }
+
+  static let copyFeedbackDurationSeconds: Int = 2
+
   @Dependency(\.defaultDatabase) var database
   @Dependency(\.apiClient) var apiClient
   @Dependency(\.syncEngine) var syncEngine
   @Dependency(\.pasteboard) var pasteboard
   @Dependency(\.haptics) var haptics
+  @Dependency(\.continuousClock) var clock
   @Dependency(\.date.now) var now
 
   public init() {}

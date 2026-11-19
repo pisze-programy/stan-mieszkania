@@ -5,7 +5,6 @@ struct DeleteAccountImpactSheetView: View {
   private static let warningIconSize: CGFloat = 44
 
   let onContinueTapped: () -> Void
-  let onCancelTapped: () -> Void
 
   var body: some View {
     NavigationStack {
@@ -31,22 +30,21 @@ struct DeleteAccountImpactSheetView: View {
 
         Spacer()
 
-        VStack(spacing: Spacing.sm) {
-          GlassActionButton(
-            title: L10n.string("profile.delete.step1.continue"),
-            systemImage: "trash.fill",
-            variant: .destructive,
-            action: onContinueTapped
-          )
-          GlassActionButton(
-            title: L10n.string("apartments.create.cancel.cta"),
-            variant: .secondary,
-            action: onCancelTapped
-          )
-        }
+        GlassActionButton(
+          title: L10n.string("profile.delete.step1.continue"),
+          systemImage: "trash.fill",
+          variant: .destructive,
+          action: onContinueTapped
+        )
       }
       .padding(Spacing.lg)
+      .appCanvas()
       .navigationTitle(L10n.string("profile.delete.account"))
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
     }
+    .presentationDetents([.medium, .large])
+    .presentationDragIndicator(.visible)
   }
 }

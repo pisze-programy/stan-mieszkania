@@ -151,7 +151,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wpisz 8-znakowy kod (np. K7QM-4XPB)"
+            "value": "K7QM-4XPB"
           }
         }
       }
@@ -352,17 +352,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Brak zarejestrowanych zmian"
-          }
-        }
-      }
-    },
-    "apartment.history.close.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zamknij"
           }
         }
       }
@@ -873,39 +862,6 @@
         }
       }
     },
-    "sharing.code.copy": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Skopiuj kod"
-          }
-        }
-      }
-    },
-    "sharing.code.copied": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Skopiowano kod do schowka"
-          }
-        }
-      }
-    },
-    "sharing.sms.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wyślij przez SMS / udostępnij"
-          }
-        }
-      }
-    },
     "sharing.code.reset.cta": {
       "extractionState": "manual",
       "localizations": {
@@ -1000,7 +956,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wyświetlana nazwa"
+            "value": "Nazwa wyświetlana"
           }
         }
       }
@@ -1011,7 +967,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zapisz nazwę"
+            "value": "Zapisz"
           }
         }
       }
@@ -1022,7 +978,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Motyw aplikacji"
+            "value": "Motyw"
           }
         }
       }
@@ -2246,6 +2202,83 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mieszkanie przejdzie na najdłużej obecnego współuczestnika."
+          }
+        }
+      }
+    },
+    "sharing.share.cta": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Udostępnij"
+          }
+        }
+      }
+    },
+    "sharing.code.tapToCopy": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stuknij kod, aby skopiować"
+          }
+        }
+      }
+    },
+    "sharing.code.copied.short": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skopiowano"
+          }
+        }
+      }
+    },
+    "profile.name.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widoczna dla innych członków mieszkania przy Twoich zdjęciach i wpisach."
+          }
+        }
+      }
+    },
+    "profile.theme.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wygląd"
+          }
+        }
+      }
+    },
+    "profile.delete.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usunięcie konta jest nieodwracalne."
+          }
+        }
+      }
+    },
+    "apartments.join.code.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poproś właściciela o 8-znakowy kod."
           }
         }
       }

@@ -77,6 +77,17 @@ public struct EditApartmentSheetState: Identifiable, Equatable, Sendable {
 
   public var id: String { ApartmentTimelineConstants.editSheetID }
 
+  public var isValid: Bool {
+    if case .success = ApartmentTimelineStore.validateEditInput(
+      name: name,
+      street: street,
+      city: city
+    ) {
+      return true
+    }
+    return false
+  }
+
   public init(
     name: String,
     street: String,

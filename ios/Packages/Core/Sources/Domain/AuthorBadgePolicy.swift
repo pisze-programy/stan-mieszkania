@@ -3,7 +3,6 @@ import Foundation
 public enum AuthorBadgePolicy: Sendable {
   private static let fallbackPrefixWithHash: String =
     "\(DomainConstants.fallbackUserDisplayPrefix) #"
-  private static let hashPrefix: String = "#"
   private static let emptyPlaceholder: String = "?"
   private static let singleWordInitialsMaxLength: Int = 2
   private static let twoWordsMinimumCount: Int = 2
@@ -18,11 +17,11 @@ public enum AuthorBadgePolicy: Sendable {
       return emptyPlaceholder
     }
 
-    // Decision S2-14: Fallback display names 'Użytkownik #A1B2' render '#A' as badge initials.
     if trimmed.hasPrefix(fallbackPrefixWithHash) {
       let tagSuffix = trimmed.dropFirst(fallbackPrefixWithHash.count)
-      if let firstTagCharacter = tagSuffix.first {
-        return "\(hashPrefix)\(String(firstTagCharacter).uppercased())"
+      let tagInitials = String(tagSuffix.prefix(singleWordInitialsMaxLength)).uppercased()
+      if !tagInitials.isEmpty {
+        return tagInitials
       }
     }
 

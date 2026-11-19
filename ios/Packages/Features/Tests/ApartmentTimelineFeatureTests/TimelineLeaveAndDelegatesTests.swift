@@ -190,8 +190,7 @@ struct TimelineLeaveAndDelegatesTests {
       ApartmentTimelineView(store: viewStore),
       ApartmentHistorySheetView(
         sheet: ApartmentHistorySheetState(),
-        referenceDate: TimelineTestFixtures.thursdayLaterDate,
-        onClose: {}
+        referenceDate: TimelineTestFixtures.thursdayLaterDate
       ),
       TimelineDayHeaderView(title: "17 listopada, Czwartek"),
     )

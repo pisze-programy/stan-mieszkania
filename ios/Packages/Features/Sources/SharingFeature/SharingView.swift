@@ -11,55 +11,118 @@ public struct SharingView: View {
   }
 
   public var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: Spacing.md) {
+    sharingList
+      .refreshable {
+        await store.send(.refreshed).finish()
+      }
+      .task {
+        await store.send(.task).finish()
+      }
+      .overlay(alignment: .top) {
         if let errorMessage = store.errorMessage {
-          errorBanner(errorMessage)
-        }
-
-        if store.shouldSuggestInviteCodeReset && store.isOwner {
-          securityResetBanner
-        }
-
-        InviteCodeCardView(
-          inviteCode: store.inviteCode,
-          shareMessageText: store.shareMessageText,
-          showCopiedFeedback: store.showCopiedFeedback,
-          isResettingCode: store.isResettingCode,
-          isOwner: store.isOwner,
-          onCopyTapped: { store.send(.copyCodeTapped) },
-          onResetTapped: { store.send(.resetCodeTapped) }
-        )
-
-        membersSection(
-          title: L10n.string("sharing.members.header"),
-          members: store.activeMembers
-        )
-
-        if !store.departedMembers.isEmpty {
-          membersSection(
-            title: L10n.string("sharing.members.departed.header"),
-            members: store.departedMembers
-          )
+          ToastBanner(message: errorMessage, style: .error) {
+            store.send(.dismissError)
+          }
+          .padding(.horizontal, Spacing.md)
+          .padding(.top, Spacing.xs)
+          .transition(.move(edge: .top).combined(with: .opacity))
         }
       }
-      .padding(Spacing.md)
-    }
-    .appCanvas()
-    .refreshable {
-      await store.send(.refreshed).finish()
-    }
-    .task {
-      await store.send(.task).finish()
-    }
-    .navigationTitle(L10n.string("sharing.screen.title"))
-    .toolbar {
-      ToolbarItem(placement: .cancellationAction) {
-        Button(L10n.string("apartment.history.close.cta")) {
-          store.send(.closeTapped)
+      .animation(Motion.smooth, value: store.errorMessage)
+      .navigationTitle(L10n.string("sharing.screen.title"))
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          Button(role: .close) {
+            store.send(.closeTapped)
+          }
+        }
+      }
+  }
+
+  private var sharingList: some View {
+    List {
+      if store.shouldSuggestInviteCodeReset && store.isOwner {
+        securityAlertSection
+      }
+
+      inviteCodeSection
+
+      Section(L10n.string("sharing.members.header")) {
+        ForEach(store.activeMembers) { member in
+          activeMemberRow(member)
+        }
+      }
+
+      if !store.departedMembers.isEmpty {
+        Section(L10n.string("sharing.members.departed.header")) {
+          ForEach(store.departedMembers) { member in
+            SharingMemberRowView(member: member, isRevoking: false)
+              .foregroundStyle(.secondary)
+          }
         }
       }
     }
+    #if os(iOS)
+      .listStyle(.insetGrouped)
+    #endif
+  }
+
+  private var securityAlertSection: some View {
+    Section {
+      VStack(alignment: .leading, spacing: Spacing.xs) {
+        HStack(alignment: .top, spacing: Spacing.sm) {
+          Image(systemName: "shield.lefthalf.filled.badge.checkmark")
+            .foregroundStyle(.orange)
+          Text(L10n.string("sharing.security.banner"))
+            .font(Typography.callout)
+        }
+
+        Button(L10n.string("sharing.security.reset.cta")) {
+          store.send(.resetCodeTapped)
+        }
+        .font(.subheadline.weight(.semibold))
+        .foregroundStyle(Color.accentColor)
+        .disabled(store.isResettingCode)
+      }
+      .padding(.vertical, Spacing.xxs)
+    }
+  }
+
+  private var inviteCodeSection: some View {
+    Section(L10n.string("sharing.code.label")) {
+      InviteCodeCardView(
+        inviteCode: store.inviteCode,
+        shareMessageText: store.shareMessageText,
+        showCopiedFeedback: store.showCopiedFeedback,
+        onCopyTapped: { store.send(.copyCodeTapped) }
+      )
+
+      if store.isOwner {
+        resetCodeRow
+      }
+    }
+  }
+
+  private var resetCodeRow: some View {
+    Button {
+      store.send(.resetCodeTapped)
+    } label: {
+      HStack(spacing: Spacing.xs) {
+        if store.isResettingCode {
+          ProgressView()
+            .controlSize(.small)
+        } else {
+          Image(systemName: "arrow.clockwise")
+        }
+        Text(L10n.string("sharing.code.reset.cta"))
+      }
+      .font(.subheadline)
+      .foregroundStyle(.secondary)
+    }
+    .disabled(store.isResettingCode)
     .confirmationDialog(
       L10n.string("sharing.code.reset.confirm.title"),
       isPresented: Binding(
@@ -77,10 +140,19 @@ public struct SharingView: View {
     } message: {
       Text(L10n.string("sharing.code.reset.confirm.message"))
     }
+  }
+
+  @ViewBuilder
+  private func activeMemberRow(_ member: ApartmentMember) -> some View {
+    let canRevoke = store.isOwner && member.role == .contributor && member.isActive
+    let row = SharingMemberRowView(
+      member: member,
+      isRevoking: store.revokingUserId == member.userId
+    )
     .confirmationDialog(
       L10n.string("sharing.member.revoke.confirm.title"),
       isPresented: Binding(
-        get: { store.pendingRevokeMember != nil },
+        get: { store.pendingRevokeMember?.id == member.id },
         set: { if !$0 { store.send(.revokeConfirmationDismissed) } }
       ),
       titleVisibility: .visible
@@ -94,69 +166,26 @@ public struct SharingView: View {
     } message: {
       Text(L10n.string("sharing.member.revoke.confirm.message"))
     }
-  }
 
-  private var securityResetBanner: some View {
-    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.md) {
-      VStack(alignment: .leading, spacing: Spacing.sm) {
-        HStack(alignment: .top, spacing: Spacing.sm) {
-          Image(systemName: "shield.lefthalf.filled.badge.checkmark")
-            .foregroundStyle(.orange)
-          Text(L10n.string("sharing.security.banner"))
-            .font(Typography.callout)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        GlassActionButton(
-          title: L10n.string("sharing.security.reset.cta"),
-          systemImage: "arrow.clockwise",
-          variant: .primary,
-          isLoading: store.isResettingCode
-        ) {
-          store.send(.resetCodeTapped)
-        }
-      }
-    }
-  }
-
-  private func membersSection(title: String, members: [ApartmentMember]) -> some View {
-    VStack(alignment: .leading, spacing: Spacing.xs) {
-      Text(title)
-        .font(Typography.sectionHeader)
-        .padding(.horizontal, Spacing.xxs)
-
-      SurfaceCard(cornerRadius: CornerRadius.card, padding: Spacing.md) {
-        VStack(spacing: Spacing.sm) {
-          ForEach(members) { member in
-            SharingMemberRowView(
-              member: member,
-              canRevoke: store.isOwner && member.role == .contributor && member.isActive,
-              isRevoking: store.revokingUserId == member.userId,
-              onRevokeTapped: { store.send(.revokeMemberTapped(member)) }
-            )
-            if member.id != members.last?.id {
-              Divider()
-            }
+    if canRevoke {
+      row
+        .swipeActions(edge: .trailing) {
+          Button(L10n.string("sharing.member.revoke.cta"), role: .destructive) {
+            store.send(.revokeMemberTapped(member))
           }
         }
-      }
-    }
-  }
-
-  private func errorBanner(_ message: String) -> some View {
-    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
-      HStack(spacing: Spacing.sm) {
-        Image(systemName: "exclamationmark.triangle.fill")
-          .foregroundStyle(.yellow)
-        Text(message)
-          .font(Typography.callout)
-          .frame(maxWidth: .infinity, alignment: .leading)
-        Button {
-          store.send(.dismissError)
-        } label: {
-          Image(systemName: "xmark")
+        .contextMenu {
+          Button(role: .destructive) {
+            store.send(.revokeMemberTapped(member))
+          } label: {
+            Label(
+              L10n.string("sharing.member.revoke.cta"),
+              systemImage: "person.badge.minus"
+            )
+          }
         }
-        .buttonStyle(.plain)
-      }
+    } else {
+      row
     }
   }
 }

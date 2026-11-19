@@ -47,10 +47,13 @@ extension SharingFeature {
       return .none
     }
     state.showCopiedFeedback = true
-    return .run { _ in
+    return .run { send in
       await pasteboard.copyString(code)
-      await haptics.actionSucceeded()
+      await haptics.selection()
+      try await clock.sleep(for: .seconds(Self.copyFeedbackDurationSeconds))
+      await send(.dismissCopiedFeedback)
     }
+    .cancellable(id: CancelID.copyFeedback, cancelInFlight: true)
   }
 
   func handleResetAction(_ state: inout State, action: Action) -> Effect<Action> {
@@ -88,9 +91,12 @@ extension SharingFeature {
       state.isResettingCode = false
       state.apartment = updated
       state.showCopiedFeedback = false
-      return .run { _ in
-        await haptics.actionSucceeded()
-      }
+      return .merge(
+        .cancel(id: CancelID.copyFeedback),
+        .run { _ in
+          await haptics.actionSucceeded()
+        }
+      )
 
     case .resetCodeFailed(let message):
       state.isResettingCode = false

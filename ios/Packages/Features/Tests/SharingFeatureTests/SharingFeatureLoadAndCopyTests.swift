@@ -15,16 +15,16 @@ struct SharingFeatureLoadAndCopyTests {
   private actor Recorder {
     var outboxCalls = 0
     var copiedStrings: [String] = []
-    var successHaptics = 0
+    var selectionHaptics = 0
 
     func recordOutbox() { outboxCalls += 1 }
     func recordCopied(_ text: String) { copiedStrings.append(text) }
-    func recordSuccessHaptic() { successHaptics += 1 }
+    func recordSelectionHaptic() { selectionHaptics += 1 }
   }
 
   @MainActor
-  @Test("Flushes pending outbox, loads invite code with security banner, and copies code")
-  func loadWithOutboxFlushAndCopy() async throws {
+  @Test("Flushes outbox, loads invite code, copies with selection haptic, and auto-resets in 2s")
+  func loadWithOutboxFlushAndCopyAutoReset() async throws {
     let database = try makeInMemoryDatabase()
     try ApartmentMutationStore(database: database).createApartment(
       SharingTestFixtures.pendingApartment,
@@ -33,16 +33,16 @@ struct SharingFeatureLoadAndCopyTests {
       now: SharingTestFixtures.baseDate
     )
     let recorder = Recorder()
+    let clock = TestClock()
     let remoteMembers = [SharingTestFixtures.ownerMember, SharingTestFixtures.contributorMember]
     let store = makeLoadTestStore(
       database: database,
       remoteMembers: remoteMembers,
+      clock: clock,
       recorder: recorder
     )
 
-    await store.send(.task) {
-      $0.isLoading = true
-    }
+    await store.send(.task) { $0.isLoading = true }
     await store.receive(
       .localDataLoaded(
         apartment: SharingTestFixtures.pendingApartment,
@@ -62,12 +62,13 @@ struct SharingFeatureLoadAndCopyTests {
     #expect(store.state.shouldSuggestInviteCodeReset)
     #expect(store.state.shareMessageText?.contains("K7QM-4XPB") == true)
 
-    await store.send(.copyCodeTapped) {
-      $0.showCopiedFeedback = true
-    }
+    await store.send(.copyCodeTapped) { $0.showCopiedFeedback = true }
+    await clock.advance(by: .seconds(SharingFeature.copyFeedbackDurationSeconds))
+    await store.receive(.dismissCopiedFeedback) { $0.showCopiedFeedback = false }
+
     #expect(await recorder.outboxCalls == 1)
     #expect(await recorder.copiedStrings == ["K7QM-4XPB"])
-    #expect(await recorder.successHaptics == 1)
+    #expect(await recorder.selectionHaptics == 1)
   }
 
   @MainActor
@@ -94,9 +95,7 @@ struct SharingFeatureLoadAndCopyTests {
       $0.apiClient.resetApartmentInviteCode = { _ in SharingTestFixtures.resetApartment }
     }
 
-    await store.send(.resetCodeTapped) {
-      $0.isResetConfirmationPresented = true
-    }
+    await store.send(.resetCodeTapped) { $0.isResetConfirmationPresented = true }
     await store.send(.resetCodeConfirmed) {
       $0.isResetConfirmationPresented = false
       $0.isResettingCode = true
@@ -132,12 +131,14 @@ struct SharingFeatureLoadAndCopyTests {
   private func makeLoadTestStore(
     database: any DatabaseWriter,
     remoteMembers: [ApartmentMember],
+    clock: TestClock<Duration>,
     recorder: Recorder
   ) -> TestStoreOf<SharingFeature> {
     TestStore(initialState: SharingFeature.State(apartmentId: SharingTestFixtures.apartmentId)) {
       SharingFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.continuousClock = clock
       $0.syncEngine.processOutbox = {
         await recorder.recordOutbox()
         return SyncOutboxReport(
@@ -151,8 +152,9 @@ struct SharingFeatureLoadAndCopyTests {
       $0.apiClient.listApartmentMembers = { _ in remoteMembers }
       $0.pasteboard.copyString = { text in Task { await recorder.recordCopied(text) } }
       $0.haptics = HapticsClient(
+        selection: { Task { await recorder.recordSelectionHaptic() } },
         markerDropped: {},
-        actionSucceeded: { Task { await recorder.recordSuccessHaptic() } },
+        actionSucceeded: {},
         warning: {},
         error: {}
       )

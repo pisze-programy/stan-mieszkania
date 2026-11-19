@@ -5,7 +5,6 @@ import SwiftUI
 struct ApartmentHistorySheetView: View {
   let sheet: ApartmentHistorySheetState
   let referenceDate: Date
-  let onClose: () -> Void
 
   var body: some View {
     NavigationStack {
@@ -30,6 +29,9 @@ struct ApartmentHistorySheetView: View {
         }
       }
       .navigationTitle(L10n.string("apartment.history.sheet.title"))
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
       .toolbar {
         if sheet.isLoading && !sheet.changes.isEmpty {
           ToolbarItem(placement: .automatic) {
@@ -37,11 +39,10 @@ struct ApartmentHistorySheetView: View {
               .controlSize(.small)
           }
         }
-        ToolbarItem(placement: .cancellationAction) {
-          Button(L10n.string("apartment.history.close.cta"), action: onClose)
-        }
       }
     }
+    .presentationDetents([.medium, .large])
+    .presentationDragIndicator(.visible)
   }
 
   private func changeRow(_ change: ApartmentChange) -> some View {

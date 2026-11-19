@@ -42,20 +42,24 @@ struct CreateApartmentSheetView: View {
         }
       }
       .navigationTitle(L10n.string("apartments.create.sheet.title"))
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button(L10n.string("apartments.create.cancel.cta")) {
+          Button(role: .cancel) {
             store.send(.createSheetDismissed)
           }
           .disabled(sheet.isSaving)
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button(L10n.string("apartments.create.save.cta")) {
+          Button(L10n.string("apartments.create.save.cta"), role: .confirm) {
             store.send(.createSubmitted)
           }
-          .disabled(sheet.isSaving)
+          .disabled(sheet.isSaving || !sheet.isValid)
         }
       }
     }
+    .interactiveDismissDisabled(sheet.hasUnsavedInput)
   }
 }

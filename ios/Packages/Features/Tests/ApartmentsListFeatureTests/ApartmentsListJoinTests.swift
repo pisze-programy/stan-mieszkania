@@ -69,9 +69,17 @@ struct ApartmentsListJoinTests {
     await store.send(.joinMenuTapped) {
       $0.joinSheet = ApartmentsListFeature.JoinApartmentSheetState()
     }
+    #expect(store.state.joinSheet?.isCodeValid == false)
+    #expect(store.state.joinSheet?.hasUnsavedInput == false)
+    await store.send(.joinCodeChanged("k7qm")) {
+      $0.joinSheet?.inviteCode = "K7QM"
+    }
+    #expect(store.state.joinSheet?.isCodeValid == false)
+    #expect(store.state.joinSheet?.hasUnsavedInput == true)
     await store.send(.joinCodeChanged("k7qm0xpb")) {
       $0.joinSheet?.inviteCode = "K7QM-0XPB"
     }
+    #expect(store.state.joinSheet?.isCodeValid == false)
     await store.send(.joinSubmitted) {
       $0.joinSheet?.errorMessage = L10n.errorMessage(for: .inviteCodeInvalid)
     }
@@ -80,6 +88,7 @@ struct ApartmentsListJoinTests {
       $0.joinSheet?.inviteCode = "K7QM-4XPB"
       $0.joinSheet?.errorMessage = nil
     }
+    #expect(store.state.joinSheet?.isCodeValid == true)
     await store.send(.joinSubmitted) {
       $0.joinSheet?.isJoining = true
     }

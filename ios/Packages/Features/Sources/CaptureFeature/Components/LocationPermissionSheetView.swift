@@ -44,5 +44,6 @@ struct LocationPermissionSheetView: View {
       Spacer()
     }
     .padding(Spacing.lg)
+    .appCanvas()
   }
 }

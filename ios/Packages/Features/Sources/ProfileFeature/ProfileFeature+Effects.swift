@@ -36,7 +36,7 @@ extension ProfileFeature {
       state.displayNameInput = value
       state.showNameSavedFeedback = false
       state.errorMessage = nil
-      return .none
+      return .cancel(id: CancelID.savedFeedback)
     case .saveDisplayNameTapped:
       return saveDisplayName(&state)
     case .saveDisplayNameSucceeded(let updated):
@@ -48,7 +48,12 @@ extension ProfileFeature {
         .run { _ in
           await haptics.actionSucceeded()
         },
-        .send(.delegate(.didUpdateProfile(updated)))
+        .send(.delegate(.didUpdateProfile(updated))),
+        .run { send in
+          try await clock.sleep(for: .milliseconds(Self.savedFeedbackDurationMilliseconds))
+          await send(.dismissNameSavedFeedback)
+        }
+        .cancellable(id: CancelID.savedFeedback, cancelInFlight: true)
       )
     case .saveDisplayNameFailed(let message):
       state.isSavingName = false
@@ -56,6 +61,9 @@ extension ProfileFeature {
       return .run { _ in
         await haptics.error()
       }
+    case .dismissNameSavedFeedback:
+      state.showNameSavedFeedback = false
+      return .none
     case .themeChanged(let preference):
       state.selectedTheme = preference
       return .merge(

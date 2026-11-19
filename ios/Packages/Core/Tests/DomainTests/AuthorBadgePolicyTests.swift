@@ -7,10 +7,28 @@ struct AuthorBadgePolicyTests {
   @Test("Extracts deterministic initials for standard, fallback, anonymized, and single names")
   func extractsInitials() {
     #expect(AuthorBadgePolicy.initials(for: "Jan Kowalski") == "JK")
-    #expect(AuthorBadgePolicy.initials(for: "Użytkownik #A1B2") == "#A")
+    #expect(AuthorBadgePolicy.initials(for: "Użytkownik #DCSG") == "DC")
+    #expect(AuthorBadgePolicy.initials(for: "Użytkownik #A1B2") == "A1")
     #expect(AuthorBadgePolicy.initials(for: "Usunięty użytkownik") == "UU")
     #expect(AuthorBadgePolicy.initials(for: "Anna") == "AN")
     #expect(AuthorBadgePolicy.initials(for: "   ") == "?")
+
+    let fallbackUser = UserProfile(
+      id: "u1",
+      displayName: "Użytkownik #DCSG",
+      shortTag: "DCSG",
+      color: DomainConstants.defaultAuthorColor,
+      createdAt: .distantPast
+    )
+    let customUser = UserProfile(
+      id: "u2",
+      displayName: "Jan Kowalski",
+      shortTag: "DCSG",
+      color: DomainConstants.defaultAuthorColor,
+      createdAt: .distantPast
+    )
+    #expect(!fallbackUser.hasCustomDisplayName)
+    #expect(customUser.hasCustomDisplayName)
   }
 
   @Test("Validates hex color with ContractConstants palette fallback and deterministic seeding")

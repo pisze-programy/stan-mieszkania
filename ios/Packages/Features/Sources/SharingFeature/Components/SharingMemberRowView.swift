@@ -4,9 +4,7 @@ import SwiftUI
 
 struct SharingMemberRowView: View {
   let member: ApartmentMember
-  let canRevoke: Bool
   let isRevoking: Bool
-  let onRevokeTapped: () -> Void
 
   var body: some View {
     HStack(spacing: Spacing.sm) {
@@ -21,7 +19,7 @@ struct SharingMemberRowView: View {
       VStack(alignment: .leading, spacing: Spacing.xxs) {
         Text(member.displayName)
           .font(Typography.callout.weight(.semibold))
-          .foregroundStyle(.primary)
+          .foregroundStyle(member.isActive ? .primary : .secondary)
 
         Text(roleTitle)
           .font(Typography.caption)
@@ -29,17 +27,9 @@ struct SharingMemberRowView: View {
       }
       .frame(maxWidth: .infinity, alignment: .leading)
 
-      if canRevoke {
-        if isRevoking {
-          ProgressView()
-            .controlSize(.small)
-        } else {
-          Button(role: .destructive, action: onRevokeTapped) {
-            Text(L10n.string("sharing.member.revoke.cta"))
-              .font(Typography.caption.weight(.semibold))
-          }
-          .buttonStyle(.glass)
-        }
+      if isRevoking {
+        ProgressView()
+          .controlSize(.small)
       }
     }
     .opacity(member.isActive ? 1 : DesignMetrics.disabledOpacity)

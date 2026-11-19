@@ -27,6 +27,7 @@ struct DesignTokensAndHapticsTests {
   @Test("Executes HapticsClient.noop triggers cleanly on MainActor")
   func hapticsNoopExecutes() {
     let haptics = HapticsClient.noop
+    haptics.selection()
     haptics.markerDropped()
     haptics.actionSucceeded()
     haptics.warning()

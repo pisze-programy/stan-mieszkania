@@ -93,9 +93,7 @@ public struct ApartmentTimelineView: View {
       ApartmentHistorySheetView(
         sheet: sheet,
         referenceDate: store.now ?? Date()
-      ) {
-        store.send(.historySheetDismissed)
-      }
+      )
     }
   }
 

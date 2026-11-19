@@ -11,70 +11,52 @@ public struct ProfileView: View {
   }
 
   public var body: some View {
-    scrollContent
+    settingsForm
       .task {
         await store.send(.task).finish()
       }
+      .overlay(alignment: .top) {
+        if let errorMessage = store.errorMessage {
+          ToastBanner(message: errorMessage, style: .error) {
+            store.send(.dismissError)
+          }
+          .padding(.horizontal, Spacing.md)
+          .padding(.top, Spacing.xs)
+          .transition(.move(edge: .top).combined(with: .opacity))
+        }
+      }
+      .animation(Motion.smooth, value: store.errorMessage)
       .navigationTitle(L10n.string("profile.screen.title"))
-      .confirmationDialog(
-        L10n.string("profile.sign.out.confirm.title"),
-        isPresented: signOutConfirmationBinding,
-        titleVisibility: .visible,
-        actions: signOutDialogActions,
-        message: { Text(L10n.string("profile.sign.out.confirm.message")) }
-      )
+      .toolbar {
+        if store.isNameDirty {
+          ToolbarItem(placement: .confirmationAction) {
+            Button(L10n.string("profile.name.save")) {
+              store.send(.saveDisplayNameTapped)
+            }
+            .disabled(store.isSavingName)
+          }
+        }
+      }
+      .animation(Motion.fade, value: store.isNameDirty)
       .sheet(isPresented: deleteImpactSheetBinding) {
         DeleteAccountImpactSheetView(
-          onContinueTapped: { store.send(.deleteImpactContinueTapped) },
-          onCancelTapped: { store.send(.deleteImpactSheetDismissed) }
+          onContinueTapped: { store.send(.deleteImpactContinueTapped) }
         )
       }
-      .confirmationDialog(
-        L10n.string("profile.delete.step2.title"),
-        isPresented: deleteFinalConfirmationBinding,
-        titleVisibility: .visible,
-        actions: deleteAccountDialogActions,
-        message: { Text(L10n.string("profile.delete.step2.message")) }
-      )
   }
 
-  @ViewBuilder
-  private func signOutDialogActions() -> some View {
-    Button(L10n.string("profile.sign.out"), role: .destructive) {
-      store.send(.signOutConfirmed)
+  private var settingsForm: some View {
+    Form {
+      identityHeaderSection
+      displayNameSection
+      appearanceSection
+      signOutSection
+      deleteAccountSection
     }
-    Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
-      store.send(.signOutConfirmationDismissed)
-    }
+    .formStyle(.grouped)
   }
 
-  @ViewBuilder
-  private func deleteAccountDialogActions() -> some View {
-    Button(L10n.string("profile.delete.step2.confirm"), role: .destructive) {
-      store.send(.deleteAccountConfirmed)
-    }
-    Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
-      store.send(.deleteFinalConfirmationDismissed)
-    }
-  }
-
-  private var scrollContent: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: Spacing.md) {
-        if let errorMessage = store.errorMessage {
-          errorBanner(errorMessage)
-        }
-
-        identityHeaderCard
-        displayNameCard
-        themePickerCard
-        accountActionsCard
-      }
-      .padding(Spacing.md)
-    }
-  }
-
-  private var signOutConfirmationBinding: Binding<Bool> {
+  var signOutConfirmationBinding: Binding<Bool> {
     Binding(
       get: { store.isSignOutConfirmationPresented },
       set: { if !$0 { store.send(.signOutConfirmationDismissed) } }
@@ -88,7 +70,7 @@ public struct ProfileView: View {
     )
   }
 
-  private var deleteFinalConfirmationBinding: Binding<Bool> {
+  var deleteFinalConfirmationBinding: Binding<Bool> {
     Binding(
       get: { store.isDeleteFinalConfirmationPresented },
       set: { if !$0 { store.send(.deleteFinalConfirmationDismissed) } }

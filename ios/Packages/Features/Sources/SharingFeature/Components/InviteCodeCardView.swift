@@ -2,81 +2,70 @@ import DesignSystem
 import SwiftUI
 
 struct InviteCodeCardView: View {
+  private static let codeFontSize: CGFloat = 34
+  private static let codeKerning: CGFloat = 2
+  private static let verticalPadding: CGFloat = 20
+  private static let feedbackSlotHeight: CGFloat = 18
+
   let inviteCode: String?
   let shareMessageText: String?
   let showCopiedFeedback: Bool
-  let isResettingCode: Bool
-  let isOwner: Bool
   let onCopyTapped: () -> Void
-  let onResetTapped: () -> Void
 
   var body: some View {
-    SurfaceCard(cornerRadius: CornerRadius.card, padding: Spacing.md) {
-      VStack(alignment: .leading, spacing: Spacing.md) {
-        Text(L10n.string("sharing.code.label"))
-          .font(Typography.subheadline)
-          .foregroundStyle(.secondary)
-
-        if let inviteCode {
-          codeContent(inviteCode)
-        } else {
-          HStack(spacing: Spacing.xs) {
-            ProgressView()
-              .controlSize(.small)
-            Text(L10n.string("sharing.code.pending"))
-              .font(Typography.callout)
-              .foregroundStyle(.secondary)
-          }
+    Group {
+      if let inviteCode {
+        codeContent(inviteCode)
+      } else {
+        HStack(spacing: Spacing.xs) {
+          ProgressView()
+            .controlSize(.small)
+          Text(L10n.string("sharing.code.pending"))
+            .font(Typography.callout)
+            .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, Spacing.sm)
       }
-      .frame(maxWidth: .infinity, alignment: .leading)
     }
   }
 
-  @ViewBuilder
   private func codeContent(_ code: String) -> some View {
-    VStack(alignment: .leading, spacing: Spacing.sm) {
-      Text(code)
-        .font(Typography.monospacedCode)
-        .textSelection(.enabled)
-
-      if showCopiedFeedback {
-        Label(L10n.string("sharing.code.copied"), systemImage: "checkmark.circle.fill")
-          .font(Typography.caption)
-          .foregroundStyle(.green)
+    VStack(spacing: Spacing.sm) {
+      Button(action: onCopyTapped) {
+        Text(code)
+          .font(.system(size: Self.codeFontSize, weight: .semibold, design: .monospaced))
+          .kerning(Self.codeKerning)
+          .foregroundStyle(.primary)
+          .frame(maxWidth: .infinity)
       }
+      .buttonStyle(.plain)
 
-      HStack(spacing: Spacing.sm) {
-        GlassActionButton(
-          title: L10n.string("sharing.code.copy"),
-          systemImage: "doc.on.doc",
-          variant: .primary,
-          action: onCopyTapped
-        )
-
-        if let shareMessageText {
-          ShareLink(item: shareMessageText) {
-            HStack(spacing: Spacing.xs) {
-              Image(systemName: "message.fill")
-              Text(L10n.string("sharing.sms.cta"))
-                .font(Typography.callout.weight(.semibold))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, Spacing.xs)
-          }
-          .buttonStyle(.glass)
+      StableSlot(minHeight: Self.feedbackSlotHeight, alignment: .center) {
+        if showCopiedFeedback {
+          Label(
+            L10n.string("sharing.code.copied.short"),
+            systemImage: "checkmark.circle.fill"
+          )
+          .foregroundStyle(.green)
+        } else {
+          Text(L10n.string("sharing.code.tapToCopy"))
+            .foregroundStyle(.secondary)
         }
       }
+      .font(.footnote)
+      .animation(Motion.fade, value: showCopiedFeedback)
 
-      if isOwner {
-        GlassActionButton(
-          title: L10n.string("sharing.code.reset.cta"),
-          systemImage: "arrow.clockwise",
-          variant: .secondary,
-          isLoading: isResettingCode,
-          action: onResetTapped
-        )
+      if let shareMessageText {
+        ShareLink(item: shareMessageText) {
+          Label(L10n.string("sharing.share.cta"), systemImage: "square.and.arrow.up")
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.glassProminent)
+        .controlSize(.large)
       }
     }
+    .padding(.vertical, Self.verticalPadding)
+    .frame(maxWidth: .infinity)
   }
 }

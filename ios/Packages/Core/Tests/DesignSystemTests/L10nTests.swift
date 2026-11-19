@@ -72,6 +72,30 @@ struct L10nTests {
     #expect(L10n.summaryMultiTitle(Fixtures.fiveCount) == "5 zdjęć")
   }
 
+  @Test("Resolves sharing, profile, and join sheet Polish keys")
+  func resolvesWS6PolishStrings() {
+    let ws6Keys = [
+      "sharing.share.cta",
+      "sharing.code.tapToCopy",
+      "sharing.code.copied.short",
+      "profile.name.label",
+      "profile.name.save",
+      "profile.name.footer",
+      "profile.theme.section",
+      "profile.theme.picker",
+      "profile.delete.footer",
+      "apartments.join.code.prompt",
+      "apartments.join.code.footer",
+    ]
+    for key in ws6Keys {
+      let value = L10n.string(key)
+      #expect(!value.isEmpty)
+      #expect(value != key)
+    }
+    #expect(L10n.string("apartments.join.code.prompt") == "K7QM-4XPB")
+    #expect(L10n.string("sharing.share.cta") == "Udostępnij")
+  }
+
   @Test("Formats Polish plural photo counts for one, few, and many")
   func formatsPolishPlurals() {
     #expect(L10n.photoCount(Fixtures.oneCount) == "1 zdjęcie")

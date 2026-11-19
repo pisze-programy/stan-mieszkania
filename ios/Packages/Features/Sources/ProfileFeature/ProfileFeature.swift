@@ -28,6 +28,17 @@ public struct ProfileFeature: Sendable {
       isSavingName || isSigningOut || isDeletingAccount
     }
 
+    public var isNameDirty: Bool {
+      let trimmed = displayNameInput.trimmingCharacters(in: .whitespacesAndNewlines)
+      guard
+        trimmed.count >= ContractConstants.displayNameMinLength,
+        trimmed.count <= ContractConstants.displayNameMaxLength
+      else {
+        return false
+      }
+      return trimmed != user?.displayName
+    }
+
     public init(
       user: UserProfile? = nil,
       displayNameInput: String? = nil,
@@ -66,6 +77,7 @@ public struct ProfileFeature: Sendable {
     case saveDisplayNameTapped
     case saveDisplayNameSucceeded(UserProfile)
     case saveDisplayNameFailed(String)
+    case dismissNameSavedFeedback
     case themeChanged(AppThemePreference)
     case signOutTapped
     case signOutConfirmationDismissed
@@ -92,12 +104,19 @@ public struct ProfileFeature: Sendable {
     }
   }
 
+  enum CancelID: Hashable, Sendable {
+    case savedFeedback
+  }
+
+  static let savedFeedbackDurationMilliseconds: Int = 1_500
+
   @Dependency(\.defaultDatabase) var database
   @Dependency(\.apiClient) var apiClient
   @Dependency(\.authClient) var authClient
   @Dependency(\.mediaStorage) var mediaStorage
   @Dependency(\.themePreference) var themePreference
   @Dependency(\.haptics) var haptics
+  @Dependency(\.continuousClock) var clock
 
   public init() {}
 
@@ -107,7 +126,7 @@ public struct ProfileFeature: Sendable {
       case .task, .localProfileLoaded, .remoteProfileLoaded, .profileLoadFailed:
         return handleLoadAction(&state, action: action)
       case .displayNameChanged, .saveDisplayNameTapped, .saveDisplayNameSucceeded,
-        .saveDisplayNameFailed, .themeChanged:
+        .saveDisplayNameFailed, .dismissNameSavedFeedback, .themeChanged:
         return handleSettingsAction(&state, action: action)
       case .signOutTapped, .signOutConfirmationDismissed, .signOutConfirmed,
         .signOutCompleted, .signOutFailed:
