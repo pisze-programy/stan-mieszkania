@@ -41,7 +41,7 @@ extension MediaDetailFeature {
   }
 
   private func handlePhotoTapped(_ state: inout State) {
-    guard state.composer?.isMarkerPlacementMode != true else {
+    guard state.composer == nil else {
       return
     }
     if state.selectedMarkerNumber != nil {
@@ -120,7 +120,7 @@ extension MediaDetailFeature.State {
     }
 
     if let composer {
-      for draftMarker in composer.markers {
+      for draftMarker in composer.activeMarkers {
         items.append(draftMarker.toOverlayItem())
       }
     }
@@ -143,6 +143,7 @@ extension MediaDetailFeature.State {
     return LightboxMarkerCaption(
       markerNumber: selectedMarkerNumber,
       entryText: entryItem.entry.text,
+      linkedMarkerNumbers: Set(entryItem.entry.markers.map(\.number)),
       authorDisplayName: entryItem.authorDisplayName,
       authorShortTag: entryItem.entry.author?.shortTag,
       createdAt: entryItem.entry.createdAt

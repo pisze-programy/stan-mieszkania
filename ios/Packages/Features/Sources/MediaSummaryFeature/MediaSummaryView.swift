@@ -19,20 +19,15 @@ public struct MediaSummaryView: View {
 
   public var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: Spacing.md) {
+      VStack(alignment: .leading, spacing: Spacing.sm) {
         photoPagerSection
 
         if let page = store.currentPage {
-          metadataRow(for: page)
-          SummaryMarkerControlsView(
-            markers: page.markers,
-            selectedMarkerNumber: page.selectedMarkerNumber,
-            authorColorHex: store.currentUser.color,
-            isPlacementMode: store.isMarkerPlacementMode,
-            onTogglePlacement: { store.send(.toggleMarkerPlacementMode) },
-            onSelectMarker: { store.send(.markerSelected($0)) },
-            onDeleteMarker: { store.send(.markerDeleted($0)) }
-          )
+          Text(L10n.string("media.marker.instruction"))
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+
           SummaryDescriptionSectionView(
             description: page.description,
             isInteractive: !store.isSaving,
@@ -45,13 +40,6 @@ public struct MediaSummaryView: View {
       .padding(.vertical, Spacing.sm)
     }
     .appCanvas()
-    .safeAreaInset(edge: .bottom) {
-      SummaryActionBarView(
-        savingMode: store.savingMode,
-        onSaveLocal: { triggerSave(mode: .localOnly) },
-        onSaveCloud: { triggerSave(mode: .cloud) }
-      )
-    }
     .overlay(alignment: .top) {
       if let errorMessage = store.errorMessage {
         ToastBanner(message: errorMessage, style: .error) {
@@ -81,12 +69,30 @@ public struct MediaSummaryView: View {
         }
         .disabled(store.isSaving)
       }
+      ToolbarItem(placement: .confirmationAction) {
+        Button(role: .confirm) {
+          isDescriptionFocused = false
+          store.send(.saveButtonTapped)
+        }
+        .disabled(store.isSaving)
+        .accessibilityLabel(L10n.string("media.summary.save.a11y"))
+      }
     }
-  }
-
-  private func triggerSave(mode: MediaSummarySaveMode) {
-    isDescriptionFocused = false
-    store.send(.saveTapped(mode: mode))
+    .sheet(
+      isPresented: Binding(
+        get: { store.isSaveSheetPresented },
+        set: { if !$0 { store.send(.saveSheetDismissed) } }
+      ),
+      onDismiss: { store.send(.saveSheetDidDismiss) },
+      content: {
+        SummarySaveSheetView(
+          savingMode: store.savingMode,
+          errorMessage: store.saveErrorMessage,
+          onSelect: { store.send(.saveTapped(mode: $0)) }
+        )
+        .interactiveDismissDisabled(store.isSaving)
+      }
+    )
   }
 
   @ViewBuilder
@@ -139,29 +145,9 @@ public struct MediaSummaryView: View {
   private func canvas(for page: MediaSummaryPageState) -> some View {
     SummaryPhotoCanvasView(
       page: page,
-      isMarkerPlacementMode: store.isMarkerPlacementMode,
       onSelectMarker: { store.send(.markerSelected($0)) },
-      onDeselectAll: { store.send(.markerSelectionCleared) },
-      onAddMarker: { x, y in store.send(.markerAddedAt(x: x, y: y)) }
+      onAddMarker: { x, y in store.send(.markerAddedAt(x: x, y: y)) },
+      onRemoveMarker: { store.send(.markerRemoveRequested($0)) }
     )
-  }
-
-  private func metadataRow(for page: MediaSummaryPageState) -> some View {
-    let formattedDate = PolishDateFormatters.formatHumanTimestamp(
-      page.draft.capturedAt,
-      now: store.now ?? Date()
-    )
-    return HStack(spacing: Spacing.sm) {
-      Label(formattedDate, systemImage: "clock")
-        .font(.footnote)
-        .foregroundStyle(.secondary)
-      Spacer()
-      if page.draft.source == .imported {
-        MediaSourceBadgeView(
-          source: page.draft.source,
-          capturedAtFromImport: page.draft.capturedAtFromImport
-        )
-      }
-    }
   }
 }

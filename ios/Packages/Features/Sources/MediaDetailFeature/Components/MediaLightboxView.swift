@@ -14,12 +14,12 @@ struct MediaLightboxView: View {
   let areMarkersHidden: Bool
   let referenceDate: Date
   let onSelectMarker: (Int) -> Void
+  let onClearSelection: () -> Void
   let onToggleMarkers: () -> Void
   let onDismiss: () -> Void
 
   @State private var fullResImage: CGImage?
   @State private var zoomTransform: ZoomTransform = .identity
-  @State private var isChromeVisible = true
   @State private var dragOffsetY: CGFloat = 0
   @Dependency(\.mediaStorage) private var mediaStorage
 
@@ -43,15 +43,14 @@ struct MediaLightboxView: View {
       if !areMarkersHidden {
         markerOverlay.offset(y: dragOffsetY).transition(.opacity)
       }
-      chromeOverlay
+      chromeOverlay.zIndex(MediaDetailConstants.lightboxChromeZIndex)
     }
-    .animation(Motion.fade, value: isChromeVisible)
     .animation(Motion.fade, value: areMarkersHidden)
     .animation(Motion.snappy, value: selectedMarkerNumber)
     .simultaneousGesture(dismissDragGesture)
     .task(id: mediaId) { await loadFullResolutionImage() }
     #if os(iOS)
-      .statusBarHidden(!isChromeVisible)
+      .statusBarHidden(true)
       .persistentSystemOverlays(.hidden)
     #endif
   }
@@ -62,7 +61,7 @@ struct MediaLightboxView: View {
       ZoomableScrollView(
         image: displayedImage,
         transform: $zoomTransform,
-        onSingleTap: { isChromeVisible.toggle() }
+        onSingleTap: onClearSelection
       )
       .ignoresSafeArea()
     } else {
@@ -75,7 +74,7 @@ struct MediaLightboxView: View {
     let imageRect = zoomTransform.imageFrameInViewport
     if imageRect.width > 0, imageRect.height > 0 {
       ZStack(alignment: .topLeading) {
-        Color.clear
+        Color.clear.allowsHitTesting(false)
         ForEach(markers) { marker in
           let isSelected = selectedMarkerNumber == marker.number
           MarkerPinBadgeView(
@@ -84,6 +83,7 @@ struct MediaLightboxView: View {
             isDimmed: selectedMarkerNumber != nil && !isSelected,
             onTap: { onSelectMarker(marker.number) }
           )
+          .allowsHitTesting(true)
           .position(MarkerOverlayItem.pointInRect(marker, rect: imageRect))
         }
       }
@@ -95,40 +95,26 @@ struct MediaLightboxView: View {
   private var chromeOverlay: some View {
     VStack {
       HStack {
-        Button(role: .close, action: onDismiss) {
-          Image(systemName: "xmark")
-            .font(.callout.weight(.semibold))
-            .frame(
-              width: MediaDetailConstants.lightboxCloseSize,
-              height: MediaDetailConstants.lightboxCloseSize
-            )
-        }
-        .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: .circle)
+        GlassIconButton(
+          systemImage: "xmark",
+          accessibilityLabel: L10n.string("common.close"),
+          action: onDismiss
+        )
 
         Spacer()
 
         if !markers.isEmpty {
-          Button(action: onToggleMarkers) {
-            Image(systemName: areMarkersHidden ? "eye.slash" : "eye")
-              .font(.callout.weight(.semibold))
-              .frame(
-                width: MediaDetailConstants.lightboxCloseSize,
-                height: MediaDetailConstants.lightboxCloseSize
-              )
-              .contentTransition(.symbolEffect(.replace))
-          }
-          .buttonStyle(.plain)
-          .glassEffect(.regular.interactive(), in: .circle)
-          .accessibilityLabel(
-            L10n.string(areMarkersHidden ? "media.markers.show" : "media.markers.hide")
+          GlassIconButton(
+            systemImage: areMarkersHidden ? "eye.slash" : "eye",
+            accessibilityLabel: L10n.string(
+              areMarkersHidden ? "media.markers.show" : "media.markers.hide"
+            ),
+            action: onToggleMarkers
           )
         }
       }
       .padding(.horizontal, Spacing.md)
-      .padding(.top, Spacing.sm)
-      .opacity(isChromeVisible ? 1 : 0)
-      .allowsHitTesting(isChromeVisible)
+      .safeAreaPadding(.top, Spacing.xs)
 
       Spacer()
 
@@ -146,7 +132,7 @@ struct MediaLightboxView: View {
   }
 
   private var dismissDragGesture: some Gesture {
-    DragGesture()
+    DragGesture(minimumDistance: MediaDetailConstants.lightboxDragMinimumDistance)
       .onChanged { value in
         guard isAtRestZoom, abs(value.translation.height) > abs(value.translation.width) else {
           return

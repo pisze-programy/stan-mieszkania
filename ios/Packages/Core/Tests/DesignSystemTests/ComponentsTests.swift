@@ -120,50 +120,39 @@ struct ComponentsTests {
   func instantiatesAllComponents() {
     let card = SurfaceCard { Text("Karta") }
     let fab = GlassFloatingActionButton(accessibilityLabel: "Dodaj zdjęcie") {}
-    let infoSheet = VerifiedInfoSheetView()
+    let iconButton = GlassIconButton(systemImage: "xmark", accessibilityLabel: "Zamknij") {}
+    let photoInfoSheet = VerifiedInfoSheetView(subject: .photo)
+    let entryInfoSheet = VerifiedInfoSheetView(subject: .entry)
     let stableSlot = StableSlot { Text("Skopiowano") }
     let toast = ToastBanner(message: "Błąd sieci", style: .error, onDismiss: {})
     let uploading = SyncStatusIndicatorView(
-      syncState: .uploading,
-      isVerified: false,
-      uploadProgress: Fixtures.uploadProgress,
-      placement: .labeled
+      syncState: .uploading, isVerified: false,
+      uploadProgress: Fixtures.uploadProgress, placement: .labeled
     )
     let local = SyncStatusIndicatorView(
-      syncState: .localOnly,
-      isVerified: false,
-      placement: .labeled,
-      onLocalOnlyTap: {}
+      syncState: .localOnly, isVerified: false, placement: .labeled, onLocalOnlyTap: {}
     )
     let sourceBadge = MediaSourceBadgeView(source: .imported, capturedAtFromImport: true)
     let avatar = AuthorAvatarView(
-      displayName: "Jan Kowalski",
-      colorHex: Fixtures.authorColor,
-      role: .owner,
-      showsRoleBadge: false
+      displayName: "Jan Kowalski", colorHex: Fixtures.authorColor,
+      role: .owner, showsRoleBadge: false
     )
     let markerItem = MarkerOverlayItem(
-      id: Fixtures.markerId,
-      number: 1,
-      x: Fixtures.quarterNormalized,
-      y: Fixtures.halfNormalized,
+      id: Fixtures.markerId, number: 1,
+      x: Fixtures.quarterNormalized, y: Fixtures.halfNormalized,
       colorHex: Fixtures.markerOneColor
     )
     let overlay = MarkerDotOverlayView(
-      markers: [markerItem],
-      selectedMarkerNumber: 1,
-      onSelectMarker: { _ in },
-      onDeselectAll: {},
-      onAddMarkerAtNormalizedPoint: { _, _ in }
+      markers: [markerItem], selectedMarkerNumber: 1,
+      onSelectMarker: { _ in }, onDeselectAll: {},
+      onAddMarkerAtNormalizedPoint: { _, _ in }, onRemoveMarker: { _ in }
     )
     let entryText = HighlightedEntryTextView(
-      text: "[1] Rysa",
-      selectedMarkerNumber: 1,
-      onMarkerTapped: { _ in }
+      text: "[1] Rysa", selectedMarkerNumber: 1, linkedMarkerNumbers: [1], onMarkerTapped: { _ in }
     )
 
     _ = (
-      card, fab, infoSheet, stableSlot, toast, uploading, local,
+      card, fab, iconButton, photoInfoSheet, entryInfoSheet, stableSlot, toast, uploading, local,
       sourceBadge, avatar, overlay, entryText,
     )
   }

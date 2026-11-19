@@ -11,6 +11,7 @@ struct MediaLightboxCaptionCard: View {
       HighlightedEntryTextView(
         text: caption.entryText,
         selectedMarkerNumber: caption.markerNumber,
+        linkedMarkerNumbers: caption.linkedMarkerNumbers,
         onMarkerTapped: onSelectMarker
       )
       .frame(maxWidth: .infinity, alignment: .leading)

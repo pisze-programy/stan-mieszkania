@@ -34,11 +34,12 @@ enum MediaSummaryStore {
         )
       }
 
+      let activeMarkers = page.activeMarkers
       let entryText: String?
       if !trimmed.isEmpty {
         entryText = trimmed
-      } else if !page.markers.isEmpty {
-        entryText = page.markers.map { "[\($0.number)]" }.joined(separator: " ")
+      } else if !activeMarkers.isEmpty {
+        entryText = activeMarkers.map { "[\($0.number)]" }.joined(separator: " ")
       } else {
         entryText = nil
       }
@@ -47,7 +48,7 @@ enum MediaSummaryStore {
         ValidatedSummaryPage(
           draft: page.draft,
           initialEntryText: entryText,
-          markers: page.markers
+          markers: activeMarkers
         )
       )
     }

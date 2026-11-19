@@ -7,10 +7,9 @@ import SwiftUI
 
 struct SummaryPhotoCanvasView: View {
   let page: MediaSummaryPageState
-  let isMarkerPlacementMode: Bool
   let onSelectMarker: (Int) -> Void
-  let onDeselectAll: () -> Void
   let onAddMarker: (Double, Double) -> Void
+  let onRemoveMarker: (Int) -> Void
 
   @State private var previewImage: CGImage?
   @Dependency(\.mediaStorage) private var mediaStorage
@@ -47,8 +46,9 @@ struct SummaryPhotoCanvasView: View {
         markers: page.markerOverlayItems(),
         selectedMarkerNumber: page.selectedMarkerNumber,
         onSelectMarker: onSelectMarker,
-        onDeselectAll: onDeselectAll,
-        onAddMarkerAtNormalizedPoint: isMarkerPlacementMode ? onAddMarker : nil
+        onDeselectAll: nil,
+        onAddMarkerAtNormalizedPoint: onAddMarker,
+        onRemoveMarker: onRemoveMarker
       )
     }
     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.photo, style: .continuous))

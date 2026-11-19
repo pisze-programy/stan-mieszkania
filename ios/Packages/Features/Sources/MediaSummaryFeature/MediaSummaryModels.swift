@@ -63,8 +63,13 @@ public struct MediaSummaryPageState: Identifiable, Equatable, Sendable {
     self.selectedMarkerNumber = selectedMarkerNumber
   }
 
+  public var activeMarkers: [SummaryDraftMarker] {
+    let referenced = MarkerTextPolicy.referencedMarkerNumbers(in: description)
+    return markers.filter { referenced.contains($0.number) }
+  }
+
   public func markerOverlayItems() -> [MarkerOverlayItem] {
-    markers.map { $0.toOverlayItem() }
+    activeMarkers.map { $0.toOverlayItem() }
   }
 }
 

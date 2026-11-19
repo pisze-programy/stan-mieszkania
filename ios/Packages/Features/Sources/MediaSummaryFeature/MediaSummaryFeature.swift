@@ -15,8 +15,10 @@ public struct MediaSummaryFeature: Sendable {
     public let currentUser: AuthorSummary
     public var pages: [MediaSummaryPageState]
     public var selectedIndex: Int
-    public var isMarkerPlacementMode: Bool
+    public var isSaveSheetPresented: Bool
+    public var pendingSavedMode: MediaSummarySaveMode?
     public var savingMode: MediaSummarySaveMode?
+    public var saveErrorMessage: String?
     public var errorMessage: String?
     public var now: Date?
 
@@ -41,8 +43,10 @@ public struct MediaSummaryFeature: Sendable {
       origin: CaptureSourceKind,
       currentUser: AuthorSummary,
       selectedIndex: Int = 0,
-      isMarkerPlacementMode: Bool = false,
+      isSaveSheetPresented: Bool = false,
+      pendingSavedMode: MediaSummarySaveMode? = nil,
       savingMode: MediaSummarySaveMode? = nil,
+      saveErrorMessage: String? = nil,
       errorMessage: String? = nil,
       now: Date? = nil
     ) {
@@ -52,8 +56,10 @@ public struct MediaSummaryFeature: Sendable {
       self.pages = drafts.map { MediaSummaryPageState(draft: $0) }
       let clampedIndex = drafts.isEmpty ? 0 : min(max(0, selectedIndex), drafts.count - 1)
       self.selectedIndex = clampedIndex
-      self.isMarkerPlacementMode = isMarkerPlacementMode
+      self.isSaveSheetPresented = isSaveSheetPresented
+      self.pendingSavedMode = pendingSavedMode
       self.savingMode = savingMode
+      self.saveErrorMessage = saveErrorMessage
       self.errorMessage = errorMessage
       self.now = now
     }
@@ -62,13 +68,15 @@ public struct MediaSummaryFeature: Sendable {
   public enum Action: Equatable, Sendable {
     case task
     case pageSelected(Int)
-    case toggleMarkerPlacementMode
     case markerAddedAt(x: Double, y: Double)
     case markerSelected(Int)
     case markerSelectionCleared
-    case markerDeleted(Int)
+    case markerRemoveRequested(Int)
     case descriptionChanged(String)
     case cancelTapped
+    case saveButtonTapped
+    case saveSheetDismissed
+    case saveSheetDidDismiss
     case saveTapped(mode: MediaSummarySaveMode)
     case saveSucceeded(mode: MediaSummarySaveMode)
     case saveFailed(String)
@@ -104,28 +112,39 @@ public struct MediaSummaryFeature: Sendable {
         }
         state.selectedIndex = index
         return .none
-      case .toggleMarkerPlacementMode:
-        state.isMarkerPlacementMode.toggle()
-        return .none
       case .markerAddedAt(let x, let y):
         return addMarker(&state, x: x, y: y)
       case .markerSelected(let number):
         return selectMarker(&state, number: number)
       case .markerSelectionCleared:
         return clearMarkerSelection(&state)
-      case .markerDeleted(let number):
-        return deleteMarker(&state, number: number)
+      case .markerRemoveRequested(let number):
+        return removeMarker(&state, number: number)
       case .descriptionChanged(let value):
         return updateDescription(&state, value: value)
       case .cancelTapped:
         return discardAndEmit(&state, delegate: .didCancel)
+      case .saveButtonTapped:
+        return openSaveSheet(&state)
+      case .saveSheetDismissed:
+        guard !state.isSaving else {
+          return .none
+        }
+        state.isSaveSheetPresented = false
+        state.saveErrorMessage = nil
+        return .none
+      case .saveSheetDidDismiss:
+        return handleSaveSheetDidDismiss(&state)
       case .saveTapped(let mode):
         return startSave(&state, mode: mode)
       case .saveSucceeded(let mode):
-        return finishSave(&state, mode: mode)
+        state.savingMode = nil
+        state.pendingSavedMode = mode
+        state.isSaveSheetPresented = false
+        return .none
       case .saveFailed(let message):
         state.savingMode = nil
-        state.errorMessage = message
+        state.saveErrorMessage = message
         return .run { _ in
           await haptics.error()
         }

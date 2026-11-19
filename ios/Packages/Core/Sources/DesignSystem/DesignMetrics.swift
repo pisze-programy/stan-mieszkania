@@ -14,6 +14,7 @@ public enum DesignMetrics: Sendable {
   public static let iconSmallSize: CGFloat = 14
   public static let iconMediumSize: CGFloat = 20
   public static let iconLargeSize: CGFloat = 28
+  public static let glassIconButtonSize: CGFloat = 44
   public static let floatingActionButtonSize: CGFloat = 56
 
   public static let timelineThumbnailMinWidth: CGFloat = 104

@@ -13,12 +13,13 @@ import Testing
 struct MediaSummarySaveAndCleanupTests {
   private static let markerX = 0.3
   private static let markerY = 0.7
+  private static let orphanMarkerNumber = 2
   private static let twoOutboxOps = 2
   private static let twoPhotosCount = 2
 
   @MainActor
-  @Test("Lokalnie tracks savingMode=.localOnly and saves to SQLiteData without outbox ops")
-  func saveLocalOnlyPersistsWithoutOutbox() async throws {
+  @Test("Lokalnie persists only active markers and emits delegate after sheet dismiss")
+  func saveLocalOnlyPersistsActiveMarkersWithoutOutbox() async throws {
     let database = try MediaSummaryTestFixtures.seedApartmentDatabase()
     let successHaptics = LockIsolated(0)
     let drafts = [
@@ -26,20 +27,20 @@ struct MediaSummarySaveAndCleanupTests {
       MediaSummaryTestFixtures.makeDraft(id: MediaSummaryTestFixtures.draftTwoId),
     ]
     var initialState = MediaSummaryFeature.State(
-      apartmentId: MediaSummaryTestFixtures.apartmentId,
-      drafts: drafts,
-      origin: .photoLibrary,
-      currentUser: MediaSummaryTestFixtures.author
-    )
-    let marker = SummaryDraftMarker(
-      id: MediaSummaryTestFixtures.markerOneId,
-      number: 1,
-      x: Self.markerX,
-      y: Self.markerY
+      apartmentId: MediaSummaryTestFixtures.apartmentId, drafts: drafts,
+      origin: .photoLibrary, currentUser: MediaSummaryTestFixtures.author,
+      isSaveSheetPresented: true
     )
     initialState.pages[0].description = "Rysa [1]"
-    initialState.pages[0].markers = [marker]
-
+    initialState.pages[0].markers = [
+      SummaryDraftMarker(
+        id: MediaSummaryTestFixtures.markerOneId, number: 1, x: Self.markerX, y: Self.markerY
+      ),
+      SummaryDraftMarker(
+        id: MediaSummaryTestFixtures.markerTwoId, number: Self.orphanMarkerNumber,
+        x: Self.markerY, y: Self.markerX
+      ),
+    ]
     let store = TestStore(initialState: initialState) {
       MediaSummaryFeature()
     } withDependencies: {
@@ -52,8 +53,12 @@ struct MediaSummarySaveAndCleanupTests {
     }
 
     await store.send(.saveTapped(mode: .localOnly)) { $0.savingMode = .localOnly }
-    #expect(store.state.isSaving)
-    await store.receive(.saveSucceeded(mode: .localOnly)) { $0.savingMode = nil }
+    await store.receive(.saveSucceeded(mode: .localOnly)) {
+      $0.savingMode = nil
+      $0.pendingSavedMode = .localOnly
+      $0.isSaveSheetPresented = false
+    }
+    await store.send(.saveSheetDidDismiss) { $0.pendingSavedMode = nil }
     await store.receive(.delegate(.didSave(mode: .localOnly)))
 
     let mediaRows = try await database.read { try MediaRecord.fetchAll($0) }
@@ -63,16 +68,14 @@ struct MediaSummarySaveAndCleanupTests {
 
     #expect(mediaRows.count == Self.twoPhotosCount)
     #expect(mediaRows.allSatisfy { $0.syncState == MediaSyncState.localOnly.rawValue })
-    #expect(entryRows.count == 1)
-    #expect(entryRows[0].text == "Rysa [1]")
-    #expect(markerRows.count == 1)
-    #expect(outboxRows.isEmpty)
-    #expect(successHaptics.value == 1)
+    #expect(entryRows.count == 1 && entryRows[0].text == "Rysa [1]")
+    #expect(markerRows.map(\.number) == [1])
+    #expect(outboxRows.isEmpty && successHaptics.value == 1)
   }
 
   @MainActor
-  @Test("Chmura tracks savingMode=.cloud, queues outbox ops, and triggers processOutbox")
-  func saveToCloudQueuesOutboxAndReturnsImmediately() async throws {
+  @Test("Chmura queues outbox ops and processes outbox once save sheet dismissal settles")
+  func saveToCloudQueuesOutboxAfterSheetDismiss() async throws {
     let database = try MediaSummaryTestFixtures.seedApartmentDatabase()
     let outboxCalls = LockIsolated(0)
     let successHaptics = LockIsolated(0)
@@ -80,7 +83,8 @@ struct MediaSummarySaveAndCleanupTests {
       apartmentId: MediaSummaryTestFixtures.apartmentId,
       drafts: [MediaSummaryTestFixtures.makeDraft(origin: .camera)],
       origin: .camera,
-      currentUser: MediaSummaryTestFixtures.author
+      currentUser: MediaSummaryTestFixtures.author,
+      isSaveSheetPresented: true
     )
     initialState.pages[0].description = "Uszkodzony zamek"
 
@@ -107,49 +111,26 @@ struct MediaSummarySaveAndCleanupTests {
     }
 
     await store.send(.saveTapped(mode: .cloud)) { $0.savingMode = .cloud }
-    await store.receive(.saveSucceeded(mode: .cloud)) { $0.savingMode = nil }
+    await store.receive(.saveSucceeded(mode: .cloud)) {
+      $0.savingMode = nil
+      $0.pendingSavedMode = .cloud
+      $0.isSaveSheetPresented = false
+    }
+    await store.send(.saveSheetDidDismiss) { $0.pendingSavedMode = nil }
     await store.receive(.delegate(.didSave(mode: .cloud)))
 
     let mediaRows = try await database.read { try MediaRecord.fetchAll($0) }
     let outboxRows = try OutboxRepository(database: database).fetchAllOperations()
 
-    #expect(mediaRows.count == 1)
-    #expect(mediaRows[0].syncState == MediaSyncState.queued.rawValue)
+    #expect(mediaRows.count == 1 && mediaRows[0].syncState == MediaSyncState.queued.rawValue)
     #expect(outboxRows.count == Self.twoOutboxOps)
     #expect(outboxRows[0].operationType == OutboxOperationType.uploadMedia.rawValue)
     #expect(outboxRows[1].operationType == OutboxOperationType.createEntry.rawValue)
-    #expect(outboxCalls.value == 1)
-    #expect(successHaptics.value == 1)
+    #expect(outboxCalls.value == 1 && successHaptics.value == 1)
   }
 
   @MainActor
-  @Test("saveFailed clears savingMode and surfaces error toast message")
-  func saveFailedClearsSavingMode() async {
-    let errorHaptics = LockIsolated(0)
-    let store = TestStore(
-      initialState: MediaSummaryFeature.State(
-        apartmentId: MediaSummaryTestFixtures.apartmentId,
-        drafts: [MediaSummaryTestFixtures.makeDraft(origin: .camera)],
-        origin: .camera,
-        currentUser: MediaSummaryTestFixtures.author,
-        savingMode: .cloud
-      )
-    ) {
-      MediaSummaryFeature()
-    } withDependencies: {
-      $0.haptics.error = { errorHaptics.withValue { $0 += 1 } }
-    }
-
-    await store.send(.saveFailed("Błąd zapisu")) {
-      $0.savingMode = nil
-      $0.errorMessage = "Błąd zapisu"
-    }
-    #expect(!store.state.isSaving)
-    #expect(errorHaptics.value == 1)
-  }
-
-  @MainActor
-  @Test("Cancel cleans up unsaved files, emits cancel delegate, and view instantiates cleanly")
+  @Test("Cancel cleans up unsaved files, emits cancel delegate, and views instantiate cleanly")
   func cancelCleansUpDiskFilesAndViewInstantiates() async {
     let deletedFiles = LockIsolated<[String]>([])
     let draft = MediaSummaryTestFixtures.makeDraft(origin: .files)
@@ -169,7 +150,8 @@ struct MediaSummarySaveAndCleanupTests {
     ) {
       MediaSummaryFeature()
     }
-    _ = MediaSummaryView(store: viewStore)
+    let saveSheet = SummarySaveSheetView(savingMode: nil, errorMessage: nil, onSelect: { _ in })
+    _ = (MediaSummaryView(store: viewStore), saveSheet)
   }
 
   @MainActor

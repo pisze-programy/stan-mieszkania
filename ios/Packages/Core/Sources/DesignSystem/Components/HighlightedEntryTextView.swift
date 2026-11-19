@@ -18,7 +18,8 @@ public enum HighlightedEntryTextBuilder: Sendable {
 
   public static func buildAttributedString(
     text: String,
-    selectedMarkerNumber: Int?
+    selectedMarkerNumber: Int?,
+    linkedMarkerNumbers: Set<Int>
   ) -> AttributedString {
     let segments = MarkerTextPolicy.parseSegments(in: text)
     var result = AttributedString()
@@ -27,13 +28,17 @@ public enum HighlightedEntryTextBuilder: Sendable {
       case .text(let chunk):
         result.append(AttributedString(chunk))
       case .marker(let number, let rawToken):
-        result.append(
-          markerTokenAttributedString(
-            number: number,
-            rawToken: rawToken,
-            selectedMarkerNumber: selectedMarkerNumber
+        if linkedMarkerNumbers.contains(number) {
+          result.append(
+            markerTokenAttributedString(
+              number: number,
+              rawToken: rawToken,
+              selectedMarkerNumber: selectedMarkerNumber
+            )
           )
-        )
+        } else {
+          result.append(AttributedString(rawToken))
+        }
       }
     }
     return result
@@ -62,15 +67,18 @@ public enum HighlightedEntryTextBuilder: Sendable {
 public struct HighlightedEntryTextView: View {
   private let text: String
   private let selectedMarkerNumber: Int?
+  private let linkedMarkerNumbers: Set<Int>
   private let onMarkerTapped: (Int) -> Void
 
   public init(
     text: String,
     selectedMarkerNumber: Int?,
+    linkedMarkerNumbers: Set<Int>,
     onMarkerTapped: @escaping (Int) -> Void = { _ in }
   ) {
     self.text = text
     self.selectedMarkerNumber = selectedMarkerNumber
+    self.linkedMarkerNumbers = linkedMarkerNumbers
     self.onMarkerTapped = onMarkerTapped
   }
 
@@ -78,7 +86,8 @@ public struct HighlightedEntryTextView: View {
     Text(
       HighlightedEntryTextBuilder.buildAttributedString(
         text: text,
-        selectedMarkerNumber: selectedMarkerNumber
+        selectedMarkerNumber: selectedMarkerNumber,
+        linkedMarkerNumbers: linkedMarkerNumbers
       )
     )
     .font(Typography.body)

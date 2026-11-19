@@ -5,15 +5,16 @@ import Foundation
 
 extension MediaSummaryFeature {
   func addMarker(_ state: inout State, x: Double, y: Double) -> Effect<Action> {
-    guard state.isMarkerPlacementMode, state.pages.indices.contains(state.selectedIndex) else {
+    guard !state.isSaving, state.pages.indices.contains(state.selectedIndex) else {
       return .none
     }
     let clampedX = MarkerOverlayItem.clampedNormalizedCoordinate(x)
     let clampedY = MarkerOverlayItem.clampedNormalizedCoordinate(y)
-    let currentNumbers = state.pages[state.selectedIndex].markers.map(\.number)
+    let activeMarkers = state.pages[state.selectedIndex].activeMarkers
+    state.pages[state.selectedIndex].markers = activeMarkers
     let nextNumber = MarkerTextPolicy.nextDraftMarkerNumber(
       existingMaxNumber: 0,
-      currentDraftNumbers: currentNumbers
+      currentDraftNumbers: activeMarkers.map(\.number)
     )
     let marker = SummaryDraftMarker(
       id: idGenerator.generate(),
@@ -36,7 +37,11 @@ extension MediaSummaryFeature {
     guard state.pages.indices.contains(state.selectedIndex) else {
       return .none
     }
-    state.pages[state.selectedIndex].selectedMarkerNumber = number
+    if state.pages[state.selectedIndex].selectedMarkerNumber == number {
+      state.pages[state.selectedIndex].selectedMarkerNumber = nil
+    } else {
+      state.pages[state.selectedIndex].selectedMarkerNumber = number
+    }
     return .none
   }
 
@@ -48,8 +53,8 @@ extension MediaSummaryFeature {
     return .none
   }
 
-  func deleteMarker(_ state: inout State, number: Int) -> Effect<Action> {
-    guard state.pages.indices.contains(state.selectedIndex) else {
+  func removeMarker(_ state: inout State, number: Int) -> Effect<Action> {
+    guard !state.isSaving, state.pages.indices.contains(state.selectedIndex) else {
       return .none
     }
     state.pages[state.selectedIndex].markers.removeAll { $0.number == number }
@@ -68,8 +73,40 @@ extension MediaSummaryFeature {
       return .none
     }
     state.pages[state.selectedIndex].description = value
+    let referenced = MarkerTextPolicy.referencedMarkerNumbers(in: value)
+    if let selected = state.pages[state.selectedIndex].selectedMarkerNumber {
+      if !referenced.contains(selected) {
+        state.pages[state.selectedIndex].selectedMarkerNumber = nil
+      }
+    }
     state.errorMessage = nil
     return .none
+  }
+
+  func openSaveSheet(_ state: inout State) -> Effect<Action> {
+    guard !state.isSaving else {
+      return .none
+    }
+    switch MediaSummaryStore.validatePages(state.pages) {
+    case .failure(let failure):
+      state.errorMessage = failure.message
+      return .run { _ in
+        await haptics.warning()
+      }
+    case .success:
+      state.errorMessage = nil
+      state.saveErrorMessage = nil
+      state.isSaveSheetPresented = true
+      return .none
+    }
+  }
+
+  func handleSaveSheetDidDismiss(_ state: inout State) -> Effect<Action> {
+    guard let mode = state.pendingSavedMode else {
+      return .none
+    }
+    state.pendingSavedMode = nil
+    return finishSave(&state, mode: mode)
   }
 
   // Invariant 8: Clean up unsaved local JPEG files on cancel to avoid orphaned disk files.
@@ -92,13 +129,13 @@ extension MediaSummaryFeature {
     }
     switch MediaSummaryStore.validatePages(state.pages) {
     case .failure(let failure):
-      state.errorMessage = failure.message
+      state.saveErrorMessage = failure.message
       return .run { _ in
         await haptics.warning()
       }
     case .success(let validatedPages):
       state.savingMode = mode
-      state.errorMessage = nil
+      state.saveErrorMessage = nil
       let request = PersistSummaryRequest(
         pages: validatedPages,
         apartmentId: state.apartmentId,

@@ -62,6 +62,7 @@ struct FootnoteTokenColorVerificationTests {
     static let channelDominance = 50
     static let alphaMin = 100
     static let halfDivisor = 2
+    static let markerTwoNumber = 2
   }
 
   @MainActor
@@ -70,6 +71,7 @@ struct FootnoteTokenColorVerificationTests {
     let view = HighlightedEntryTextView(
       text: "[1] test [2]",
       selectedMarkerNumber: nil,
+      linkedMarkerNumbers: [1, Metrics.markerTwoNumber],
       onMarkerTapped: { _ in }
     )
     .padding(Metrics.padding)

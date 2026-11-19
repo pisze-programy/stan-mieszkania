@@ -4,7 +4,7 @@ import SwiftUI
 
 struct DetailMetadataSheetView: View {
   let media: MediaItem
-  @State private var isVerifiedInfoPresented = false
+  @State private var verifiedInfoSubject: VerifiedInfoSubject?
 
   // Decision Q10 & S2-12: Show source, status, and capture/cloud timestamps; never display GPS or raw SHA-256.
   var body: some View {
@@ -23,7 +23,7 @@ struct DetailMetadataSheetView: View {
               syncState: media.syncState,
               isVerified: media.isVerified,
               placement: .labeled,
-              onVerifiedTap: { isVerifiedInfoPresented = true }
+              onVerifiedTap: { verifiedInfoSubject = .photo }
             )
           }
 
@@ -31,12 +31,14 @@ struct DetailMetadataSheetView: View {
             L10n.string("media.detail.metadata.captured.label"),
             value: PolishDateFormatters.formatPreciseTimestamp(media.capturedAt)
           )
+          .monospacedDigit()
 
           if let serverReceivedAt = media.serverReceivedAt {
             LabeledContent(
               L10n.string("media.detail.metadata.cloud.label"),
               value: PolishDateFormatters.formatPreciseTimestamp(serverReceivedAt)
             )
+            .monospacedDigit()
           }
         }
       }
@@ -44,8 +46,8 @@ struct DetailMetadataSheetView: View {
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
       #endif
-      .sheet(isPresented: $isVerifiedInfoPresented) {
-        VerifiedInfoSheetView()
+      .sheet(item: $verifiedInfoSubject) { subject in
+        VerifiedInfoSheetView(subject: subject)
       }
     }
     .presentationDetents([.medium])

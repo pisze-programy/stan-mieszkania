@@ -11,6 +11,21 @@ struct MarkerTextPolicyTests {
     static let markerFour = 4
     static let markerFive = 5
     static let markerTen = 10
+    static let markerTwelve = 12
+  }
+
+  @Test("Collects unique referenced marker numbers while ignoring malformed or zero tokens")
+  func collectsReferencedMarkerNumbers() {
+    #expect(MarkerTextPolicy.referencedMarkerNumbers(in: "").isEmpty)
+    #expect(MarkerTextPolicy.referencedMarkerNumbers(in: "Brak uwag").isEmpty)
+    #expect(
+      MarkerTextPolicy.referencedMarkerNumbers(in: "[1] rysa [1]") == [Fixtures.markerOne]
+    )
+    #expect(MarkerTextPolicy.referencedMarkerNumbers(in: "[1 rysa [0] [01]").isEmpty)
+    #expect(
+      MarkerTextPolicy.referencedMarkerNumbers(in: "Okno [12] i próg [2]")
+        == [Fixtures.markerTwo, Fixtures.markerTwelve]
+    )
   }
 
   @Test("Parses plain text, valid marker tokens, and ignores invalid bracket tokens")
@@ -31,18 +46,21 @@ struct MarkerTextPolicyTests {
     #expect(invalidTokens == [.text("Test [0] [01] [abc] [12")])
   }
 
-  @Test("Appends marker token with clean whitespace handling")
+  @Test("Appends marker token with trailing space and clean whitespace handling")
   func appendsMarkerToken() {
-    #expect(MarkerTextPolicy.appendMarkerToken(to: "", number: Fixtures.markerOne) == "[1]")
-    #expect(MarkerTextPolicy.appendMarkerToken(to: "   ", number: Fixtures.markerOne) == "[1]")
+    #expect(MarkerTextPolicy.appendMarkerToken(to: "", number: Fixtures.markerOne) == "[1] ")
+    #expect(MarkerTextPolicy.appendMarkerToken(to: "   ", number: Fixtures.markerOne) == "[1] ")
     #expect(
-      MarkerTextPolicy.appendMarkerToken(to: "Rysa", number: Fixtures.markerOne) == "Rysa [1]"
+      MarkerTextPolicy.appendMarkerToken(to: "Rysa", number: Fixtures.markerOne) == "Rysa [1] "
     )
     #expect(
-      MarkerTextPolicy.appendMarkerToken(to: "Rysa ", number: Fixtures.markerOne) == "Rysa [1]"
+      MarkerTextPolicy.appendMarkerToken(to: "Rysa ", number: Fixtures.markerOne) == "Rysa [1] "
     )
     #expect(
-      MarkerTextPolicy.appendMarkerToken(to: "Rysa\n", number: Fixtures.markerTwo) == "Rysa\n[2]"
+      MarkerTextPolicy.appendMarkerToken(to: "[1] ", number: Fixtures.markerTwo) == "[1] [2] "
+    )
+    #expect(
+      MarkerTextPolicy.appendMarkerToken(to: "Rysa\n", number: Fixtures.markerTwo) == "Rysa\n[2] "
     )
   }
 
@@ -62,6 +80,9 @@ struct MarkerTextPolicyTests {
     #expect(
       MarkerTextPolicy.removeMarkerToken(from: "Rysa [1] [2]", number: Fixtures.markerOne)
         == "Rysa [2]"
+    )
+    #expect(
+      MarkerTextPolicy.removeMarkerToken(from: "Rysa [1] ", number: Fixtures.markerOne) == "Rysa"
     )
     #expect(
       MarkerTextPolicy.removeMarkerToken(from: "Rysa [10]", number: Fixtures.markerOne)

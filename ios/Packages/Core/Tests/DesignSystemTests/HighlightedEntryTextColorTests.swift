@@ -23,18 +23,22 @@ struct HighlightedEntryTextColorTests {
     static let markerTwoNumber = 2
   }
 
-  @Test("Footnote builder leaves plain text unstyled and attaches marker://n links only to tokens")
+  @Test("Builder styles only linked tokens and leaves unlinked [n] and plain text unstyled")
   func highlightedEntryTextStylesOnlyTokens() {
-    let text = "[1] Rysa na szybie. [2] Klamka luźna."
+    let text = "[1] Rysa na szybie. [2] Klamka luźna. [99]"
+    let linked: Set<Int> = [1, RenderMetrics.markerTwoNumber]
     let selected = HighlightedEntryTextBuilder.buildAttributedString(
       text: text,
-      selectedMarkerNumber: 1
+      selectedMarkerNumber: 1,
+      linkedMarkerNumbers: linked
     )
     #expect(String(selected.characters) == text)
 
     let plainRuns = selected.runs.filter { $0.link == nil }
     #expect(!plainRuns.isEmpty)
     #expect(plainRuns.allSatisfy { $0.foregroundColor == nil && $0.backgroundColor == nil })
+    let plainCombined = plainRuns.map { String(selected[$0.range].characters) }.joined()
+    #expect(plainCombined.contains("[99]"))
 
     let linkRuns = selected.runs.compactMap { run -> LinkRun? in
       guard let link = run.link else { return nil }
@@ -54,7 +58,8 @@ struct HighlightedEntryTextColorTests {
 
     let unselected = HighlightedEntryTextBuilder.buildAttributedString(
       text: text,
-      selectedMarkerNumber: nil
+      selectedMarkerNumber: nil,
+      linkedMarkerNumbers: linked
     )
     #expect(unselected.runs.allSatisfy { $0.backgroundColor == nil })
     let parsedNumber = HighlightedEntryTextBuilder.markerNumber(from: linkRuns[1].url)
@@ -67,6 +72,7 @@ struct HighlightedEntryTextColorTests {
     let view = HighlightedEntryTextView(
       text: "[1] test [2]",
       selectedMarkerNumber: nil,
+      linkedMarkerNumbers: [1, RenderMetrics.markerTwoNumber],
       onMarkerTapped: { _ in }
     )
     .padding(RenderMetrics.padding)

@@ -70,7 +70,7 @@ extension MediaDetailView {
           isVerified: media.isVerified,
           uploadProgress: store.uploadProgress,
           placement: .labeled,
-          onVerifiedTap: { isVerifiedInfoPresented = true },
+          onVerifiedTap: { verifiedInfoSubject = .photo },
           onLocalOnlyTap: { isLocalInfoPresented = true }
         )
         Spacer()
@@ -116,7 +116,7 @@ extension MediaDetailView {
             deleteConfirmationMessage: entryDeleteMessage,
             deleteConfirmButtonLabel: entryDeleteConfirmLabel,
             onMarkerTapped: { store.send(.markerTapped($0)) },
-            onVerifiedTap: { isVerifiedInfoPresented = true },
+            onVerifiedTap: { verifiedInfoSubject = .entry },
             onEditLocal: { store.send(.editLocalEntryTapped(item.id)) },
             onDeleteOrRetract: { store.send(.entryDeleteTapped(item.id)) },
             onConfirmDelete: { store.send(.entryDeleteConfirmed) },

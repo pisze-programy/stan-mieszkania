@@ -26,7 +26,9 @@ public struct GlassFloatingActionButton: View {
           width: DesignMetrics.floatingActionButtonSize,
           height: DesignMetrics.floatingActionButtonSize
         )
+        .contentShape(.circle)
     }
+    .buttonStyle(.plain)
     .glassEffect(.regular.interactive(), in: .circle)
     .accessibilityLabel(accessibilityLabel)
     .accessibilityHint(accessibilityHint ?? "")

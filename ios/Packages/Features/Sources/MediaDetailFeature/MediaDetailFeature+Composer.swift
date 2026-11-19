@@ -8,7 +8,7 @@ extension MediaDetailFeature {
   func handleComposerAction(_ state: inout State, action: Action) -> Effect<Action> {
     switch action {
     case .addEntryTapped, .editLocalEntryTapped, .composerDismissed, .composerTextChanged,
-      .composerToggleMarkerMode, .composerMarkerAdded, .composerMarkerDeleted:
+      .composerMarkerAdded, .composerMarkerRemoveRequested:
       return handleComposerDraftAction(&state, action: action)
     case .composerSubmitted:
       return submitComposer(&state)
@@ -33,6 +33,7 @@ extension MediaDetailFeature {
     switch action {
     case .addEntryTapped:
       guard state.canComposeEntry else { return .none }
+      state.areMarkersHidden = false
       state.composer = EntryComposerState()
       return .none
     case .editLocalEntryTapped(let entryId):
@@ -41,22 +42,26 @@ extension MediaDetailFeature {
       state.composer = nil
       return .none
     case .composerTextChanged(let value):
-      state.composer?.text = value
-      state.composer?.errorMessage = nil
-      return .none
-    case .composerToggleMarkerMode:
-      state.composer?.isMarkerPlacementMode.toggle()
-      if state.composer?.isMarkerPlacementMode == true {
-        state.areMarkersHidden = false
-      }
-      return .none
+      return updateComposerText(&state, value: value)
     case .composerMarkerAdded(let x, let y):
       return addComposerMarker(&state, x: x, y: y)
-    case .composerMarkerDeleted(let number):
-      return deleteComposerMarker(&state, number: number)
+    case .composerMarkerRemoveRequested(let number):
+      return removeComposerMarker(&state, number: number)
     default:
       return .none
     }
+  }
+
+  private func updateComposerText(_ state: inout State, value: String) -> Effect<Action> {
+    state.composer?.text = value
+    state.composer?.errorMessage = nil
+    if let selected = state.selectedMarkerNumber {
+      let visibleNumbers = Set(state.overlayMarkers.map(\.number))
+      if !visibleNumbers.contains(selected) {
+        state.selectedMarkerNumber = nil
+      }
+    }
+    return .none
   }
 
   private func openLocalEntryEditor(_ state: inout State, entryId: String) -> Effect<Action> {
@@ -69,6 +74,7 @@ extension MediaDetailFeature {
     let draftMarkers = item.entry.markers.map {
       DetailDraftMarker(id: $0.id, number: $0.number, x: $0.x, y: $0.y)
     }
+    state.areMarkersHidden = false
     state.composer = EntryComposerState(
       editingEntryId: item.id,
       text: item.entry.text,
@@ -78,15 +84,17 @@ extension MediaDetailFeature {
   }
 
   private func addComposerMarker(_ state: inout State, x: Double, y: Double) -> Effect<Action> {
-    guard let composer = state.composer, composer.isMarkerPlacementMode else {
+    guard let composer = state.composer, !composer.isSubmitting else {
       return .none
     }
     let clampedX = MarkerOverlayItem.clampedNormalizedCoordinate(x)
     let clampedY = MarkerOverlayItem.clampedNormalizedCoordinate(y)
+    let activeMarkers = composer.activeMarkers
+    state.composer?.markers = activeMarkers
     // Decision S2-2: Draft markers start after the highest existing marker number on this photo.
     let nextNumber = MarkerTextPolicy.nextDraftMarkerNumber(
       existingMaxNumber: state.maxExistingMarkerNumber,
-      currentDraftNumbers: composer.markers.map(\.number)
+      currentDraftNumbers: activeMarkers.map(\.number)
     )
     let marker = DetailDraftMarker(
       id: idGenerator.generate(),
@@ -100,8 +108,8 @@ extension MediaDetailFeature {
     return .run { _ in await haptics.markerDropped() }
   }
 
-  private func deleteComposerMarker(_ state: inout State, number: Int) -> Effect<Action> {
-    guard let composer = state.composer else {
+  private func removeComposerMarker(_ state: inout State, number: Int) -> Effect<Action> {
+    guard let composer = state.composer, !composer.isSubmitting else {
       return .none
     }
     state.composer?.markers.removeAll { $0.number == number }
@@ -121,7 +129,8 @@ extension MediaDetailFeature {
     else {
       return .none
     }
-    switch MediaDetailStore.validateEntryText(composer.text, markers: composer.markers) {
+    let activeMarkers = composer.activeMarkers
+    switch MediaDetailStore.validateEntryText(composer.text, markers: activeMarkers) {
     case .failure(let failure):
       state.composer?.errorMessage = failure.message
       return .run { _ in await haptics.warning() }
@@ -129,7 +138,8 @@ extension MediaDetailFeature {
       state.composer?.isSubmitting = true
       state.composer?.errorMessage = nil
       return persistComposerEntry(
-        composer: composer,
+        editingEntryId: composer.editingEntryId,
+        activeMarkers: activeMarkers,
         validatedText: validatedText,
         media: media,
         currentUser: currentUser
@@ -138,7 +148,8 @@ extension MediaDetailFeature {
   }
 
   private func persistComposerEntry(
-    composer: EntryComposerState,
+    editingEntryId: String?,
+    activeMarkers: [DetailDraftMarker],
     validatedText: String,
     media: MediaItem,
     currentUser: AuthorSummary
@@ -147,41 +158,27 @@ extension MediaDetailFeature {
     let generator = idGenerator
     let mediaId = media.id
     let queueForCloud = media.syncState != .localOnly
-
     return .run { send in
       do {
         let entryStore = EntryMutationStore(database: database)
-        if let editingEntryId = composer.editingEntryId {
-          let markers = composer.markers.map {
+        if let editingEntryId {
+          let markers = activeMarkers.map {
             $0.toMarkerPoint(entryId: editingEntryId, mediaId: mediaId)
           }
           try entryStore.updateLocalEntry(
-            entryId: editingEntryId,
-            actorId: currentUser.userId,
-            text: validatedText,
-            markers: markers,
-            now: timestamp
+            entryId: editingEntryId, actorId: currentUser.userId,
+            text: validatedText, markers: markers, now: timestamp
           )
         } else {
           let entryId = generator.generate()
-          let markers = composer.markers.map {
-            $0.toMarkerPoint(entryId: entryId, mediaId: mediaId)
-          }
+          let markers = activeMarkers.map { $0.toMarkerPoint(entryId: entryId, mediaId: mediaId) }
           let entry = EntryItem(
-            id: entryId,
-            mediaId: mediaId,
-            authorId: currentUser.userId,
-            author: currentUser,
-            text: validatedText,
-            markers: markers,
-            createdAt: timestamp
+            id: entryId, mediaId: mediaId, authorId: currentUser.userId,
+            author: currentUser, text: validatedText, markers: markers, createdAt: timestamp
           )
           let outboxId = queueForCloud ? generator.generate() : ""
           try entryStore.createEntry(
-            entry,
-            queueForCloud: queueForCloud,
-            outboxId: outboxId,
-            now: timestamp
+            entry, queueForCloud: queueForCloud, outboxId: outboxId, now: timestamp
           )
         }
         let updated = try MediaDetailStore.fetchSnapshot(mediaId: mediaId, from: database)

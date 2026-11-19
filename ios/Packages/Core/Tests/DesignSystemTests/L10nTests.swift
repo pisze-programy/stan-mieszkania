@@ -14,18 +14,7 @@ struct L10nTests {
     static let twentyTwoCount = 22
     static let twentyFiveCount = 25
     static let expectedErrorCount = 53
-  }
-
-  @Test("Resolves Polish localized strings from Bundle.module")
-  func resolvesPolishStrings() {
-    let headline = L10n.string("onboarding.headline")
-    #expect(!headline.isEmpty)
-    #expect(headline != "onboarding.headline")
-
-    let apartmentsTitle = L10n.string("apartments.list.title")
-    #expect(apartmentsTitle == "Mieszkania")
-
-    let ws2Keys = [
+    static let redesignKeys = [
       "common.close",
       "date.today",
       "date.yesterday",
@@ -36,9 +25,28 @@ struct L10nTests {
       "verified.info.server.detail",
       "verified.info.author.title",
       "verified.info.author.detail",
+      "verified.info.original.title",
+      "verified.info.original.detail",
       "verified.info.footer",
+      "verified.info.entry.title",
+      "verified.info.entry.cloud.title",
+      "verified.info.entry.cloud.detail",
+      "verified.info.entry.server.title",
+      "verified.info.entry.server.detail",
+      "verified.info.entry.author.title",
+      "verified.info.entry.author.detail",
+      "verified.info.entry.edit.title",
+      "verified.info.entry.edit.detail",
+      "verified.info.entry.footer",
       "local.info.title",
-      "media.summary.save.caption",
+      "local.info.device.title",
+      "local.info.device.detail",
+      "local.info.unverified.title",
+      "local.info.unverified.detail",
+      "local.info.footer",
+      "media.marker.instruction",
+      "media.summary.save.sheet.title",
+      "media.summary.save.a11y",
       "media.summary.action.local",
       "media.summary.action.local.subtitle",
       "media.summary.action.cloud",
@@ -56,18 +64,21 @@ struct L10nTests {
       "media.detail.metadata.cloud.label",
       "media.detail.metadata.source.label",
       "media.detail.metadata.status.label",
-      "local.info.device.title",
-      "local.info.device.detail",
-      "local.info.unverified.title",
-      "local.info.unverified.detail",
-      "local.info.footer",
     ]
-    for key in ws2Keys {
+  }
+
+  @Test("Resolves Polish localized strings from Bundle.module")
+  func resolvesPolishStrings() {
+    let headline = L10n.string("onboarding.headline")
+    #expect(!headline.isEmpty && headline != "onboarding.headline")
+    #expect(L10n.string("apartments.list.title") == "Mieszkania")
+
+    for key in Fixtures.redesignKeys {
       let value = L10n.string(key)
-      #expect(!value.isEmpty)
-      #expect(value != key)
+      #expect(!value.isEmpty && value != key)
     }
     #expect(L10n.string("media.summary.action.cloud") == "Chmura")
+    #expect(L10n.string("media.detail.metadata.cloud.label") == "Zapisane")
     #expect(L10n.summaryMultiTitle(Fixtures.twoCount) == "2 zdjęcia")
     #expect(L10n.summaryMultiTitle(Fixtures.fiveCount) == "5 zdjęć")
   }

@@ -87,6 +87,7 @@ public struct MediaDetailSnapshot: Equatable, Sendable {
 public struct LightboxMarkerCaption: Equatable, Sendable {
   public let markerNumber: Int
   public let entryText: String
+  public let linkedMarkerNumbers: Set<Int>
   public let authorDisplayName: String
   public let authorShortTag: String?
   public let createdAt: Date
@@ -94,12 +95,14 @@ public struct LightboxMarkerCaption: Equatable, Sendable {
   public init(
     markerNumber: Int,
     entryText: String,
+    linkedMarkerNumbers: Set<Int> = [],
     authorDisplayName: String,
     authorShortTag: String?,
     createdAt: Date
   ) {
     self.markerNumber = markerNumber
     self.entryText = entryText
+    self.linkedMarkerNumbers = linkedMarkerNumbers
     self.authorDisplayName = authorDisplayName
     self.authorShortTag = authorShortTag
     self.createdAt = createdAt
@@ -125,22 +128,24 @@ public struct EntryComposerState: Equatable, Sendable {
   public var editingEntryId: String?
   public var text: String
   public var markers: [DetailDraftMarker]
-  public var isMarkerPlacementMode: Bool
   public var isSubmitting: Bool
   public var errorMessage: String?
+
+  public var activeMarkers: [DetailDraftMarker] {
+    let referenced = MarkerTextPolicy.referencedMarkerNumbers(in: text)
+    return markers.filter { referenced.contains($0.number) }
+  }
 
   public init(
     editingEntryId: String? = nil,
     text: String = "",
     markers: [DetailDraftMarker] = [],
-    isMarkerPlacementMode: Bool = false,
     isSubmitting: Bool = false,
     errorMessage: String? = nil
   ) {
     self.editingEntryId = editingEntryId
     self.text = text
     self.markers = markers
-    self.isMarkerPlacementMode = isMarkerPlacementMode
     self.isSubmitting = isSubmitting
     self.errorMessage = errorMessage
   }

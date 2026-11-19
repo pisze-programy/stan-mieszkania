@@ -102,9 +102,8 @@ public struct MediaDetailFeature: Sendable {
     case editLocalEntryTapped(String)
     case composerDismissed
     case composerTextChanged(String)
-    case composerToggleMarkerMode
     case composerMarkerAdded(x: Double, y: Double)
-    case composerMarkerDeleted(Int)
+    case composerMarkerRemoveRequested(Int)
     case composerSubmitted
     case composerSucceeded(MediaDetailSnapshot)
     case composerFailed(String)
@@ -152,7 +151,7 @@ public struct MediaDetailFeature: Sendable {
         .markersVisibilityToggled, .photoTapped, .lightboxDismissed, .scrollTargetHandled:
         return handleViewerAction(&state, action: action)
       case .addEntryTapped, .editLocalEntryTapped, .composerDismissed, .composerTextChanged,
-        .composerToggleMarkerMode, .composerMarkerAdded, .composerMarkerDeleted,
+        .composerMarkerAdded, .composerMarkerRemoveRequested,
         .composerSubmitted, .composerSucceeded, .composerFailed:
         return handleComposerAction(&state, action: action)
       case .entryDeleteTapped, .entryDeleteConfirmationDismissed, .entryDeleteConfirmed,

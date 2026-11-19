@@ -92,8 +92,8 @@ struct MediaDetailViewerAndLightboxTests {
   }
 
   @MainActor
-  @Test("Composer placement mode forces markers visible and ignores photoTapped lightbox")
-  func composerPlacementForcesMarkersVisibleAndBlocksLightbox() async throws {
+  @Test("Opening composer forces markers visible and ignores photoTapped lightbox")
+  func composerOpenForcesMarkersVisibleAndBlocksLightbox() async throws {
     let database = try MediaDetailTestFixtures.seedDatabase(
       activeRole: .owner,
       isVerifiedMedia: true
@@ -116,10 +116,9 @@ struct MediaDetailViewerAndLightboxTests {
       MediaDetailFeature()
     }
 
-    await store.send(.addEntryTapped) { $0.composer = EntryComposerState() }
-    await store.send(.composerToggleMarkerMode) {
-      $0.composer?.isMarkerPlacementMode = true
+    await store.send(.addEntryTapped) {
       $0.areMarkersHidden = false
+      $0.composer = EntryComposerState()
     }
     await store.send(.photoTapped)
     #expect(!store.state.isLightboxPresented)

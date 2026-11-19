@@ -109,6 +109,7 @@ public struct ApartmentsListView: View {
           width: DesignMetrics.floatingActionButtonSize,
           height: DesignMetrics.floatingActionButtonSize
         )
+        .contentShape(.circle)
         .glassEffect(.regular.interactive(), in: .circle)
     }
     .accessibilityLabel(L10n.string("apartments.create.sheet.title"))

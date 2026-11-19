@@ -26,6 +26,7 @@ struct DetailPhotoCanvasView: View {
   let onPhotoTapped: () -> Void
   let onToggleMarkers: () -> Void
   let onAddComposerMarker: (Double, Double) -> Void
+  let onRemoveComposerMarker: (Int) -> Void
 
   @Dependency(\.mediaStorage) private var mediaStorage
 
@@ -60,7 +61,8 @@ struct DetailPhotoCanvasView: View {
           selectedMarkerNumber: selectedMarkerNumber,
           onSelectMarker: onSelectMarker,
           onDeselectAll: nil,
-          onAddMarkerAtNormalizedPoint: isComposerPlacementActive ? onAddComposerMarker : nil
+          onAddMarkerAtNormalizedPoint: isComposerPlacementActive ? onAddComposerMarker : nil,
+          onRemoveMarker: isComposerPlacementActive ? onRemoveComposerMarker : nil
         )
         .opacity(areMarkersHidden ? 0 : 1)
         .allowsHitTesting(!areMarkersHidden)
@@ -70,7 +72,15 @@ struct DetailPhotoCanvasView: View {
     .clipShape(.rect(cornerRadius: CornerRadius.photo, style: .continuous))
     .overlay(alignment: .bottomTrailing) {
       if !media.isSoftDeleted, !markers.isEmpty, !isComposerPlacementActive {
-        eyeToggleButton
+        GlassIconButton(
+          systemImage: areMarkersHidden ? "eye.slash" : "eye",
+          accessibilityLabel: L10n.string(
+            areMarkersHidden ? "media.markers.show" : "media.markers.hide"
+          ),
+          size: MediaDetailConstants.eyeToggleSize,
+          action: onToggleMarkers
+        )
+        .padding(MediaDetailConstants.eyeTogglePadding)
       }
     }
     .matchedTransitionSource(id: lightboxSourceID, in: lightboxNamespace)
@@ -84,24 +94,6 @@ struct DetailPhotoCanvasView: View {
     ) {
       await loadPhoto()
     }
-  }
-
-  private var eyeToggleButton: some View {
-    Button(action: onToggleMarkers) {
-      Image(systemName: areMarkersHidden ? "eye.slash" : "eye")
-        .font(.callout.weight(.semibold))
-        .frame(
-          width: MediaDetailConstants.eyeToggleSize,
-          height: MediaDetailConstants.eyeToggleSize
-        )
-        .contentTransition(.symbolEffect(.replace))
-    }
-    .buttonStyle(.plain)
-    .glassEffect(.regular.interactive(), in: .circle)
-    .padding(MediaDetailConstants.eyeTogglePadding)
-    .accessibilityLabel(
-      L10n.string(areMarkersHidden ? "media.markers.show" : "media.markers.hide")
-    )
   }
 
   @ViewBuilder

@@ -63,53 +63,53 @@ struct MediaDetailMarkersAndComposerTests {
   }
 
   @MainActor
-  @Test("Contributor appends entry with markers starting at [3] and queues cloud sync")
-  func contributorAddsEntryStartingAtThree() async throws {
+  @Test("Contributor places markers without toggle, syncs text edits, and persists activeMarkers")
+  func contributorAddsTextSyncedMarkerStartingAtThree() async throws {
     let database = try MediaDetailTestFixtures.seedDatabase(
-      activeRole: .contributor,
-      isVerifiedMedia: true
+      activeRole: .contributor, isVerifiedMedia: true
     )
     let snapshot = try MediaDetailStore.fetchSnapshot(
-      mediaId: MediaDetailTestFixtures.mediaId,
-      from: database
+      mediaId: MediaDetailTestFixtures.mediaId, from: database
     )
     let markerHaptics = LockIsolated(0)
     let successHaptics = LockIsolated(0)
     let outboxCalls = LockIsolated(0)
-
     let store = makeContributorStore(
-      database: database,
-      snapshot: snapshot,
-      markerHaptics: markerHaptics,
-      successHaptics: successHaptics,
-      outboxCalls: outboxCalls
+      database: database, snapshot: snapshot,
+      markerHaptics: markerHaptics, successHaptics: successHaptics, outboxCalls: outboxCalls
     )
-
     #expect(store.state.canComposeEntry)
     #expect(!store.state.canEditOrHardDeleteEntry(snapshot.entries[0]))
     #expect(!store.state.canRetractEntry(snapshot.entries[0]))
 
     await store.send(.addEntryTapped) { $0.composer = EntryComposerState() }
-    await store.send(.composerToggleMarkerMode) { $0.composer?.isMarkerPlacementMode = true }
     await store.send(.composerTextChanged("Uwaga przy oknie")) {
       $0.composer?.text = "Uwaga przy oknie"
     }
     let draftThree = DetailDraftMarker(
-      id: MediaDetailTestFixtures.markerThreeId,
-      number: Self.markerThreeNumber,
-      x: Self.markerThreeX,
-      y: Self.markerThreeY
+      id: MediaDetailTestFixtures.markerThreeId, number: Self.markerThreeNumber,
+      x: Self.markerThreeX, y: Self.markerThreeY
     )
     await store.send(.composerMarkerAdded(x: Self.markerThreeX, y: Self.markerThreeY)) {
       $0.composer?.markers = [draftThree]
-      $0.composer?.text = "Uwaga przy oknie [3]"
+      $0.composer?.text = "Uwaga przy oknie [3] "
       $0.selectedMarkerNumber = Self.markerThreeNumber
     }
+    await store.send(.composerTextChanged("Uwaga przy oknie ")) {
+      $0.composer?.text = "Uwaga przy oknie "
+      $0.selectedMarkerNumber = nil
+    }
+    #expect(store.state.composer?.activeMarkers.isEmpty == true)
+    #expect(store.state.overlayMarkers.map(\.number) == [1, Self.markerTwoNumber])
+
+    await store.send(.composerTextChanged("Uwaga przy oknie [3] ")) {
+      $0.composer?.text = "Uwaga przy oknie [3] "
+    }
+    #expect(store.state.composer?.activeMarkers == [draftThree])
     await store.send(.composerSubmitted) { $0.composer?.isSubmitting = true }
 
     let updated = try MediaDetailStore.fetchSnapshot(
-      mediaId: MediaDetailTestFixtures.mediaId,
-      from: database
+      mediaId: MediaDetailTestFixtures.mediaId, from: database
     )
     await store.receive(.composerSucceeded(updated)) {
       $0.composer = nil

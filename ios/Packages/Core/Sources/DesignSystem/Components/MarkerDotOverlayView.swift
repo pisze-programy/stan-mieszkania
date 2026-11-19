@@ -110,24 +110,29 @@ public struct MarkerPinBadgeView: View {
 }
 
 public struct MarkerDotOverlayView: View {
+  private static let markerTransitionScale: CGFloat = 0.6
+
   private let markers: [MarkerOverlayItem]
   private let selectedMarkerNumber: Int?
   private let onSelectMarker: (Int) -> Void
   private let onDeselectAll: (() -> Void)?
   private let onAddMarkerAtNormalizedPoint: ((Double, Double) -> Void)?
+  private let onRemoveMarker: ((Int) -> Void)?
 
   public init(
     markers: [MarkerOverlayItem],
     selectedMarkerNumber: Int?,
     onSelectMarker: @escaping (Int) -> Void,
     onDeselectAll: (() -> Void)? = nil,
-    onAddMarkerAtNormalizedPoint: ((Double, Double) -> Void)? = nil
+    onAddMarkerAtNormalizedPoint: ((Double, Double) -> Void)? = nil,
+    onRemoveMarker: ((Int) -> Void)? = nil
   ) {
     self.markers = markers
     self.selectedMarkerNumber = selectedMarkerNumber
     self.onSelectMarker = onSelectMarker
     self.onDeselectAll = onDeselectAll
     self.onAddMarkerAtNormalizedPoint = onAddMarkerAtNormalizedPoint
+    self.onRemoveMarker = onRemoveMarker
   }
 
   public var body: some View {
@@ -153,18 +158,42 @@ public struct MarkerDotOverlayView: View {
         }
 
         ForEach(markers) { marker in
-          let isSelected = selectedMarkerNumber == marker.number
-          let isDimmed = selectedMarkerNumber != nil && !isSelected
-          MarkerPinBadgeView(
-            marker: marker,
-            isSelected: isSelected,
-            isDimmed: isDimmed,
-            onTap: { onSelectMarker(marker.number) }
-          )
-          .position(MarkerOverlayItem.pointInContainer(marker, size: geometry.size))
+          markerView(for: marker, in: geometry.size)
+            .transition(.scale(scale: Self.markerTransitionScale).combined(with: .opacity))
         }
       }
       .animation(Motion.snappy, value: selectedMarkerNumber)
+      .animation(Motion.snappy, value: markers.map(\.id))
+    }
+  }
+
+  @ViewBuilder
+  private func markerView(for marker: MarkerOverlayItem, in size: CGSize) -> some View {
+    let isSelected = selectedMarkerNumber == marker.number
+    let isDimmed = selectedMarkerNumber != nil && !isSelected
+    let badge = MarkerPinBadgeView(
+      marker: marker,
+      isSelected: isSelected,
+      isDimmed: isDimmed,
+      onTap: { onSelectMarker(marker.number) }
+    )
+
+    if let onRemoveMarker {
+      badge
+        .contextMenu {
+          Button(role: .destructive) {
+            onRemoveMarker(marker.number)
+          } label: {
+            Label(
+              L10n.format("media.summary.marker.delete", marker.number),
+              systemImage: "trash"
+            )
+          }
+        }
+        .position(MarkerOverlayItem.pointInContainer(marker, size: size))
+    } else {
+      badge
+        .position(MarkerOverlayItem.pointInContainer(marker, size: size))
     }
   }
 }

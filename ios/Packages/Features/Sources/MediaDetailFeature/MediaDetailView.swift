@@ -8,7 +8,7 @@ public struct MediaDetailView: View {
   static let lightboxSourceID = "mediaDetailPhoto"
 
   @Bindable var store: StoreOf<MediaDetailFeature>
-  @State var isVerifiedInfoPresented = false
+  @State var verifiedInfoSubject: VerifiedInfoSubject?
   @State var isLocalInfoPresented = false
   @State var decodedCanvasImage: CGImage?
   @State private var viewportHeight: CGFloat = 0
@@ -39,7 +39,7 @@ public struct MediaDetailView: View {
               markers: store.overlayMarkers,
               selectedMarkerNumber: store.selectedMarkerNumber,
               areMarkersHidden: store.areMarkersHidden,
-              isComposerPlacementActive: store.composer?.isMarkerPlacementMode == true,
+              isComposerPlacementActive: store.composer != nil,
               photoMaxHeight: photoMaxHeight,
               lightboxSourceID: Self.lightboxSourceID,
               lightboxNamespace: lightboxNamespace,
@@ -47,7 +47,8 @@ public struct MediaDetailView: View {
               onSelectMarker: { store.send(.markerTapped($0)) },
               onPhotoTapped: { store.send(.photoTapped) },
               onToggleMarkers: { store.send(.markersVisibilityToggled) },
-              onAddComposerMarker: { x, y in store.send(.composerMarkerAdded(x: x, y: y)) }
+              onAddComposerMarker: { x, y in store.send(.composerMarkerAdded(x: x, y: y)) },
+              onRemoveComposerMarker: { store.send(.composerMarkerRemoveRequested($0)) }
             )
 
             statusAndSyncBar(for: media)
@@ -96,8 +97,8 @@ public struct MediaDetailView: View {
         DetailMetadataSheetView(media: media)
       }
     }
-    .sheet(isPresented: $isVerifiedInfoPresented) {
-      VerifiedInfoSheetView()
+    .sheet(item: $verifiedInfoSubject) { subject in
+      VerifiedInfoSheetView(subject: subject)
     }
     .sheet(isPresented: $isLocalInfoPresented) {
       LocalOnlyInfoSheetView(
@@ -139,6 +140,7 @@ public struct MediaDetailView: View {
       areMarkersHidden: store.areMarkersHidden,
       referenceDate: store.now ?? Date(),
       onSelectMarker: { store.send(.markerTapped($0)) },
+      onClearSelection: { store.send(.markerSelectionCleared) },
       onToggleMarkers: { store.send(.markersVisibilityToggled) },
       onDismiss: { store.send(.lightboxDismissed) }
     )
@@ -149,12 +151,7 @@ public struct MediaDetailView: View {
     if let composer = store.composer {
       DetailEntryComposerView(
         composer: composer,
-        authorColorHex: store.currentUser?.color ?? DomainConstants.defaultAuthorColor,
-        selectedMarkerNumber: store.selectedMarkerNumber,
         onTextChanged: { store.send(.composerTextChanged($0)) },
-        onToggleMarkerMode: { store.send(.composerToggleMarkerMode) },
-        onSelectMarker: { store.send(.markerTapped($0)) },
-        onDeleteMarker: { store.send(.composerMarkerDeleted($0)) },
         onSubmit: { store.send(.composerSubmitted) },
         onCancel: { store.send(.composerDismissed) }
       )

@@ -55,17 +55,27 @@ public enum MarkerTextPolicy: Sendable {
     return segments
   }
 
+  public static func referencedMarkerNumbers(in text: String) -> Set<Int> {
+    var numbers: Set<Int> = []
+    for segment in parseSegments(in: text) {
+      if case .marker(let number, _) = segment {
+        numbers.insert(number)
+      }
+    }
+    return numbers
+  }
+
   public static func appendMarkerToken(to text: String, number: Int) -> String {
     let token = formatToken(number)
     let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else {
-      return token
+      return "\(token)\(space)"
     }
 
     if text.last?.isWhitespace == true {
-      return "\(text)\(token)"
+      return "\(text)\(token)\(space)"
     }
-    return "\(text)\(space)\(token)"
+    return "\(text)\(space)\(token)\(space)"
   }
 
   public static func removeMarkerToken(from text: String, number: Int) -> String {
@@ -93,6 +103,9 @@ public enum MarkerTextPolicy: Sendable {
             chunk.removeFirst()
           }
           stripLeadingSpaceOnNextText = false
+        }
+        if chunk.isEmpty {
+          continue
         }
         if pendingRemovalTrimAtEnd, chunk.first?.isNewline == true {
           result = trimTrailingHorizontalWhitespace(result)

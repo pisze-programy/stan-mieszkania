@@ -49,6 +49,7 @@ struct TimelineCaptureMenuButtonView: View {
           width: DesignMetrics.floatingActionButtonSize,
           height: DesignMetrics.floatingActionButtonSize
         )
+        .contentShape(.circle)
         .glassEffect(.regular.interactive(), in: .circle)
     }
     .menuOrder(.fixed)

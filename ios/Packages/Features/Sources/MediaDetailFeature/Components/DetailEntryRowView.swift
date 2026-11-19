@@ -51,6 +51,7 @@ struct DetailEntryRowView: View {
       HighlightedEntryTextView(
         text: item.entry.text,
         selectedMarkerNumber: selectedMarkerNumber,
+        linkedMarkerNumbers: Set(item.entry.markers.map(\.number)),
         onMarkerTapped: onMarkerTapped
       )
       .frame(maxWidth: .infinity, alignment: .leading)

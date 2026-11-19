@@ -11,56 +11,56 @@ struct MediaSummaryMarkersAndPagerTests {
   private static let markerOneY = 0.4
   private static let markerTwoX = 0.8
   private static let markerTwoY = 0.6
-  private static let outOfBoundsX = 1.5
-  private static let outOfBoundsY = -0.2
   private static let twoMarkersCount = 2
 
   @MainActor
-  @Test("Places touch-point markers with [n] tokens, deletes cleanly, and clears on outside tap")
-  func markerPlacementDeletionAndOutsideDeselection() async {
+  @Test("Markers sync live with text, restore on retype, purge orphans, and remove on menu")
+  func textSyncedMarkersAndRemoval() async {
     let markerHaptics = LockIsolated(0)
     let store = makeStore(
       drafts: [MediaSummaryTestFixtures.makeDraft()],
       origin: .camera,
-      isPlacementMode: false,
       markerHaptics: markerHaptics
     )
-
-    await store.send(.markerAddedAt(x: Self.markerOneX, y: Self.markerOneY))
-    await store.send(.toggleMarkerPlacementMode) { $0.isMarkerPlacementMode = true }
-    await store.send(.descriptionChanged("Rysa na ścianie")) {
-      $0.pages[0].description = "Rysa na ścianie"
-    }
-
     let first = SummaryDraftMarker(
-      id: MediaSummaryTestFixtures.markerOneId,
-      number: 1,
-      x: Self.markerOneX,
-      y: Self.markerOneY
+      id: MediaSummaryTestFixtures.markerOneId, number: 1,
+      x: Self.markerOneX, y: Self.markerOneY
     )
     await store.send(.markerAddedAt(x: Self.markerOneX, y: Self.markerOneY)) {
       $0.pages[0].markers = [first]
-      $0.pages[0].description = "Rysa na ścianie [1]"
+      $0.pages[0].description = "[1] "
       $0.pages[0].selectedMarkerNumber = 1
     }
+    #expect(store.state.pages[0].activeMarkers == [first])
 
-    let second = SummaryDraftMarker(
-      id: MediaSummaryTestFixtures.markerTwoId,
-      number: Self.twoMarkersCount,
-      x: ContractConstants.markerCoordMax,
-      y: ContractConstants.markerCoordMin
-    )
-    await store.send(.markerAddedAt(x: Self.outOfBoundsX, y: Self.outOfBoundsY)) {
-      $0.pages[0].markers = [first, second]
-      $0.pages[0].description = "Rysa na ścianie [1] [2]"
-      $0.pages[0].selectedMarkerNumber = Self.twoMarkersCount
+    await store.send(.descriptionChanged(" rysa")) {
+      $0.pages[0].description = " rysa"
+      $0.pages[0].selectedMarkerNumber = nil
     }
+    #expect(store.state.pages[0].activeMarkers.isEmpty)
+    #expect(store.state.pages[0].markerOverlayItems().isEmpty)
+    #expect(store.state.pages[0].markers == [first])
 
-    await store.send(.markerSelectionCleared) { $0.pages[0].selectedMarkerNumber = nil }
+    await store.send(.descriptionChanged("[1] rysa")) { $0.pages[0].description = "[1] rysa" }
+    #expect(store.state.pages[0].activeMarkers == [first])
+
+    await store.send(.descriptionChanged("[99]")) { $0.pages[0].description = "[99]" }
+    #expect(store.state.pages[0].activeMarkers.isEmpty)
+
+    let freshOne = SummaryDraftMarker(
+      id: MediaSummaryTestFixtures.markerTwoId, number: 1,
+      x: Self.markerTwoX, y: Self.markerTwoY
+    )
+    await store.send(.markerAddedAt(x: Self.markerTwoX, y: Self.markerTwoY)) {
+      $0.pages[0].markers = [freshOne]
+      $0.pages[0].description = "[99] [1] "
+      $0.pages[0].selectedMarkerNumber = 1
+    }
+    await store.send(.markerSelected(1)) { $0.pages[0].selectedMarkerNumber = nil }
     await store.send(.markerSelected(1)) { $0.pages[0].selectedMarkerNumber = 1 }
-    await store.send(.markerDeleted(1)) {
-      $0.pages[0].markers = [second]
-      $0.pages[0].description = "Rysa na ścianie [2]"
+    await store.send(.markerRemoveRequested(1)) {
+      $0.pages[0].markers = []
+      $0.pages[0].description = "[99]"
       $0.pages[0].selectedMarkerNumber = nil
     }
     #expect(markerHaptics.value == Self.twoMarkersCount)
@@ -82,7 +82,6 @@ struct MediaSummaryMarkersAndPagerTests {
     let store = makeStore(
       drafts: drafts,
       origin: .photoLibrary,
-      isPlacementMode: true,
       markerHaptics: LockIsolated(0)
     )
     #expect(store.state.isMultiPhoto)
@@ -95,7 +94,7 @@ struct MediaSummaryMarkersAndPagerTests {
     )
     await store.send(.markerAddedAt(x: Self.markerOneX, y: Self.markerOneY)) {
       $0.pages[0].markers = [pageOneMarker]
-      $0.pages[0].description = "[1]"
+      $0.pages[0].description = "[1] "
       $0.pages[0].selectedMarkerNumber = 1
     }
 
@@ -111,13 +110,13 @@ struct MediaSummaryMarkersAndPagerTests {
     )
     await store.send(.markerAddedAt(x: Self.markerTwoX, y: Self.markerTwoY)) {
       $0.pages[1].markers = [pageTwoMarker]
-      $0.pages[1].description = "Kuchnia - blat [1]"
+      $0.pages[1].description = "Kuchnia - blat [1] "
       $0.pages[1].selectedMarkerNumber = 1
     }
 
     await store.send(.pageSelected(0)) { $0.selectedIndex = 0 }
-    #expect(store.state.pages[0].description == "[1]")
-    #expect(store.state.pages[1].description == "Kuchnia - blat [1]")
+    #expect(store.state.pages[0].description == "[1] ")
+    #expect(store.state.pages[1].description == "Kuchnia - blat [1] ")
   }
 
   @MainActor
@@ -142,7 +141,6 @@ struct MediaSummaryMarkersAndPagerTests {
   private func makeStore(
     drafts: [CapturedPhotoDraft],
     origin: CaptureSourceKind,
-    isPlacementMode: Bool,
     markerHaptics: LockIsolated<Int>
   ) -> TestStoreOf<MediaSummaryFeature> {
     TestStore(
@@ -150,8 +148,7 @@ struct MediaSummaryMarkersAndPagerTests {
         apartmentId: MediaSummaryTestFixtures.apartmentId,
         drafts: drafts,
         origin: origin,
-        currentUser: MediaSummaryTestFixtures.author,
-        isMarkerPlacementMode: isPlacementMode
+        currentUser: MediaSummaryTestFixtures.author
       )
     ) {
       MediaSummaryFeature()

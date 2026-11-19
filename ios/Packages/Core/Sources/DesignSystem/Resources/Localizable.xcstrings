@@ -1,211 +1,227 @@
 {
-  "sourceLanguage": "pl",
-  "version": "1.0",
-  "strings": {
-    "onboarding.headline": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dokumentacja stanu mieszkania i ochrona przed sporami"
+  "sourceLanguage" : "pl",
+  "strings" : {
+    " " : {
+
+    },
+    "%lld" : {
+
+    },
+    "apartment.delete.confirm.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń"
           }
         }
       }
     },
-    "onboarding.description": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Twórz niezmienny, oparty na dowodach rejestr stanu mieszkania i chroń swoje prawa przy zwrocie kaucji."
+    "apartment.delete.confirmation.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mieszkanie i wszystkie zdjęcia zostaną trwale usunięte."
           }
         }
       }
     },
-    "onboarding.apple.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zaloguj się przez Apple"
+    "apartment.delete.confirmation.message.transfer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mieszkanie przejdzie na najdłużej obecnego współuczestnika."
           }
         }
       }
     },
-    "apartments.list.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mieszkania"
+    "apartment.delete.confirmation.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usunąć mieszkanie?"
           }
         }
       }
     },
-    "apartments.list.empty.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak mieszkań"
+    "apartment.edit.save.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz"
           }
         }
       }
     },
-    "apartments.list.empty.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utwórz nowe mieszkanie lub dołącz do istniejącego za pomocą kodu zaproszenia."
+    "apartment.edit.sheet.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edytuj mieszkanie"
           }
         }
       }
     },
-    "apartments.create.sheet.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nowe mieszkanie"
+    "apartment.history.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak zarejestrowanych zmian"
           }
         }
       }
     },
-    "apartments.create.name.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nazwa mieszkania"
+    "apartment.history.sheet.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historia zmian"
           }
         }
       }
     },
-    "apartments.create.street.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ulica i numer"
+    "apartment.leave.confirm.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opuść"
           }
         }
       }
     },
-    "apartments.create.city.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Miasto"
+    "apartment.leave.confirmation.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stracisz dostęp do osi czasu tego mieszkania, ale Twoje dotychczasowe wpisy pozostaną zachowane."
           }
         }
       }
     },
-    "apartments.create.save.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utwórz"
+    "apartment.leave.confirmation.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opuścić mieszkanie?"
           }
         }
       }
     },
-    "apartments.create.cancel.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anuluj"
+    "apartment.timeline.empty.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuknij przycisk plusa poniżej, aby dodać pierwsze zdjęcie stanu mieszkania."
           }
         }
       }
     },
-    "apartments.join.sheet.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dołącz do mieszkania"
+    "apartment.timeline.empty.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak wpisów na osi czasu"
           }
         }
       }
     },
-    "apartments.join.code.prompt": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "K7QM-4XPB"
+    "apartment.timeline.photo.tombstone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zdjęcie usunięte przez autora"
           }
         }
       }
     },
-    "apartments.join.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dołącz"
+    "apartment.timeline.quota.badge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld/%lld"
           }
         }
       }
     },
-    "apartments.card.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@, %@"
+    "apartment.timeline.quota.popover" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "W chmurze: %lld z %lld zdjęć. Zdjęcia w chmurze są zweryfikowane i widoczne dla wszystkich członków."
           }
         }
       }
     },
-    "apartments.card.photo.count": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld zdjęcie"
+    "apartment.timeline.sync.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronizuj wszystko (%lld)"
+          }
+        }
+      }
+    },
+    "apartments.card.photo.count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld zdjęcia"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld zdjęcia"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld zdjęć"
                 }
               },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld zdjęć"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld zdjęcie"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld zdjęć"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld zdjęć"
                 }
               }
             }
@@ -213,1970 +229,1508 @@
         }
       }
     },
-    "apartment.timeline.quota.badge": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld/%lld"
+    "apartments.card.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, %@"
           }
         }
       }
     },
-    "apartment.timeline.sync.all": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Synchronizuj wszystko (%lld)"
+    "apartments.create.cancel.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anuluj"
           }
         }
       }
     },
-    "apartment.timeline.empty.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak wpisów na osi czasu"
+    "apartments.create.city.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Miasto"
           }
         }
       }
     },
-    "apartment.timeline.empty.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stuknij przycisk plusa poniżej, aby dodać pierwsze zdjęcie stanu mieszkania."
+    "apartments.create.name.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nazwa mieszkania"
           }
         }
       }
     },
-    "apartment.timeline.photo.tombstone": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zdjęcie usunięte przez autora"
+    "apartments.create.save.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utwórz"
           }
         }
       }
     },
-    "apartment.edit.sheet.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Edytuj mieszkanie"
+    "apartments.create.sheet.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nowe mieszkanie"
           }
         }
       }
     },
-    "apartment.history.sheet.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Historia zmian"
+    "apartments.create.street.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ulica i numer"
           }
         }
       }
     },
-    "apartment.leave.confirmation.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opuścić mieszkanie?"
+    "apartments.join.code.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poproś właściciela o 8-znakowy kod."
           }
         }
       }
     },
-    "apartment.leave.confirmation.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stracisz dostęp do osi czasu tego mieszkania, ale Twoje dotychczasowe wpisy pozostaną zachowane."
+    "apartments.join.code.prompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "K7QM-4XPB"
           }
         }
       }
     },
-    "apartment.delete.confirmation.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usunąć mieszkanie?"
+    "apartments.join.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dołącz"
           }
         }
       }
     },
-    "apartment.delete.confirmation.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mieszkanie i wszystkie zdjęcia zostaną trwale usunięte."
+    "apartments.join.sheet.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dołącz do mieszkania"
           }
         }
       }
     },
-    "apartment.edit.save.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapisz"
+    "apartments.list.empty.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utwórz nowe mieszkanie lub dołącz do istniejącego za pomocą kodu zaproszenia."
           }
         }
       }
     },
-    "apartment.history.empty": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak zarejestrowanych zmian"
+    "apartments.list.empty.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak mieszkań"
           }
         }
       }
     },
-    "apartment.leave.confirm.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opuść"
+    "apartments.list.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mieszkania"
           }
         }
       }
     },
-    "apartment.delete.confirm.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usuń"
+    "app.update.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaktualizuj aplikację do najnowszej wersji, aby kontynuować korzystanie z usług. Twoje lokalne dane są całkowicie bezpieczne."
           }
         }
       }
     },
-    "capture.menu.camera": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zrób zdjęcie"
+    "app.update.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wymagana aktualizacja"
           }
         }
       }
     },
-    "capture.menu.library": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wybierz z galerii"
+    "capture.camera.unavailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aparat jest niedostępny na tym urządzeniu."
           }
         }
       }
     },
-    "capture.menu.files": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Importuj z Plików"
+    "capture.gps.allow.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zezwól"
           }
         }
       }
     },
-    "capture.menu.video.disabled": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wideo — wkrótce"
+    "capture.gps.explanation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokalizator GPS jest opcjonalną metadaną weryfikacyjną, przechowywaną wyłącznie w raporcie i nigdy niepublikowaną w interfejsie."
           }
         }
       }
     },
-    "capture.processing.hud": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Przygotowuję zdjęcie…"
+    "capture.gps.sheet.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opcjonalna lokalizacja GPS"
           }
         }
       }
     },
-    "capture.import.failed.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie udało się dodać zdjęcia"
+    "capture.gps.skip.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontynuuj bez lokalizacji"
           }
         }
       }
     },
-    "common.ok": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OK"
+    "capture.import.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się wczytać wybranego zdjęcia."
           }
         }
       }
     },
-    "capture.gps.explanation": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lokalizator GPS jest opcjonalną metadaną weryfikacyjną, przechowywaną wyłącznie w raporcie i nigdy niepublikowaną w interfejsie."
+    "capture.import.failed.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się dodać zdjęcia"
           }
         }
       }
     },
-    "media.summary.marker.toggle": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dodaj znacznik"
+    "capture.menu.camera" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zrób zdjęcie"
           }
         }
       }
     },
-    "media.summary.marker.hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stuknij na zdjęciu, aby dodać punkt w miejscu wady."
+    "capture.menu.files" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importuj z Plików"
           }
         }
       }
     },
-    "media.summary.description.placeholder": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opisz, co widać na zdjęciu (opcjonalnie)"
+    "capture.menu.library" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz z galerii"
           }
         }
       }
     },
-    "media.summary.action.local": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lokalnie"
+    "capture.menu.video.disabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wideo — wkrótce"
           }
         }
       }
     },
-    "media.summary.action.cloud": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chmura"
+    "capture.processing.hud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przygotowuję zdjęcie…"
           }
         }
       }
     },
-    "media.summary.quota.notice": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Osiągnięto limit 250 zdjęć w chmurze. Zdjęcie zostało bezpiecznie zachowane lokalnie na urządzeniu."
+    "common.close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zamknij"
           }
         }
       }
     },
-    "media.detail.status.verified": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zweryfikowane"
+    "common.ok" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
           }
         }
       }
     },
-    "media.detail.status.local": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lokalne"
+    "date.today" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dzisiaj"
           }
         }
       }
     },
-    "media.detail.status.uploading": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wysyłanie…"
+    "date.yesterday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wczoraj"
           }
         }
       }
     },
-    "media.detail.source.camera": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aparat"
+    "error.ACCOUNT_DELETION_FAILED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się usunąć konta. Spróbuj ponownie później."
           }
         }
       }
     },
-    "media.detail.source.import": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Import"
+    "error.APARTMENT_ACCESS_DENIED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak dostępu do tego mieszkania."
           }
         }
       }
     },
-    "media.detail.source.import.no.exif": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Import (data dodania — brak EXIF)"
+    "error.APARTMENT_NOT_FOUND" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie znaleziono mieszkania."
           }
         }
       }
     },
-    "media.detail.entries.header": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wpisy"
+    "error.APARTMENT_OWNER_REQUIRED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wymagane uprawnienia właściciela mieszkania."
           }
         }
       }
     },
-    "media.detail.metadata.captured.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zrobione"
+    "error.APARTMENT_VALIDATION_FAILED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Walidacja danych mieszkania nie powiodła się."
           }
         }
       }
     },
-    "media.detail.metadata.cloud.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapisane w chmurze"
+    "error.APP_UPDATE_REQUIRED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wymagana jest aktualizacja aplikacji."
           }
         }
       }
     },
-    "media.detail.metadata.source.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Źródło"
+    "error.AUTH_TOKEN_INVALID" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowy token uwierzytelniania."
           }
         }
       }
     },
-    "media.detail.metadata.status.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Status"
+    "error.AUTH_TOKEN_MISSING" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak tokenu uwierzytelniania."
           }
         }
       }
     },
-    "media.markers.show": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pokaż znaczniki"
+    "error.CANNOT_REVOKE_OWNER" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można odebrać dostępu właścicielowi mieszkania."
           }
         }
       }
     },
-    "media.markers.hide": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ukryj znaczniki"
+    "error.CONFLICT" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wystąpił konflikt danych."
           }
         }
       }
     },
-    "media.detail.entry.add.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dodaj wpis"
+    "error.DISPLAY_NAME_INVALID" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowa wyświetlana nazwa użytkownika."
           }
         }
       }
     },
-    "media.detail.entry.placeholder": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dodaj komentarz lub uwagę do tego zdjęcia..."
+    "error.ENTRY_ACCESS_DENIED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak dostępu do tego wpisu."
           }
         }
       }
     },
-    "media.detail.entry.retracted": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wpis wycofany przez %1$@, %2$@"
+    "error.ENTRY_ALREADY_RETRACTED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten wpis został już wycofany."
           }
         }
       }
     },
-    "media.detail.entry.retract.confirm.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wycofać wpis?"
+    "error.ENTRY_AUTHOR_REQUIRED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wymagany autor wpisu."
           }
         }
       }
     },
-    "media.detail.entry.retract.confirm.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wpis zniknie dla wszystkich, ale zostanie ślad, że został wycofany."
+    "error.ENTRY_CONFLICT" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konflikt danych wpisu."
           }
         }
       }
     },
-    "media.detail.upload.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wyślij do chmury"
+    "error.ENTRY_MEDIA_NOT_READY" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zdjęcie dla tego wpisu nie jest jeszcze gotowe."
           }
         }
       }
     },
-    "media.detail.delete.local.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trwale usunąć lokalne zdjęcie?"
+    "error.ENTRY_NOT_FOUND" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie znaleziono wpisu."
           }
         }
       }
     },
-    "media.detail.delete.cloud.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usunąć zdjęcie?"
+    "error.ENTRY_VALIDATION_FAILED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Walidacja wpisu nie powiodła się."
           }
         }
       }
     },
-    "media.detail.metadata.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Informacje o zdjęciu"
+    "error.EXTERNAL_AUTH_CLEANUP_FAILED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czyszczenie uwierzytelniania zewnętrznego nie powiodło się."
           }
         }
       }
     },
-    "media.detail.entry.retract.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wycofaj wpis"
+    "error.FORBIDDEN" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Działanie zabronione."
           }
         }
       }
     },
-    "media.detail.entry.edit.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Edytuj wpis"
+    "error.INTERNAL_ERROR" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wewnętrzny błąd serwera."
           }
         }
       }
     },
-    "media.detail.entry.delete.local.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trwale usunąć lokalny wpis?"
+    "error.INVALID_APPLE_AUTHORIZATION_CODE" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowy kod autoryzacji Apple."
           }
         }
       }
     },
-    "media.detail.role.owner": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Właściciel"
+    "error.INVITE_CODE_COLLISION" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kolizja kodu zaproszenia. Spróbuj ponownie."
           }
         }
       }
     },
-    "media.detail.role.contributor": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Współpracownik"
+    "error.INVITE_CODE_INVALID" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowy kod zaproszenia."
           }
         }
       }
     },
-    "media.detail.user.anonymous": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usunięty użytkownik"
+    "error.INVITE_CODE_NOT_FOUND" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie znaleziono takiego kodu zaproszenia."
           }
         }
       }
     },
-    "sharing.screen.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zarządzanie dostępem"
+    "error.INVITE_CODE_RATE_LIMITED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zbyt wiele prób użycia kodu zaproszenia. Spróbuj później."
           }
         }
       }
     },
-    "sharing.code.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kod zaproszenia"
+    "error.MARKER_DUPLICATE_LOCAL_NUMBER" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duplikat numeru znacznika lokalnego."
           }
         }
       }
     },
-    "sharing.code.reset.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zresetuj kod zaproszenia"
+    "error.MARKER_INVALID_COORDINATES" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowe współrzędne znacznika."
           }
         }
       }
     },
-    "sharing.code.reset.confirm.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zresetować kod?"
+    "error.MEDIA_ACCESS_DENIED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak dostępu do tego pliku media."
           }
         }
       }
     },
-    "sharing.code.reset.confirm.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stary kod zaproszenia przestanie działać dla nowych osób."
+    "error.MEDIA_ALREADY_DELETED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To zdjęcie zostało już usunięte."
           }
         }
       }
     },
-    "sharing.security.banner": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nowa osoba dołączyła do mieszkania. Zresetuj kod, aby stary kod przestał działać."
+    "error.MEDIA_AUTHOR_REQUIRED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wymagany autor pliku media."
           }
         }
       }
     },
-    "sharing.members.header": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Członkowie mieszkania"
+    "error.MEDIA_CONFLICT" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konflikt danych pliku media."
           }
         }
       }
     },
-    "sharing.member.revoke.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Odbierz dostęp"
+    "error.MEDIA_HASH_MISMATCH" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niezgodność sumy kontrolnej SHA-256 pliku."
           }
         }
       }
     },
-    "sharing.member.revoke.confirm.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Odebrać dostęp użytkownikowi?"
+    "error.MEDIA_INVALID_SHA256" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowy format SHA-256 pliku."
           }
         }
       }
     },
-    "profile.screen.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Profil"
+    "error.MEDIA_NOT_FOUND" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie znaleziono pliku media."
           }
         }
       }
     },
-    "profile.name.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nazwa wyświetlana"
+    "error.MEDIA_OBJECT_NOT_UPLOADED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plik obiektu media nie został przesłany."
           }
         }
       }
     },
-    "profile.name.save": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapisz"
+    "error.MEDIA_VALIDATION_FAILED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Walidacja pliku media nie powiodła się."
           }
         }
       }
     },
-    "profile.theme.picker": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Motyw"
+    "error.MEMBERSHIP_ACCESS_DENIED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak uprawnień członkowskich."
           }
         }
       }
     },
-    "profile.theme.system": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Systemowy"
+    "error.MEMBERSHIP_NOT_FOUND" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie znaleziono członkostwa."
           }
         }
       }
     },
-    "profile.theme.light": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jasny"
+    "error.MEMBERSHIP_OWNER_REQUIRED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wymagane członkostwo właściciela."
           }
         }
       }
     },
-    "profile.theme.dark": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ciemny"
+    "error.NETWORK_UNAVAILABLE" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak połączenia z siecią."
           }
         }
       }
     },
-    "profile.sign.out": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wyloguj się"
+    "error.NOT_FOUND" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie znaleziono zasobu."
           }
         }
       }
     },
-    "profile.delete.account": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usuń konto"
+    "error.QUOTA_EXCEEDED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przekroczono limit 250 zdjęć w chmurze dla tego mieszkania."
           }
         }
       }
     },
-    "profile.delete.confirm.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usunąć konto?"
+    "error.RATE_LIMITED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zbyt wiele żądań. Spróbuj ponownie później."
           }
         }
       }
     },
-    "profile.delete.confirm.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Twoje prywatne mieszkania zostaną trwale usunięte. Mieszkania współdzielone zachowają Twoje zdjęcia i wpisy pod nazwą \"Usunięty użytkownik\", a własność zostanie przekazana innym członkom."
+    "error.ROUTE_NOT_FOUND" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie znaleziono żądanej ścieżki."
           }
         }
       }
     },
-    "app.update.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wymagana aktualizacja"
+    "error.SYNC_ACCESS_DENIED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak dostępu do synchronizacji."
           }
         }
       }
     },
-    "app.update.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zaktualizuj aplikację do najnowszej wersji, aby kontynuować korzystanie z usług. Twoje lokalne dane są całkowicie bezpieczne."
+    "error.SYNC_APARTMENT_NOT_FOUND" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie znaleziono mieszkania podczas synchronizacji."
           }
         }
       }
     },
-    "error.ACCOUNT_DELETION_FAILED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie udało się usunąć konta. Spróbuj ponownie później."
+    "error.SYNC_VALIDATION_FAILED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Walidacja synchronizacji nie powiodła się."
           }
         }
       }
     },
-    "error.APARTMENT_ACCESS_DENIED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak dostępu do tego mieszkania."
+    "error.UNAUTHORIZED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieautoryzowany dostęp."
           }
         }
       }
     },
-    "error.APARTMENT_NOT_FOUND": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie znaleziono mieszkania."
+    "error.UNKNOWN" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wystąpił nieznany błąd."
           }
         }
       }
     },
-    "error.APARTMENT_OWNER_REQUIRED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wymagane uprawnienia właściciela mieszkania."
+    "error.UNPROCESSABLE_ENTITY" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprzetwarzalna encja."
           }
         }
       }
     },
-    "error.APARTMENT_VALIDATION_FAILED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Walidacja danych mieszkania nie powiodła się."
+    "error.USER_DELETED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Użytkownik został usunięty."
           }
         }
       }
     },
-    "error.APP_UPDATE_REQUIRED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wymagana jest aktualizacja aplikacji."
+    "error.USER_NOT_FOUND" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie znaleziono użytkownika."
           }
         }
       }
     },
-    "error.AUTH_TOKEN_INVALID": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nieprawidłowy token uwierzytelniania."
+    "error.VALIDATION_ERROR" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Błąd walidacji danych."
           }
         }
       }
     },
-    "error.AUTH_TOKEN_MISSING": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak tokenu uwierzytelniania."
+    "error.VIDEO_DISABLED_IN_MVP" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rejestracja wideo jest wyłączona w wersji MVP."
           }
         }
       }
     },
-    "error.CANNOT_REVOKE_OWNER": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie można odebrać dostępu właścicielowi mieszkania."
+    "local.info.device.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To zdjęcie istnieje tylko w pamięci tego telefonu i nie jest widoczne dla innych."
           }
         }
       }
     },
-    "error.CONFLICT": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wystąpił konflikt danych."
+    "local.info.device.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisane lokalnie"
           }
         }
       }
     },
-    "error.DISPLAY_NAME_INVALID": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nieprawidłowa wyświetlana nazwa użytkownika."
+    "local.info.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Możesz w każdej chwili wysłać zdjęcie do chmury, aby udostępnić je współuczestnikom mieszkania."
           }
         }
       }
     },
-    "error.ENTRY_ACCESS_DENIED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak dostępu do tego wpisu."
+    "local.info.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tylko na tym telefonie"
           }
         }
       }
     },
-    "error.ENTRY_ALREADY_RETRACTED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ten wpis został już wycofany."
+    "local.info.unverified.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dopiero wysłanie do chmury utrwala zdjęcie i nadaje mu zweryfikowaną datę."
           }
         }
       }
     },
-    "error.ENTRY_AUTHOR_REQUIRED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wymagany autor wpisu."
+    "local.info.unverified.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak daty z serwera"
           }
         }
       }
     },
-    "error.ENTRY_CONFLICT": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Konflikt danych wpisu."
+    "media.detail.delete.cloud.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usunąć zdjęcie?"
           }
         }
       }
     },
-    "error.ENTRY_MEDIA_NOT_READY": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zdjęcie dla tego wpisu nie jest jeszcze gotowe."
+    "media.detail.delete.local.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trwale usunąć lokalne zdjęcie?"
           }
         }
       }
     },
-    "error.ENTRY_NOT_FOUND": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie znaleziono wpisu."
+    "media.detail.entries.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wpisy"
           }
         }
       }
     },
-    "error.ENTRY_VALIDATION_FAILED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Walidacja wpisu nie powiodła się."
+    "media.detail.entry.add.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj wpis"
           }
         }
       }
     },
-    "error.EXTERNAL_AUTH_CLEANUP_FAILED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Czyszczenie uwierzytelniania zewnętrznego nie powiodło się."
+    "media.detail.entry.delete.local.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trwale usunąć lokalny wpis?"
           }
         }
       }
     },
-    "error.FORBIDDEN": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Działanie zabronione."
+    "media.detail.entry.edit.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edytuj wpis"
           }
         }
       }
     },
-    "error.INTERNAL_ERROR": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wewnętrzny błąd serwera."
+    "media.detail.entry.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj komentarz lub uwagę do tego zdjęcia..."
           }
         }
       }
     },
-    "error.INVALID_APPLE_AUTHORIZATION_CODE": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nieprawidłowy kod autoryzacji Apple."
+    "media.detail.entry.retract.confirm.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wpis zniknie dla wszystkich, ale zostanie ślad, że został wycofany."
           }
         }
       }
     },
-    "error.INVITE_CODE_COLLISION": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kolizja kodu zaproszenia. Spróbuj ponownie."
+    "media.detail.entry.retract.confirm.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wycofać wpis?"
           }
         }
       }
     },
-    "error.INVITE_CODE_INVALID": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nieprawidłowy kod zaproszenia."
+    "media.detail.entry.retract.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wycofaj wpis"
           }
         }
       }
     },
-    "error.INVITE_CODE_NOT_FOUND": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie znaleziono takiego kodu zaproszenia."
+    "media.detail.entry.retracted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wpis wycofany przez %1$@, %2$@"
           }
         }
       }
     },
-    "error.INVITE_CODE_RATE_LIMITED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zbyt wiele prób użycia kodu zaproszenia. Spróbuj później."
+    "media.detail.metadata.captured.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zrobione"
           }
         }
       }
     },
-    "error.MARKER_DUPLICATE_LOCAL_NUMBER": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Duplikat numeru znacznika lokalnego."
+    "media.detail.metadata.cloud.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisane"
           }
         }
       }
     },
-    "error.MARKER_INVALID_COORDINATES": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nieprawidłowe współrzędne znacznika."
+    "media.detail.metadata.source.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Źródło"
           }
         }
       }
     },
-    "error.MEDIA_ACCESS_DENIED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak dostępu do tego pliku media."
+    "media.detail.metadata.status.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
           }
         }
       }
     },
-    "error.MEDIA_ALREADY_DELETED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To zdjęcie zostało już usunięte."
+    "media.detail.metadata.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informacje o zdjęciu"
           }
         }
       }
     },
-    "error.MEDIA_AUTHOR_REQUIRED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wymagany autor pliku media."
+    "media.detail.role.contributor" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Współpracownik"
           }
         }
       }
     },
-    "error.MEDIA_CONFLICT": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Konflikt danych pliku media."
+    "media.detail.role.owner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Właściciel"
           }
         }
       }
     },
-    "error.MEDIA_HASH_MISMATCH": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Niezgodność sumy kontrolnej SHA-256 pliku."
+    "media.detail.source.camera" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aparat"
           }
         }
       }
     },
-    "error.MEDIA_INVALID_SHA256": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nieprawidłowy format SHA-256 pliku."
+    "media.detail.source.import" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import"
           }
         }
       }
     },
-    "error.MEDIA_NOT_FOUND": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie znaleziono pliku media."
+    "media.detail.source.import.no.exif" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import (data dodania — brak EXIF)"
           }
         }
       }
     },
-    "error.MEDIA_OBJECT_NOT_UPLOADED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plik obiektu media nie został przesłany."
+    "media.detail.status.local" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokalne"
           }
         }
       }
     },
-    "error.MEDIA_VALIDATION_FAILED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Walidacja pliku media nie powiodła się."
+    "media.detail.status.uploading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wysyłanie…"
           }
         }
       }
     },
-    "error.MEMBERSHIP_ACCESS_DENIED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak uprawnień członkowskich."
+    "media.detail.status.verified" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zweryfikowane"
           }
         }
       }
     },
-    "error.MEMBERSHIP_NOT_FOUND": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie znaleziono członkostwa."
+    "media.detail.upload.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij do chmury"
           }
         }
       }
     },
-    "error.MEMBERSHIP_OWNER_REQUIRED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wymagane członkostwo właściciela."
+    "media.detail.user.anonymous" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usunięty użytkownik"
           }
         }
       }
     },
-    "error.NOT_FOUND": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie znaleziono zasobu."
+    "media.markers.hide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukryj znaczniki"
           }
         }
       }
     },
-    "error.QUOTA_EXCEEDED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Przekroczono limit 250 zdjęć w chmurze dla tego mieszkania."
+    "media.markers.show" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokaż znaczniki"
           }
         }
       }
     },
-    "error.RATE_LIMITED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zbyt wiele żądań. Spróbuj ponownie później."
+    "media.summary.action.cloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chmura"
           }
         }
       }
     },
-    "error.ROUTE_NOT_FOUND": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie znaleziono żądanej ścieżki."
+    "media.summary.action.cloud.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zweryfikowane, widoczne dla wszystkich"
           }
         }
       }
     },
-    "error.SYNC_ACCESS_DENIED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak dostępu do synchronizacji."
+    "media.summary.action.local" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokalnie"
           }
         }
       }
     },
-    "error.SYNC_APARTMENT_NOT_FOUND": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie znaleziono mieszkania podczas synchronizacji."
+    "media.summary.action.local.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tylko na tym telefonie"
           }
         }
       }
     },
-    "error.SYNC_VALIDATION_FAILED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Walidacja synchronizacji nie powiodła się."
+    "media.summary.description.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opisz, co widać na zdjęciu (opcjonalnie)"
           }
         }
       }
     },
-    "error.UNAUTHORIZED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nieautoryzowany dostęp."
+    "media.summary.marker.delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń znacznik %lld"
           }
         }
       }
     },
-    "error.UNPROCESSABLE_ENTITY": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nieprzetwarzalna encja."
+    "media.marker.instruction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wskaż detal: Zaznacz element na zdjęciu oraz opisz jego znaczenie"
           }
         }
       }
     },
-    "error.USER_DELETED": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Użytkownik został usunięty."
+    "media.summary.pager.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld z %lld"
           }
         }
       }
     },
-    "error.USER_NOT_FOUND": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie znaleziono użytkownika."
+    "media.summary.pager.next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Następne zdjęcie"
           }
         }
       }
     },
-    "error.VALIDATION_ERROR": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Błąd walidacji danych."
+    "media.summary.pager.previous" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poprzednie zdjęcie"
           }
         }
       }
     },
-    "error.VIDEO_DISABLED_IN_MVP": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rejestracja wideo jest wyłączona w wersji MVP."
+    "media.summary.quota.notice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Osiągnięto limit 250 zdjęć w chmurze. Zdjęcie zostało bezpiecznie zachowane lokalnie na urządzeniu."
           }
         }
       }
     },
-    "error.NETWORK_UNAVAILABLE": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak połączenia z siecią."
+    "media.summary.save.a11y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz zdjęcie"
           }
         }
       }
     },
-    "error.UNKNOWN": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wystąpił nieznany błąd."
+    "media.summary.save.sheet.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gdzie zapisać?"
           }
         }
       }
     },
-    "sharing.code.pending": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kod zaproszenia będzie dostępny po pierwszej synchronizacji z chmurą."
-          }
-        }
-      }
-    },
-    "sharing.member.revoke.confirm.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Użytkownik straci dostęp do mieszkania, ale jego dotychczasowe zdjęcia i wpisy pozostaną zachowane."
-          }
-        }
-      }
-    },
-    "sharing.members.departed.header": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Byli członkowie"
-          }
-        }
-      }
-    },
-    "sharing.security.reset.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zresetuj kod"
-          }
-        }
-      }
-    },
-    "sharing.sms.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dołącz do mieszkania \"%1$@\" w StanMieszkania kodem: %2$@"
-          }
-        }
-      }
-    },
-    "capture.gps.sheet.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opcjonalna lokalizacja GPS"
-          }
-        }
-      }
-    },
-    "capture.gps.allow.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zezwól"
-          }
-        }
-      }
-    },
-    "capture.gps.skip.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kontynuuj bez lokalizacji"
-          }
-        }
-      }
-    },
-    "capture.camera.unavailable": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aparat jest niedostępny na tym urządzeniu."
-          }
-        }
-      }
-    },
-    "capture.import.failed": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie udało się wczytać wybranego zdjęcia."
-          }
-        }
-      }
-    },
-    "profile.sign.out.confirm.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wylogować się?"
-          }
-        }
-      }
-    },
-    "profile.sign.out.confirm.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lokalna pamięć podręczna zostanie wyczyszczona. Niesynchronizowane lokalne zdjęcia mogą zostać utracone."
-          }
-        }
-      }
-    },
-    "profile.delete.step1.continue": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rozumiem, kontynuuj"
-          }
-        }
-      }
-    },
-    "profile.delete.step2.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ostateczne potwierdzenie"
-          }
-        }
-      }
-    },
-    "profile.delete.step2.message": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tej operacji nie można cofnąć. Czy na pewno chcesz trwale usunąć swoje konto?"
-          }
-        }
-      }
-    },
-    "profile.delete.step2.confirm": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trwale usuń konto"
-          }
-        }
-      }
-    },
-    "profile.name.saved": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapisano nazwę wyświetlaną."
-          }
-        }
-      }
-    },
-    "common.close": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zamknij"
-          }
-        }
-      }
-    },
-    "date.today": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dzisiaj"
-          }
-        }
-      }
-    },
-    "date.yesterday": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wczoraj"
-          }
-        }
-      }
-    },
-    "verified.info.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zdjęcie zweryfikowane"
-          }
-        }
-      }
-    },
-    "verified.info.cloud.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bezpiecznie w chmurze"
-          }
-        }
-      }
-    },
-    "verified.info.cloud.detail": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zdjęcia nie da się potajemnie podmienić ani edytować."
-          }
-        }
-      }
-    },
-    "verified.info.server.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data z naszego serwera"
-          }
-        }
-      }
-    },
-    "verified.info.server.detail": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Czas zapisu nie pochodzi z telefonu, więc nikt nie może go cofnąć ani przestawić."
-          }
-        }
-      }
-    },
-    "verified.info.author.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wiadomo, kto dodał"
-          }
-        }
-      }
-    },
-    "verified.info.author.detail": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Każde zdjęcie i wpis są podpisane przez autora."
-          }
-        }
-      }
-    },
-    "verified.info.footer": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dzięki temu najemca i właściciel mają wiarygodny dowód stanu mieszkania — np. przy rozliczaniu kaucji."
-          }
-        }
-      }
-    },
-    "local.info.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tylko na tym telefonie"
-          }
-        }
-      }
-    },
-    "local.info.device.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapisane lokalnie"
-          }
-        }
-      }
-    },
-    "local.info.device.detail": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To zdjęcie istnieje tylko w pamięci tego telefonu i nie jest widoczne dla innych."
-          }
-        }
-      }
-    },
-    "local.info.unverified.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak daty z serwera"
-          }
-        }
-      }
-    },
-    "local.info.unverified.detail": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dopiero wysłanie do chmury utrwala zdjęcie i nadaje mu zweryfikowaną datę."
-          }
-        }
-      }
-    },
-    "local.info.footer": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Możesz w każdej chwili wysłać zdjęcie do chmury, aby udostępnić je współuczestnikom mieszkania."
-          }
-        }
-      }
-    },
-    "media.summary.save.caption": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapisz w:"
-          }
-        }
-      }
-    },
-    "media.summary.action.local.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tylko na tym telefonie"
-          }
-        }
-      }
-    },
-    "media.summary.action.cloud.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zweryfikowane, widoczne dla wszystkich"
-          }
-        }
-      }
-    },
-    "media.summary.title.single": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nowe zdjęcie"
-          }
-        }
-      }
-    },
-    "media.summary.pager.format": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld z %lld"
-          }
-        }
-      }
-    },
-    "media.summary.pager.previous": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Poprzednie zdjęcie"
-          }
-        }
-      }
-    },
-    "media.summary.pager.next": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Następne zdjęcie"
-          }
-        }
-      }
-    },
-    "media.summary.marker.delete": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usuń znacznik %lld"
-          }
-        }
-      }
-    },
-    "media.summary.title.multi": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld zdjęcie"
+    "media.summary.title.multi" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld zdjęcia"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld zdjęcia"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld zdjęć"
                 }
               },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld zdjęć"
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld zdjęcie"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld zdjęć"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld zdjęć"
                 }
               }
             }
@@ -2184,104 +1738,688 @@
         }
       }
     },
-    "apartment.timeline.quota.popover": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "W chmurze: %lld z %lld zdjęć. Zdjęcia w chmurze są zweryfikowane i widoczne dla wszystkich członków."
+    "media.summary.title.single" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nowe zdjęcie"
           }
         }
       }
     },
-    "apartment.delete.confirmation.message.transfer": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mieszkanie przejdzie na najdłużej obecnego współuczestnika."
+    "onboarding.apple.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaloguj się przez Apple"
           }
         }
       }
     },
-    "sharing.share.cta": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Udostępnij"
+    "onboarding.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twórz niezmienny, oparty na dowodach rejestr stanu mieszkania i chroń swoje prawa przy zwrocie kaucji."
           }
         }
       }
     },
-    "sharing.code.tapToCopy": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stuknij kod, aby skopiować"
+    "onboarding.headline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentacja stanu mieszkania i ochrona przed sporami"
           }
         }
       }
     },
-    "sharing.code.copied.short": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Skopiowano"
+    "profile.delete.account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń konto"
           }
         }
       }
     },
-    "profile.name.footer": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Widoczna dla innych członków mieszkania przy Twoich zdjęciach i wpisach."
+    "profile.delete.confirm.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twoje prywatne mieszkania zostaną trwale usunięte. Mieszkania współdzielone zachowają Twoje zdjęcia i wpisy pod nazwą \"Usunięty użytkownik\", a własność zostanie przekazana innym członkom."
           }
         }
       }
     },
-    "profile.theme.section": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wygląd"
+    "profile.delete.confirm.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usunąć konto?"
           }
         }
       }
     },
-    "profile.delete.footer": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usunięcie konta jest nieodwracalne."
+    "profile.delete.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usunięcie konta jest nieodwracalne."
           }
         }
       }
     },
-    "apartments.join.code.footer": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Poproś właściciela o 8-znakowy kod."
+    "profile.delete.step1.continue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rozumiem, kontynuuj"
+          }
+        }
+      }
+    },
+    "profile.delete.step2.confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trwale usuń konto"
+          }
+        }
+      }
+    },
+    "profile.delete.step2.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tej operacji nie można cofnąć. Czy na pewno chcesz trwale usunąć swoje konto?"
+          }
+        }
+      }
+    },
+    "profile.delete.step2.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostateczne potwierdzenie"
+          }
+        }
+      }
+    },
+    "profile.name.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widoczna dla innych członków mieszkania przy Twoich zdjęciach i wpisach."
+          }
+        }
+      }
+    },
+    "profile.name.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nazwa wyświetlana"
+          }
+        }
+      }
+    },
+    "profile.name.save" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz"
+          }
+        }
+      }
+    },
+    "profile.name.saved" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisano nazwę wyświetlaną."
+          }
+        }
+      }
+    },
+    "profile.screen.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil"
+          }
+        }
+      }
+    },
+    "profile.sign.out" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyloguj się"
+          }
+        }
+      }
+    },
+    "profile.sign.out.confirm.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokalna pamięć podręczna zostanie wyczyszczona. Niesynchronizowane lokalne zdjęcia mogą zostać utracone."
+          }
+        }
+      }
+    },
+    "profile.sign.out.confirm.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wylogować się?"
+          }
+        }
+      }
+    },
+    "profile.theme.dark" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciemny"
+          }
+        }
+      }
+    },
+    "profile.theme.light" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jasny"
+          }
+        }
+      }
+    },
+    "profile.theme.picker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motyw"
+          }
+        }
+      }
+    },
+    "profile.theme.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygląd"
+          }
+        }
+      }
+    },
+    "profile.theme.system" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemowy"
+          }
+        }
+      }
+    },
+    "sharing.code.copied.short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skopiowano"
+          }
+        }
+      }
+    },
+    "sharing.code.label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kod zaproszenia"
+          }
+        }
+      }
+    },
+    "sharing.code.pending" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kod zaproszenia będzie dostępny po pierwszej synchronizacji z chmurą."
+          }
+        }
+      }
+    },
+    "sharing.code.reset.confirm.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stary kod zaproszenia przestanie działać dla nowych osób."
+          }
+        }
+      }
+    },
+    "sharing.code.reset.confirm.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zresetować kod?"
+          }
+        }
+      }
+    },
+    "sharing.code.reset.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zresetuj kod zaproszenia"
+          }
+        }
+      }
+    },
+    "sharing.code.tapToCopy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuknij kod, aby skopiować"
+          }
+        }
+      }
+    },
+    "sharing.member.revoke.confirm.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Użytkownik straci dostęp do mieszkania, ale jego dotychczasowe zdjęcia i wpisy pozostaną zachowane."
+          }
+        }
+      }
+    },
+    "sharing.member.revoke.confirm.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odebrać dostęp użytkownikowi?"
+          }
+        }
+      }
+    },
+    "sharing.member.revoke.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odbierz dostęp"
+          }
+        }
+      }
+    },
+    "sharing.members.departed.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byli członkowie"
+          }
+        }
+      }
+    },
+    "sharing.members.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Członkowie mieszkania"
+          }
+        }
+      }
+    },
+    "sharing.screen.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zarządzanie dostępem"
+          }
+        }
+      }
+    },
+    "sharing.security.banner" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nowa osoba dołączyła do mieszkania. Zresetuj kod, aby stary kod przestał działać."
+          }
+        }
+      }
+    },
+    "sharing.security.reset.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zresetuj kod"
+          }
+        }
+      }
+    },
+    "sharing.share.cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Udostępnij"
+          }
+        }
+      }
+    },
+    "sharing.sms.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dołącz do mieszkania \"%1$@\" w StanMieszkania kodem: %2$@"
+          }
+        }
+      }
+    },
+    "verified.info.author.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Każde zdjęcie jest podpisane przez autora."
+          }
+        }
+      }
+    },
+    "verified.info.author.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiadomo, kto dodał"
+          }
+        }
+      }
+    },
+    "verified.info.cloud.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zdjęcia nie da się potajemnie podmienić ani edytować."
+          }
+        }
+      }
+    },
+    "verified.info.cloud.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezpiecznie w chmurze"
+          }
+        }
+      }
+    },
+    "verified.info.entry.author.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiadomo, kto dodał wpis. Nikt nie może podpisać się za kogoś innego."
+          }
+        }
+      }
+    },
+    "verified.info.entry.author.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podpisany przez autora"
+          }
+        }
+      }
+    },
+    "verified.info.entry.cloud.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Treść wpisu jest bezpiecznie przechowywana i widoczna dla wszystkich osób w mieszkaniu."
+          }
+        }
+      }
+    },
+    "verified.info.entry.cloud.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisany w chmurze"
+          }
+        }
+      }
+    },
+    "verified.info.entry.edit.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zweryfikowanego wpisu nie da się po cichu edytować. Można go tylko wycofać — a ślad wycofania zostaje."
+          }
+        }
+      }
+    },
+    "verified.info.entry.edit.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez ukrytych poprawek"
+          }
+        }
+      }
+    },
+    "verified.info.entry.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dzięki temu wpis jest wiarygodnym dowodem dla obu stron — np. przy rozliczaniu kaucji."
+          }
+        }
+      }
+    },
+    "verified.info.entry.server.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czas dodania wpisu nadał serwer, nie telefon — nikt nie może go zmienić."
+          }
+        }
+      }
+    },
+    "verified.info.entry.server.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data z naszego serwera"
+          }
+        }
+      }
+    },
+    "verified.info.entry.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wpis zweryfikowany"
+          }
+        }
+      }
+    },
+    "verified.info.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dzięki temu najemca i właściciel mają wiarygodny dowód stanu mieszkania — np. przy rozliczaniu kaucji."
+          }
+        }
+      }
+    },
+    "verified.info.original.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zdjęcie jest zapisane dokładnie tak, jak zostało zrobione — bez filtrów i kadrowania."
+          }
+        }
+      }
+    },
+    "verified.info.original.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oryginał bez zmian"
+          }
+        }
+      }
+    },
+    "verified.info.server.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czas zapisu nie pochodzi z telefonu, więc nikt nie może go cofnąć ani przestawić."
+          }
+        }
+      }
+    },
+    "verified.info.server.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data z naszego serwera"
+          }
+        }
+      }
+    },
+    "verified.info.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zdjęcie zweryfikowane"
           }
         }
       }
     }
-  }
+  },
+  "version" : "1.0"
 }
