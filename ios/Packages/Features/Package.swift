@@ -12,6 +12,7 @@ let package = Package(
   products: [
     .library(name: "OnboardingFeature", targets: ["OnboardingFeature"]),
     .library(name: "ApartmentsListFeature", targets: ["ApartmentsListFeature"]),
+    .library(name: "ApartmentTimelineFeature", targets: ["ApartmentTimelineFeature"]),
   ],
   dependencies: [
     .package(path: "../Core"),
@@ -43,6 +44,19 @@ let package = Package(
         .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
       ]
     ),
+    .target(
+      name: "ApartmentTimelineFeature",
+      dependencies: [
+        .product(name: "Domain", package: "Core"),
+        .product(name: "DesignSystem", package: "Core"),
+        .product(name: "Database", package: "Core"),
+        .product(name: "APIClient", package: "Core"),
+        .product(name: "AppConfigClient", package: "Core"),
+        .product(name: "MediaStorage", package: "Core"),
+        .product(name: "SyncEngine", package: "Core"),
+        .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+      ]
+    ),
     .testTarget(
       name: "OnboardingFeatureTests",
       dependencies: [
@@ -63,6 +77,20 @@ let package = Package(
         .product(name: "DesignSystem", package: "Core"),
         .product(name: "Database", package: "Core"),
         .product(name: "APIClient", package: "Core"),
+        .product(name: "SyncEngine", package: "Core"),
+        .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+      ]
+    ),
+    .testTarget(
+      name: "ApartmentTimelineFeatureTests",
+      dependencies: [
+        "ApartmentTimelineFeature",
+        .product(name: "Domain", package: "Core"),
+        .product(name: "DesignSystem", package: "Core"),
+        .product(name: "Database", package: "Core"),
+        .product(name: "APIClient", package: "Core"),
+        .product(name: "AppConfigClient", package: "Core"),
+        .product(name: "MediaStorage", package: "Core"),
         .product(name: "SyncEngine", package: "Core"),
         .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
       ]

@@ -400,6 +400,72 @@
         }
       }
     },
+    "apartment.edit.save.cta": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapisz"
+          }
+        }
+      }
+    },
+    "apartment.history.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak zarejestrowanych zmian"
+          }
+        }
+      }
+    },
+    "apartment.history.close.cta": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamknij"
+          }
+        }
+      }
+    },
+    "apartment.leave.confirm.cta": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opuść"
+          }
+        }
+      }
+    },
+    "apartment.delete.confirm.cta": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuń"
+          }
+        }
+      }
+    },
+    "apartment.timeline.capture.sheet.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj materiał"
+          }
+        }
+      }
+    },
     "capture.gps.explanation": {
       "extractionState": "manual",
       "localizations": {
