@@ -50,6 +50,7 @@ struct MediaDetailMarkersAndComposerTests {
       $0.mediaAuthorColorHex = snapshot.mediaAuthorColorHex
       $0.entries = snapshot.entries
       $0.currentUser = snapshot.currentUser
+      $0.hasOtherMembers = snapshot.hasOtherMembers
     }
     await store.receive(.photoCacheReady) { $0.isPhotoCached = true }
 
@@ -135,7 +136,8 @@ struct MediaDetailMarkersAndComposerTests {
         mediaAuthorName: snapshot.mediaAuthorName,
         mediaAuthorColorHex: snapshot.mediaAuthorColorHex,
         entries: snapshot.entries,
-        currentUser: snapshot.currentUser
+        currentUser: snapshot.currentUser,
+        hasOtherMembers: snapshot.hasOtherMembers
       )
     ) {
       MediaDetailFeature()

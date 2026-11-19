@@ -23,22 +23,43 @@ extension MediaDetailView {
           Image(systemName: "trash")
         }
         .accessibilityLabel(L10n.string("apartment.delete.confirm.cta"))
+        .confirmationDialog(
+          mediaDeleteTitle,
+          isPresented: Binding(
+            get: { store.mediaDeleteConfirmation != nil },
+            set: { if !$0 { store.send(.mediaDeleteConfirmationDismissed) } }
+          ),
+          titleVisibility: .visible
+        ) {
+          Button(L10n.string("apartment.delete.confirm.cta"), role: .destructive) {
+            store.send(.mediaDeleteConfirmed)
+          }
+          Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
+            store.send(.mediaDeleteConfirmationDismissed)
+          }
+        }
       }
     }
   }
 
   @ViewBuilder
-  var bannersSection: some View {
-    if let quotaNotice = store.quotaNoticeMessage {
-      banner(message: quotaNotice, icon: "icloud.slash.fill", tint: .orange) {
-        store.send(.dismissQuotaNotice)
+  var toastOverlay: some View {
+    VStack(spacing: Spacing.xs) {
+      if let quotaNotice = store.quotaNoticeMessage {
+        ToastBanner(message: quotaNotice, style: .info) {
+          store.send(.dismissQuotaNotice)
+        }
+        .transition(.move(edge: .top).combined(with: .opacity))
+      }
+      if let errorMessage = store.errorMessage {
+        ToastBanner(message: errorMessage, style: .error) {
+          store.send(.dismissError)
+        }
+        .transition(.move(edge: .top).combined(with: .opacity))
       }
     }
-    if let errorMessage = store.errorMessage {
-      banner(message: errorMessage, icon: "exclamationmark.triangle.fill", tint: .yellow) {
-        store.send(.dismissError)
-      }
-    }
+    .padding(.horizontal, Spacing.md)
+    .padding(.top, Spacing.xs)
   }
 
   func statusAndSyncBar(for media: MediaItem) -> some View {
@@ -49,13 +70,16 @@ extension MediaDetailView {
           isVerified: media.isVerified,
           uploadProgress: store.uploadProgress,
           placement: .labeled,
-          onVerifiedTap: { isVerifiedInfoPresented = true }
+          onVerifiedTap: { isVerifiedInfoPresented = true },
+          onLocalOnlyTap: { isLocalInfoPresented = true }
         )
         Spacer()
-        MediaSourceBadgeView(
-          source: media.source,
-          capturedAtFromImport: media.capturedAtFromImport
-        )
+        if media.source == .imported {
+          MediaSourceBadgeView(
+            source: media.source,
+            capturedAtFromImport: media.capturedAtFromImport
+          )
+        }
       }
 
       if store.canUploadToCloud {
@@ -71,43 +95,35 @@ extension MediaDetailView {
     }
   }
 
+  @ViewBuilder
   var entriesSection: some View {
-    VStack(alignment: .leading, spacing: Spacing.sm) {
-      Text(L10n.string("media.detail.timeline.title"))
-        .font(Typography.sectionHeader)
+    if !store.entries.isEmpty {
+      VStack(alignment: .leading, spacing: Spacing.sm) {
+        Text(L10n.string("media.detail.entries.header"))
+          .font(.headline)
 
-      if store.entries.isEmpty {
-        Text(L10n.string("media.detail.timeline.empty"))
-          .font(Typography.callout)
-          .foregroundStyle(.secondary)
-      } else {
         ForEach(store.entries) { item in
+          let isConfirming = store.entryDeleteConfirmation?.entryId == item.id
           DetailEntryRowView(
             item: item,
             referenceDate: store.now ?? Date(),
             selectedMarkerNumber: store.selectedMarkerNumber,
+            hasOtherMembers: store.hasOtherMembers,
             canEditOrHardDelete: store.state.canEditOrHardDeleteEntry(item),
             canRetract: store.state.canRetractEntry(item),
+            isConfirmingDelete: isConfirming,
+            deleteConfirmationTitle: entryDeleteTitle,
+            deleteConfirmationMessage: entryDeleteMessage,
+            deleteConfirmButtonLabel: entryDeleteConfirmLabel,
+            onMarkerTapped: { store.send(.markerTapped($0)) },
+            onVerifiedTap: { isVerifiedInfoPresented = true },
             onEditLocal: { store.send(.editLocalEntryTapped(item.id)) },
-            onDeleteOrRetract: { store.send(.entryDeleteTapped(item.id)) }
+            onDeleteOrRetract: { store.send(.entryDeleteTapped(item.id)) },
+            onConfirmDelete: { store.send(.entryDeleteConfirmed) },
+            onDismissDelete: { store.send(.entryDeleteConfirmationDismissed) }
           )
           .id(item.id)
         }
-      }
-    }
-  }
-
-  private func banner(
-    message: String,
-    icon: String,
-    tint: Color,
-    onDismiss: @escaping () -> Void
-  ) -> some View {
-    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
-      HStack(spacing: Spacing.sm) {
-        Image(systemName: icon).foregroundStyle(tint)
-        Text(message).font(Typography.callout).frame(maxWidth: .infinity, alignment: .leading)
-        Button(action: onDismiss) { Image(systemName: "xmark") }.buttonStyle(.plain)
       }
     }
   }
@@ -123,6 +139,13 @@ extension MediaDetailView {
       return L10n.string("media.detail.entry.delete.local.title")
     }
     return L10n.string("media.detail.entry.retract.confirm.title")
+  }
+
+  var entryDeleteMessage: String? {
+    if case .retractSynced = store.entryDeleteConfirmation {
+      return L10n.string("media.detail.entry.retract.confirm.message")
+    }
+    return nil
   }
 
   var entryDeleteConfirmLabel: String {

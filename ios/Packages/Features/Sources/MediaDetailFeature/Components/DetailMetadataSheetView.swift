@@ -4,20 +4,21 @@ import SwiftUI
 
 struct DetailMetadataSheetView: View {
   let media: MediaItem
-  let onClose: () -> Void
   @State private var isVerifiedInfoPresented = false
 
-  // Decision Q10 & S2-12: Show source, capture/cloud timestamps, and SHA-256; never display GPS.
+  // Decision Q10 & S2-12: Show source, status, and capture/cloud timestamps; never display GPS or raw SHA-256.
   var body: some View {
     NavigationStack {
       List {
         Section {
-          HStack {
+          LabeledContent(L10n.string("media.detail.metadata.source.label")) {
             MediaSourceBadgeView(
               source: media.source,
               capturedAtFromImport: media.capturedAtFromImport
             )
-            Spacer()
+          }
+
+          LabeledContent(L10n.string("media.detail.metadata.status.label")) {
             SyncStatusIndicatorView(
               syncState: media.syncState,
               isVerified: media.isVerified,
@@ -26,40 +27,28 @@ struct DetailMetadataSheetView: View {
             )
           }
 
-          Text(
-            L10n.format(
-              "media.detail.timestamp.captured",
-              PolishDateFormatters.formatPreciseTimestamp(media.capturedAt)
-            )
+          LabeledContent(
+            L10n.string("media.detail.metadata.captured.label"),
+            value: PolishDateFormatters.formatPreciseTimestamp(media.capturedAt)
           )
-          .font(Typography.callout)
 
           if let serverReceivedAt = media.serverReceivedAt {
-            Text(
-              L10n.format(
-                "media.detail.timestamp.cloud",
-                PolishDateFormatters.formatPreciseTimestamp(serverReceivedAt)
-              )
+            LabeledContent(
+              L10n.string("media.detail.metadata.cloud.label"),
+              value: PolishDateFormatters.formatPreciseTimestamp(serverReceivedAt)
             )
-            .font(Typography.callout)
           }
-        }
-
-        Section {
-          Text(L10n.format("media.detail.sha256", media.sha256))
-            .font(Typography.caption.monospaced())
-            .textSelection(.enabled)
         }
       }
       .navigationTitle(L10n.string("media.detail.metadata.title"))
-      .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button(L10n.string("apartment.history.close.cta"), action: onClose)
-        }
-      }
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
       .sheet(isPresented: $isVerifiedInfoPresented) {
         VerifiedInfoSheetView()
       }
     }
+    .presentationDetents([.medium])
+    .presentationDragIndicator(.visible)
   }
 }

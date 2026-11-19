@@ -16,15 +16,23 @@ struct DetailPhotoCanvasView: View {
   let isPhotoCached: Bool
   let markers: [MarkerOverlayItem]
   let selectedMarkerNumber: Int?
+  let areMarkersHidden: Bool
   let isComposerPlacementActive: Bool
+  let photoMaxHeight: CGFloat
+  let lightboxSourceID: String
+  let lightboxNamespace: Namespace.ID
+  @Binding var decodedImage: CGImage?
   let onSelectMarker: (Int) -> Void
-  let onDeselectAll: () -> Void
+  let onPhotoTapped: () -> Void
+  let onToggleMarkers: () -> Void
   let onAddComposerMarker: (Double, Double) -> Void
 
-  @State private var photoImage: CGImage?
   @Dependency(\.mediaStorage) private var mediaStorage
 
-  private var aspectRatio: CGFloat {
+  private var displayAspectRatio: CGFloat {
+    if let decodedImage, decodedImage.width > 0, decodedImage.height > 0 {
+      return CGFloat(decodedImage.width) / CGFloat(decodedImage.height)
+    }
     guard media.width > 0, media.height > 0 else {
       return MediaDetailConstants.fallbackPhotoAspectRatio
     }
@@ -39,20 +47,34 @@ struct DetailPhotoCanvasView: View {
         activePhotoView
       }
     }
-    .aspectRatio(aspectRatio, contentMode: .fit)
-    .frame(maxWidth: .infinity, maxHeight: MediaDetailConstants.photoMaxHeight)
+    .aspectRatio(displayAspectRatio, contentMode: .fit)
+    .onTapGesture {
+      if !media.isSoftDeleted {
+        onPhotoTapped()
+      }
+    }
     .overlay {
       if !media.isSoftDeleted {
         MarkerDotOverlayView(
           markers: markers,
           selectedMarkerNumber: selectedMarkerNumber,
           onSelectMarker: onSelectMarker,
-          onDeselectAll: onDeselectAll,
+          onDeselectAll: nil,
           onAddMarkerAtNormalizedPoint: isComposerPlacementActive ? onAddComposerMarker : nil
         )
+        .opacity(areMarkersHidden ? 0 : 1)
+        .allowsHitTesting(!areMarkersHidden)
+        .animation(Motion.fade, value: areMarkersHidden)
       }
     }
-    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
+    .clipShape(.rect(cornerRadius: CornerRadius.photo, style: .continuous))
+    .overlay(alignment: .bottomTrailing) {
+      if !media.isSoftDeleted, !markers.isEmpty, !isComposerPlacementActive {
+        eyeToggleButton
+      }
+    }
+    .matchedTransitionSource(id: lightboxSourceID, in: lightboxNamespace)
+    .frame(maxWidth: .infinity, maxHeight: photoMaxHeight)
     .task(
       id: PhotoLoadKey(
         mediaId: media.id,
@@ -64,10 +86,28 @@ struct DetailPhotoCanvasView: View {
     }
   }
 
+  private var eyeToggleButton: some View {
+    Button(action: onToggleMarkers) {
+      Image(systemName: areMarkersHidden ? "eye.slash" : "eye")
+        .font(.callout.weight(.semibold))
+        .frame(
+          width: MediaDetailConstants.eyeToggleSize,
+          height: MediaDetailConstants.eyeToggleSize
+        )
+        .contentTransition(.symbolEffect(.replace))
+    }
+    .buttonStyle(.plain)
+    .glassEffect(.regular.interactive(), in: .circle)
+    .padding(MediaDetailConstants.eyeTogglePadding)
+    .accessibilityLabel(
+      L10n.string(areMarkersHidden ? "media.markers.show" : "media.markers.hide")
+    )
+  }
+
   @ViewBuilder
   private var activePhotoView: some View {
-    if let photoImage {
-      Image(decorative: photoImage, scale: MediaDetailConstants.imageRenderScale)
+    if let decodedImage {
+      Image(decorative: decodedImage, scale: MediaDetailConstants.imageRenderScale)
         .resizable()
         .scaledToFit()
     } else {
@@ -109,6 +149,6 @@ struct DetailPhotoCanvasView: View {
     guard !Task.isCancelled else {
       return
     }
-    photoImage = decoded
+    decodedImage = decoded
   }
 }

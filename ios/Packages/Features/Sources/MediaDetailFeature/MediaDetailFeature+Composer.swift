@@ -46,6 +46,9 @@ extension MediaDetailFeature {
       return .none
     case .composerToggleMarkerMode:
       state.composer?.isMarkerPlacementMode.toggle()
+      if state.composer?.isMarkerPlacementMode == true {
+        state.areMarkersHidden = false
+      }
       return .none
     case .composerMarkerAdded(let x, let y):
       return addComposerMarker(&state, x: x, y: y)

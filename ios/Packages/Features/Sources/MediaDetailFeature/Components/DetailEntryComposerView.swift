@@ -28,11 +28,14 @@ struct DetailEntryComposerView: View {
           Spacer()
         }
 
-        if composer.isMarkerPlacementMode {
-          Text(L10n.string("media.summary.marker.hint"))
-            .font(Typography.footnote)
-            .foregroundStyle(.secondary)
+        StableSlot(minHeight: MediaDetailConstants.composerHintSlotHeight) {
+          if composer.isMarkerPlacementMode {
+            Text(L10n.string("media.summary.marker.hint"))
+              .font(Typography.footnote)
+              .foregroundStyle(.secondary)
+          }
         }
+        .animation(Motion.fade, value: composer.isMarkerPlacementMode)
 
         if !composer.markers.isEmpty {
           ScrollView(.horizontal, showsIndicators: false) {
@@ -56,23 +59,26 @@ struct DetailEntryComposerView: View {
           in: .rect(cornerRadius: CornerRadius.field, style: .continuous)
         )
 
-        if let errorMessage = composer.errorMessage {
-          Text(errorMessage)
-            .font(Typography.footnote)
-            .foregroundStyle(.red)
+        StableSlot(minHeight: MediaDetailConstants.composerErrorSlotHeight) {
+          if let errorMessage = composer.errorMessage {
+            Text(errorMessage)
+              .font(Typography.footnote)
+              .foregroundStyle(.red)
+          }
         }
+        .animation(Motion.fade, value: composer.errorMessage)
 
         HStack(spacing: Spacing.sm) {
-          GlassActionButton(
-            title: L10n.string("apartments.create.cancel.cta"),
-            variant: .secondary,
-            isDisabled: composer.isSubmitting,
-            action: onCancel
-          )
+          Button(L10n.string("apartments.create.cancel.cta"), action: onCancel)
+            .buttonStyle(.borderless)
+            .disabled(composer.isSubmitting)
+          Spacer()
           GlassActionButton(
             title: L10n.string("apartment.edit.save.cta"),
             variant: .primary,
             isLoading: composer.isSubmitting,
+            expandsHorizontally: false,
+            controlSize: .regular,
             action: onSubmit
           )
         }
@@ -82,35 +88,66 @@ struct DetailEntryComposerView: View {
 
   private func markerChip(_ marker: DetailDraftMarker) -> some View {
     let isSelected = selectedMarkerNumber == marker.number
-    let color = AuthorPalette.color(fromHex: authorColorHex)
-    return HStack(spacing: Spacing.xxs) {
+    let color = MarkerPalette.color(forMarkerNumber: marker.number)
+    return HStack(spacing: 0) {
       Button {
         onSelectMarker(marker.number)
       } label: {
-        Text("[\(marker.number)]")
-          .font(Typography.markerNumber)
-          .foregroundStyle(color)
+        HStack(spacing: MediaDetailConstants.markerChipSpacing) {
+          Circle()
+            .fill(color)
+            .frame(
+              width: MediaDetailConstants.markerChipDotSize,
+              height: MediaDetailConstants.markerChipDotSize
+            )
+          Text("\(marker.number)")
+            .font(.subheadline.weight(.semibold))
+            .monospacedDigit()
+            .foregroundStyle(.primary)
+        }
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, MediaDetailConstants.markerChipVerticalPadding)
       }
       .buttonStyle(.plain)
 
-      Button {
-        onDeleteMarker(marker.number)
-      } label: {
-        Image(systemName: "xmark.circle.fill")
-          .font(Typography.caption)
-          .foregroundStyle(.secondary)
+      if composer.isMarkerPlacementMode {
+        deleteMarkerButton(for: marker.number)
       }
-      .buttonStyle(.plain)
     }
-    .padding(.horizontal, Spacing.xs)
-    .padding(.vertical, Spacing.xxs)
     .background(
       color.opacity(
         isSelected
           ? MediaDetailConstants.selectedMarkerChipOpacity
-          : MediaDetailConstants.markerChipOpacity
+          : MediaDetailConstants.markerChipBackgroundOpacity
       ),
       in: .capsule
     )
+    .contextMenu {
+      Button(role: .destructive) {
+        onDeleteMarker(marker.number)
+      } label: {
+        Label(
+          L10n.format("media.summary.marker.delete", marker.number),
+          systemImage: "trash"
+        )
+      }
+    }
+  }
+
+  private func deleteMarkerButton(for number: Int) -> some View {
+    Button {
+      onDeleteMarker(number)
+    } label: {
+      Image(systemName: "xmark")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.secondary)
+        .frame(
+          width: DesignMetrics.markerHitTargetSize,
+          height: DesignMetrics.markerHitTargetSize
+        )
+        .contentShape(.circle)
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(L10n.format("media.summary.marker.delete", number))
   }
 }

@@ -15,13 +15,13 @@ public struct DetailDraftMarker: Identifiable, Equatable, Hashable, Sendable {
     self.y = y
   }
 
-  public func toOverlayItem(authorColorHex: String) -> MarkerOverlayItem {
+  public func toOverlayItem() -> MarkerOverlayItem {
     MarkerOverlayItem(
       id: id,
       number: number,
       x: x,
       y: y,
-      authorColorHex: authorColorHex
+      colorHex: MarkerPalette.hex(forMarkerNumber: number)
     )
   }
 
@@ -65,19 +65,44 @@ public struct MediaDetailSnapshot: Equatable, Sendable {
   public let mediaAuthorColorHex: String
   public let entries: [MediaDetailEntryItem]
   public let currentUser: AuthorSummary?
+  public let hasOtherMembers: Bool
 
   public init(
     media: MediaItem?,
     mediaAuthorName: String,
     mediaAuthorColorHex: String,
     entries: [MediaDetailEntryItem],
-    currentUser: AuthorSummary?
+    currentUser: AuthorSummary?,
+    hasOtherMembers: Bool = false
   ) {
     self.media = media
     self.mediaAuthorName = mediaAuthorName
     self.mediaAuthorColorHex = mediaAuthorColorHex
     self.entries = entries
     self.currentUser = currentUser
+    self.hasOtherMembers = hasOtherMembers
+  }
+}
+
+public struct LightboxMarkerCaption: Equatable, Sendable {
+  public let markerNumber: Int
+  public let entryText: String
+  public let authorDisplayName: String
+  public let authorShortTag: String?
+  public let createdAt: Date
+
+  public init(
+    markerNumber: Int,
+    entryText: String,
+    authorDisplayName: String,
+    authorShortTag: String?,
+    createdAt: Date
+  ) {
+    self.markerNumber = markerNumber
+    self.entryText = entryText
+    self.authorDisplayName = authorDisplayName
+    self.authorShortTag = authorShortTag
+    self.createdAt = createdAt
   }
 }
 
@@ -114,6 +139,13 @@ public enum MediaDeleteConfirmationMode: Equatable, Sendable {
 public enum EntryDeleteConfirmation: Equatable, Sendable {
   case hardDeleteLocal(entryId: String)
   case retractSynced(entryId: String)
+
+  public var entryId: String {
+    switch self {
+    case .hardDeleteLocal(let entryId), .retractSynced(let entryId):
+      return entryId
+    }
+  }
 }
 
 struct DetailValidationFailure: Error, Equatable {

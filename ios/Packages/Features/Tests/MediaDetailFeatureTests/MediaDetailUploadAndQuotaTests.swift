@@ -32,15 +32,14 @@ struct MediaDetailUploadAndQuotaTests {
       warningHaptics: warningHaptics
     )
 
-    let taskEffect = await store.send(.task) {
-      $0.now = MediaDetailTestFixtures.laterDate
-    }
+    let taskEffect = await store.send(.task) { $0.now = MediaDetailTestFixtures.laterDate }
     await store.receive(.snapshotLoaded(snapshot)) {
       $0.media = snapshot.media
       $0.mediaAuthorName = snapshot.mediaAuthorName
       $0.mediaAuthorColorHex = snapshot.mediaAuthorColorHex
       $0.entries = snapshot.entries
       $0.currentUser = snapshot.currentUser
+      $0.hasOtherMembers = snapshot.hasOtherMembers
     }
     await store.receive(.photoCacheReady) { $0.isPhotoCached = true }
 
@@ -63,11 +62,9 @@ struct MediaDetailUploadAndQuotaTests {
       $0.quotaNoticeMessage = L10n.string("media.summary.quota.notice")
     }
     await store.receive(.snapshotLoaded(queued))
-
     continuation.finish()
     await taskEffect.cancel()
-    #expect(enqueuedIds.value == [MediaDetailTestFixtures.mediaId])
-    #expect(warningHaptics.value == 1)
+    #expect(enqueuedIds.value == [MediaDetailTestFixtures.mediaId] && warningHaptics.value == 1)
   }
 
   @MainActor

@@ -9,6 +9,7 @@ struct ComponentsTests {
   private enum Fixtures {
     static let markerId = "01933e2a-7b40-7000-8000-000000000001"
     static let authorColor = "#007AFF"
+    static let markerOneColor = "#FF3B30"
     static let containerWidth: CGFloat = 200
     static let containerHeight: CGFloat = 100
     static let halfNormalized = 0.5
@@ -23,47 +24,11 @@ struct ComponentsTests {
     static let paletteWrapNumber = 9
     static let paletteSecondWrapNumber = 10
     static let paletteSecondIndex = 2
+    static let aspectFourByThree: CGFloat = 4.0 / 3.0
+    static let expectedFittedWidth: CGFloat = 400.0 / 3.0
   }
 
-  @Test("Builds AttributedString highlighting selected marker token and its clause")
-  func highlightedEntryTextBuildsAttributedString() {
-    let text = "[1] Rysa na szybie. [2] Klamka luźna."
-    let highlightColor = AuthorPalette.color(fromHex: Fixtures.authorColor)
-
-    let attributed = HighlightedEntryTextBuilder.buildAttributedString(
-      text: text,
-      selectedMarkerNumber: 1,
-      highlightColor: highlightColor
-    )
-    #expect(String(attributed.characters) == text)
-
-    let highlightedText = attributed.runs
-      .filter { $0.backgroundColor != nil }
-      .map { String(attributed[$0.range].characters) }
-      .joined()
-    #expect(highlightedText == "[1] Rysa na szybie. ")
-
-    let trailingText = "Rysa na drzwiach [1]"
-    let trailingAttributed = HighlightedEntryTextBuilder.buildAttributedString(
-      text: trailingText,
-      selectedMarkerNumber: 1,
-      highlightColor: highlightColor
-    )
-    let trailingHighlighted = trailingAttributed.runs
-      .filter { $0.backgroundColor != nil }
-      .map { String(trailingAttributed[$0.range].characters) }
-      .joined()
-    #expect(trailingHighlighted == trailingText)
-
-    let unselected = HighlightedEntryTextBuilder.buildAttributedString(
-      text: text,
-      selectedMarkerNumber: nil,
-      highlightColor: highlightColor
-    )
-    #expect(unselected.runs.allSatisfy { $0.backgroundColor == nil })
-  }
-
-  @Test("Clamps marker coordinates to 0...1 and maps points to container size")
+  @Test("Clamps marker coordinates to 0...1 and maps points to container and aspect-fit rects")
   func markerOverlayCoordinateMapping() {
     #expect(MarkerOverlayItem.clampedNormalizedCoordinate(Fixtures.outOfBoundsLow) == 0)
     #expect(MarkerOverlayItem.clampedNormalizedCoordinate(Fixtures.outOfBoundsHigh) == 1)
@@ -73,7 +38,7 @@ struct ComponentsTests {
       number: 1,
       x: Fixtures.outOfBoundsHigh,
       y: Fixtures.halfNormalized,
-      authorColorHex: Fixtures.authorColor
+      colorHex: Fixtures.markerOneColor
     )
     let size = CGSize(width: Fixtures.containerWidth, height: Fixtures.containerHeight)
     let mapped = MarkerOverlayItem.pointInContainer(item, size: size)
@@ -81,6 +46,10 @@ struct ComponentsTests {
       mapped
         == CGPoint(
           x: Fixtures.containerWidth, y: Fixtures.containerHeight * Fixtures.halfNormalized))
+
+    let fitted = ZoomTransform.aspectFitRect(aspectRatio: Fixtures.aspectFourByThree, in: size)
+    #expect(abs(fitted.width - Fixtures.expectedFittedWidth) < 0.01)
+    #expect(abs(fitted.height - Fixtures.containerHeight) < 0.01)
 
     let (nx, ny) = MarkerOverlayItem.normalizedPoint(
       for: CGPoint(x: Fixtures.tapX, y: Fixtures.tapY),
@@ -160,24 +129,25 @@ struct ComponentsTests {
       uploadProgress: Fixtures.uploadProgress,
       placement: .labeled
     )
-    let queued = SyncStatusIndicatorView(
-      syncState: .queued,
+    let local = SyncStatusIndicatorView(
+      syncState: .localOnly,
       isVerified: false,
-      placement: .overPhoto
+      placement: .labeled,
+      onLocalOnlyTap: {}
     )
     let sourceBadge = MediaSourceBadgeView(source: .imported, capturedAtFromImport: true)
     let avatar = AuthorAvatarView(
       displayName: "Jan Kowalski",
       colorHex: Fixtures.authorColor,
       role: .owner,
-      showsRoleBadge: true
+      showsRoleBadge: false
     )
     let markerItem = MarkerOverlayItem(
       id: Fixtures.markerId,
       number: 1,
       x: Fixtures.quarterNormalized,
       y: Fixtures.halfNormalized,
-      authorColorHex: Fixtures.authorColor
+      colorHex: Fixtures.markerOneColor
     )
     let overlay = MarkerDotOverlayView(
       markers: [markerItem],
@@ -189,11 +159,11 @@ struct ComponentsTests {
     let entryText = HighlightedEntryTextView(
       text: "[1] Rysa",
       selectedMarkerNumber: 1,
-      authorColorHex: Fixtures.authorColor
+      onMarkerTapped: { _ in }
     )
 
     _ = (
-      card, fab, infoSheet, stableSlot, toast, uploading, queued,
+      card, fab, infoSheet, stableSlot, toast, uploading, local,
       sourceBadge, avatar, overlay, entryText,
     )
   }

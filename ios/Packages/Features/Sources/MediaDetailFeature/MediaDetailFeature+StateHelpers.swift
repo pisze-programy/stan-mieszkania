@@ -1,6 +1,60 @@
+import ComposableArchitecture
 import DesignSystem
 import Domain
 import Foundation
+
+extension MediaDetailFeature {
+  func handleViewerAction(_ state: inout State, action: Action) -> Effect<Action> {
+    switch action {
+    case .dismissError:
+      state.errorMessage = nil
+    case .dismissQuotaNotice:
+      state.quotaNoticeMessage = nil
+    case .markerTapped(let number):
+      handleMarkerTapped(&state, number: number)
+    case .markerSelectionCleared:
+      state.selectedMarkerNumber = nil
+      state.scrollTargetEntryId = nil
+    case .markersVisibilityToggled:
+      state.areMarkersHidden.toggle()
+    case .photoTapped:
+      handlePhotoTapped(&state)
+    case .lightboxDismissed:
+      state.isLightboxPresented = false
+    case .scrollTargetHandled:
+      state.scrollTargetEntryId = nil
+    default:
+      break
+    }
+    return .none
+  }
+
+  private func handleMarkerTapped(_ state: inout State, number: Int) {
+    if !state.areMarkersHidden, state.selectedMarkerNumber == number {
+      state.selectedMarkerNumber = nil
+      state.scrollTargetEntryId = nil
+    } else {
+      state.areMarkersHidden = false
+      state.selectedMarkerNumber = number
+      state.scrollTargetEntryId = state.entryId(owningMarker: number)
+    }
+  }
+
+  private func handlePhotoTapped(_ state: inout State) {
+    guard state.composer?.isMarkerPlacementMode != true else {
+      return
+    }
+    if state.selectedMarkerNumber != nil {
+      state.selectedMarkerNumber = nil
+      state.scrollTargetEntryId = nil
+      return
+    }
+    guard let media = state.media, !media.isSoftDeleted else {
+      return
+    }
+    state.isLightboxPresented = true
+  }
+}
 
 extension MediaDetailFeature.State {
   public var isMediaAuthor: Bool {
@@ -59,20 +113,40 @@ extension MediaDetailFeature.State {
             number: marker.number,
             x: marker.x,
             y: marker.y,
-            authorColorHex: entryItem.authorColorHex
+            colorHex: MarkerPalette.hex(forMarkerNumber: marker.number)
           )
         )
       }
     }
 
     if let composer {
-      let draftColor = currentUser?.color ?? DomainConstants.defaultAuthorColor
       for draftMarker in composer.markers {
-        items.append(draftMarker.toOverlayItem(authorColorHex: draftColor))
+        items.append(draftMarker.toOverlayItem())
       }
     }
 
     return items
+  }
+
+  public var selectedLightboxCaption: LightboxMarkerCaption? {
+    guard let selectedMarkerNumber else {
+      return nil
+    }
+    guard
+      let entryItem = entries.first(where: {
+        !$0.entry.isRetracted
+          && $0.entry.markers.contains { $0.number == selectedMarkerNumber }
+      })
+    else {
+      return nil
+    }
+    return LightboxMarkerCaption(
+      markerNumber: selectedMarkerNumber,
+      entryText: entryItem.entry.text,
+      authorDisplayName: entryItem.authorDisplayName,
+      authorShortTag: entryItem.entry.author?.shortTag,
+      createdAt: entryItem.entry.createdAt
+    )
   }
 
   public func entryId(owningMarker number: Int) -> String? {

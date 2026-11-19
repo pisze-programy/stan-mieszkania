@@ -20,13 +20,13 @@ public struct SummaryDraftMarker: Identifiable, Equatable, Hashable, Sendable {
     self.y = y
   }
 
-  public func toOverlayItem(authorColorHex: String) -> MarkerOverlayItem {
+  public func toOverlayItem() -> MarkerOverlayItem {
     MarkerOverlayItem(
       id: id,
       number: number,
       x: x,
       y: y,
-      authorColorHex: authorColorHex
+      colorHex: MarkerPalette.hex(forMarkerNumber: number)
     )
   }
 
@@ -63,8 +63,8 @@ public struct MediaSummaryPageState: Identifiable, Equatable, Sendable {
     self.selectedMarkerNumber = selectedMarkerNumber
   }
 
-  public func markerOverlayItems(authorColorHex: String) -> [MarkerOverlayItem] {
-    markers.map { $0.toOverlayItem(authorColorHex: authorColorHex) }
+  public func markerOverlayItems() -> [MarkerOverlayItem] {
+    markers.map { $0.toOverlayItem() }
   }
 }
 

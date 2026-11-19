@@ -1,31 +1,52 @@
 import ComposableArchitecture
+import CoreGraphics
 import DesignSystem
 import Domain
 import SwiftUI
 
 public struct MediaDetailView: View {
+  static let lightboxSourceID = "mediaDetailPhoto"
+
   @Bindable var store: StoreOf<MediaDetailFeature>
   @State var isVerifiedInfoPresented = false
+  @State var isLocalInfoPresented = false
+  @State var decodedCanvasImage: CGImage?
+  @State private var viewportHeight: CGFloat = 0
+  @Namespace private var lightboxNamespace
 
   public init(store: StoreOf<MediaDetailFeature>) {
     self.store = store
+  }
+
+  private var photoMaxHeight: CGFloat {
+    guard viewportHeight > 0 else {
+      return MediaDetailConstants.defaultPhotoMaxHeight
+    }
+    return min(
+      viewportHeight * MediaDetailConstants.photoMaxHeightRatio,
+      MediaDetailConstants.photoMaxHeightCap
+    )
   }
 
   public var body: some View {
     ScrollViewReader { proxy in
       ScrollView {
         VStack(alignment: .leading, spacing: Spacing.md) {
-          bannersSection
-
           if let media = store.media {
             DetailPhotoCanvasView(
               media: media,
               isPhotoCached: store.isPhotoCached,
               markers: store.overlayMarkers,
               selectedMarkerNumber: store.selectedMarkerNumber,
+              areMarkersHidden: store.areMarkersHidden,
               isComposerPlacementActive: store.composer?.isMarkerPlacementMode == true,
+              photoMaxHeight: photoMaxHeight,
+              lightboxSourceID: Self.lightboxSourceID,
+              lightboxNamespace: lightboxNamespace,
+              decodedImage: $decodedCanvasImage,
               onSelectMarker: { store.send(.markerTapped($0)) },
-              onDeselectAll: { store.send(.markerSelectionCleared) },
+              onPhotoTapped: { store.send(.photoTapped) },
+              onToggleMarkers: { store.send(.markersVisibilityToggled) },
               onAddComposerMarker: { x, y in store.send(.composerMarkerAdded(x: x, y: y)) }
             )
 
@@ -38,6 +59,11 @@ public struct MediaDetailView: View {
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
       }
+      .onGeometryChange(for: CGFloat.self) { proxy in
+        proxy.size.height
+      } action: { height in
+        viewportHeight = height
+      }
       .appCanvas()
       .onChange(of: store.scrollTargetEntryId) { _, targetId in
         guard let targetId else {
@@ -49,6 +75,11 @@ public struct MediaDetailView: View {
         store.send(.scrollTargetHandled)
       }
     }
+    .overlay(alignment: .top) {
+      toastOverlay
+    }
+    .animation(Motion.smooth, value: store.errorMessage)
+    .animation(Motion.smooth, value: store.quotaNoticeMessage)
     .task {
       await store.send(.task).finish()
     }
@@ -62,45 +93,55 @@ public struct MediaDetailView: View {
       )
     ) {
       if let media = store.media {
-        DetailMetadataSheetView(media: media) {
-          store.send(.metadataDismissed)
-        }
-        .presentationDetents([.medium])
+        DetailMetadataSheetView(media: media)
       }
     }
     .sheet(isPresented: $isVerifiedInfoPresented) {
       VerifiedInfoSheetView()
     }
-    .confirmationDialog(
-      mediaDeleteTitle,
-      isPresented: Binding(
-        get: { store.mediaDeleteConfirmation != nil },
-        set: { if !$0 { store.send(.mediaDeleteConfirmationDismissed) } }
-      ),
-      titleVisibility: .visible
-    ) {
-      Button(L10n.string("apartment.delete.confirm.cta"), role: .destructive) {
-        store.send(.mediaDeleteConfirmed)
-      }
-      Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
-        store.send(.mediaDeleteConfirmationDismissed)
-      }
+    .sheet(isPresented: $isLocalInfoPresented) {
+      LocalOnlyInfoSheetView(
+        canUploadToCloud: store.canUploadToCloud,
+        isUploadingToCloud: store.isUploadingToCloud,
+        onUploadToCloud: {
+          isLocalInfoPresented = false
+          store.send(.uploadToCloudTapped)
+        }
+      )
     }
-    .confirmationDialog(
-      entryDeleteTitle,
-      isPresented: Binding(
-        get: { store.entryDeleteConfirmation != nil },
-        set: { if !$0 { store.send(.entryDeleteConfirmationDismissed) } }
-      ),
-      titleVisibility: .visible
-    ) {
-      Button(entryDeleteConfirmLabel, role: .destructive) {
-        store.send(.entryDeleteConfirmed)
+    #if os(iOS)
+      .fullScreenCover(isPresented: lightboxBinding) {
+        lightboxView.navigationTransition(
+          .zoom(sourceID: Self.lightboxSourceID, in: lightboxNamespace)
+        )
       }
-      Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
-        store.send(.entryDeleteConfirmationDismissed)
+    #else
+      .sheet(isPresented: lightboxBinding) {
+        lightboxView
       }
-    }
+    #endif
+  }
+
+  private var lightboxBinding: Binding<Bool> {
+    Binding(
+      get: { store.isLightboxPresented },
+      set: { if !$0 { store.send(.lightboxDismissed) } }
+    )
+  }
+
+  private var lightboxView: some View {
+    MediaLightboxView(
+      mediaId: store.mediaId,
+      placeholderImage: decodedCanvasImage,
+      markers: store.overlayMarkers,
+      selectedMarkerNumber: store.selectedMarkerNumber,
+      selectedCaption: store.selectedLightboxCaption,
+      areMarkersHidden: store.areMarkersHidden,
+      referenceDate: store.now ?? Date(),
+      onSelectMarker: { store.send(.markerTapped($0)) },
+      onToggleMarkers: { store.send(.markersVisibilityToggled) },
+      onDismiss: { store.send(.lightboxDismissed) }
+    )
   }
 
   @ViewBuilder

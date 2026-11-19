@@ -6,20 +6,20 @@ public struct MarkerOverlayItem: Identifiable, Sendable, Equatable, Hashable {
   public let number: Int
   public let x: Double
   public let y: Double
-  public let authorColorHex: String
+  public let colorHex: String
 
   public init(
     id: String,
     number: Int,
     x: Double,
     y: Double,
-    authorColorHex: String
+    colorHex: String
   ) {
     self.id = id
     self.number = number
     self.x = x
     self.y = y
-    self.authorColorHex = authorColorHex
+    self.colorHex = colorHex
   }
 
   public static func clampedNormalizedCoordinate(_ value: Double) -> Double {
@@ -32,6 +32,15 @@ public struct MarkerOverlayItem: Identifiable, Sendable, Equatable, Hashable {
     return CGPoint(x: clampedX * size.width, y: clampedY * size.height)
   }
 
+  public static func pointInRect(_ item: MarkerOverlayItem, rect: CGRect) -> CGPoint {
+    let clampedX = clampedNormalizedCoordinate(item.x)
+    let clampedY = clampedNormalizedCoordinate(item.y)
+    return CGPoint(
+      x: rect.minX + clampedX * rect.width,
+      y: rect.minY + clampedY * rect.height
+    )
+  }
+
   public static func normalizedPoint(for location: CGPoint, in size: CGSize) -> (Double, Double) {
     guard size.width > 0, size.height > 0 else {
       return (ContractConstants.markerCoordMin, ContractConstants.markerCoordMin)
@@ -42,18 +51,76 @@ public struct MarkerOverlayItem: Identifiable, Sendable, Equatable, Hashable {
   }
 }
 
+public struct MarkerPinBadgeView: View {
+  private let marker: MarkerOverlayItem
+  private let isSelected: Bool
+  private let isDimmed: Bool
+  private let onTap: () -> Void
+
+  public init(
+    marker: MarkerOverlayItem,
+    isSelected: Bool,
+    isDimmed: Bool,
+    onTap: @escaping () -> Void
+  ) {
+    self.marker = marker
+    self.isSelected = isSelected
+    self.isDimmed = isDimmed
+    self.onTap = onTap
+  }
+
+  public var body: some View {
+    let fillColor = AuthorPalette.color(fromHex: marker.colorHex)
+    Button(action: onTap) {
+      ZStack {
+        if isSelected {
+          Circle()
+            .stroke(
+              fillColor.opacity(DesignMetrics.markerHaloOpacity),
+              lineWidth: DesignMetrics.markerHaloStrokeWidth
+            )
+            .frame(width: DesignMetrics.markerDotSize, height: DesignMetrics.markerDotSize)
+        }
+
+        Text("\(marker.number)")
+          .font(.caption.weight(.bold).monospacedDigit())
+          .foregroundStyle(.white)
+          .frame(width: DesignMetrics.markerDotSize, height: DesignMetrics.markerDotSize)
+          .background(fillColor, in: .circle)
+          .overlay {
+            Circle()
+              .stroke(.white, lineWidth: DesignMetrics.markerPinStrokeWidth)
+          }
+          .shadow(
+            color: .black.opacity(DesignMetrics.markerShadowOpacity),
+            radius: DesignMetrics.markerShadowRadius,
+            y: DesignMetrics.markerShadowYOffset
+          )
+      }
+      .scaleEffect(isSelected ? DesignMetrics.selectedMarkerScale : 1)
+      .opacity(isDimmed ? DesignMetrics.dimmedMarkerOpacity : DesignMetrics.selectedMarkerOpacity)
+      .frame(
+        width: DesignMetrics.markerHitTargetSize,
+        height: DesignMetrics.markerHitTargetSize
+      )
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+  }
+}
+
 public struct MarkerDotOverlayView: View {
   private let markers: [MarkerOverlayItem]
   private let selectedMarkerNumber: Int?
   private let onSelectMarker: (Int) -> Void
-  private let onDeselectAll: () -> Void
+  private let onDeselectAll: (() -> Void)?
   private let onAddMarkerAtNormalizedPoint: ((Double, Double) -> Void)?
 
   public init(
     markers: [MarkerOverlayItem],
     selectedMarkerNumber: Int?,
     onSelectMarker: @escaping (Int) -> Void,
-    onDeselectAll: @escaping () -> Void,
+    onDeselectAll: (() -> Void)? = nil,
     onAddMarkerAtNormalizedPoint: ((Double, Double) -> Void)? = nil
   ) {
     self.markers = markers
@@ -66,68 +133,38 @@ public struct MarkerDotOverlayView: View {
   public var body: some View {
     GeometryReader { geometry in
       ZStack {
-        Color.clear
-          .contentShape(Rectangle())
-          .gesture(
-            SpatialTapGesture()
-              .onEnded { value in
-                if let onAddMarkerAtNormalizedPoint {
-                  let (nx, ny) = MarkerOverlayItem.normalizedPoint(
-                    for: value.location,
-                    in: geometry.size
-                  )
-                  onAddMarkerAtNormalizedPoint(nx, ny)
-                } else {
-                  onDeselectAll()
+        if onAddMarkerAtNormalizedPoint != nil || onDeselectAll != nil {
+          Color.clear
+            .contentShape(Rectangle())
+            .gesture(
+              SpatialTapGesture()
+                .onEnded { value in
+                  if let onAddMarkerAtNormalizedPoint {
+                    let (nx, ny) = MarkerOverlayItem.normalizedPoint(
+                      for: value.location,
+                      in: geometry.size
+                    )
+                    onAddMarkerAtNormalizedPoint(nx, ny)
+                  } else {
+                    onDeselectAll?()
+                  }
                 }
-              }
-          )
+            )
+        }
 
         ForEach(markers) { marker in
-          markerDot(for: marker)
-            .position(MarkerOverlayItem.pointInContainer(marker, size: geometry.size))
+          let isSelected = selectedMarkerNumber == marker.number
+          let isDimmed = selectedMarkerNumber != nil && !isSelected
+          MarkerPinBadgeView(
+            marker: marker,
+            isSelected: isSelected,
+            isDimmed: isDimmed,
+            onTap: { onSelectMarker(marker.number) }
+          )
+          .position(MarkerOverlayItem.pointInContainer(marker, size: geometry.size))
         }
       }
       .animation(Motion.snappy, value: selectedMarkerNumber)
     }
-  }
-
-  private func markerDot(for marker: MarkerOverlayItem) -> some View {
-    let isSelected = selectedMarkerNumber == marker.number
-    let fillColor = AuthorPalette.color(fromHex: marker.authorColorHex)
-    let foregroundColor = AuthorPalette.contrastingForegroundColor(
-      forBackgroundHex: marker.authorColorHex
-    )
-
-    return Button {
-      onSelectMarker(marker.number)
-    } label: {
-      Text("\(marker.number)")
-        .font(Typography.markerNumber)
-        .foregroundStyle(foregroundColor)
-        .frame(width: DesignMetrics.markerDotSize, height: DesignMetrics.markerDotSize)
-        .background(fillColor, in: .circle)
-        .overlay {
-          Circle()
-            .stroke(
-              .white,
-              lineWidth: isSelected
-                ? DesignMetrics.selectedBorderWidth
-                : DesignMetrics.hairlineBorderWidth
-            )
-        }
-        .opacity(
-          isSelected
-            ? DesignMetrics.selectedMarkerOpacity
-            : DesignMetrics.unselectedMarkerOpacity
-        )
-        .scaleEffect(isSelected ? DesignMetrics.selectedMarkerScale : 1)
-        .frame(
-          width: DesignMetrics.markerHitTargetSize,
-          height: DesignMetrics.markerHitTargetSize
-        )
-        .contentShape(Rectangle())
-    }
-    .buttonStyle(.plain)
   }
 }

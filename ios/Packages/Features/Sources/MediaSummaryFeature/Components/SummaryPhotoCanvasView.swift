@@ -7,7 +7,6 @@ import SwiftUI
 
 struct SummaryPhotoCanvasView: View {
   let page: MediaSummaryPageState
-  let authorColorHex: String
   let isMarkerPlacementMode: Bool
   let onSelectMarker: (Int) -> Void
   let onDeselectAll: () -> Void
@@ -16,7 +15,10 @@ struct SummaryPhotoCanvasView: View {
   @State private var previewImage: CGImage?
   @Dependency(\.mediaStorage) private var mediaStorage
 
-  private var photoAspectRatio: CGFloat {
+  private var displayAspectRatio: CGFloat {
+    if let previewImage, previewImage.width > 0, previewImage.height > 0 {
+      return CGFloat(previewImage.width) / CGFloat(previewImage.height)
+    }
     guard page.draft.width > 0, page.draft.height > 0 else {
       return MediaSummaryConstants.fallbackPhotoAspectRatio
     }
@@ -39,10 +41,10 @@ struct SummaryPhotoCanvasView: View {
           }
       }
     }
-    .aspectRatio(photoAspectRatio, contentMode: .fit)
+    .aspectRatio(displayAspectRatio, contentMode: .fit)
     .overlay {
       MarkerDotOverlayView(
-        markers: page.markerOverlayItems(authorColorHex: authorColorHex),
+        markers: page.markerOverlayItems(),
         selectedMarkerNumber: page.selectedMarkerNumber,
         onSelectMarker: onSelectMarker,
         onDeselectAll: onDeselectAll,

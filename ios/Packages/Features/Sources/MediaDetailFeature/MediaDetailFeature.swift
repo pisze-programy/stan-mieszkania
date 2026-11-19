@@ -17,7 +17,10 @@ public struct MediaDetailFeature: Sendable {
     public var mediaAuthorColorHex: String
     public var entries: [MediaDetailEntryItem]
     public var currentUser: AuthorSummary?
+    public var hasOtherMembers: Bool
     public var selectedMarkerNumber: Int?
+    public var areMarkersHidden: Bool
+    public var isLightboxPresented: Bool
     public var scrollTargetEntryId: String?
     public var uploadProgress: Double?
     public var isUploadingToCloud: Bool
@@ -38,7 +41,10 @@ public struct MediaDetailFeature: Sendable {
       mediaAuthorColorHex: String = DomainConstants.defaultAuthorColor,
       entries: [MediaDetailEntryItem] = [],
       currentUser: AuthorSummary? = nil,
+      hasOtherMembers: Bool = false,
       selectedMarkerNumber: Int? = nil,
+      areMarkersHidden: Bool = false,
+      isLightboxPresented: Bool = false,
       scrollTargetEntryId: String? = nil,
       uploadProgress: Double? = nil,
       isUploadingToCloud: Bool = false,
@@ -58,7 +64,10 @@ public struct MediaDetailFeature: Sendable {
       self.mediaAuthorColorHex = mediaAuthorColorHex
       self.entries = entries
       self.currentUser = currentUser
+      self.hasOtherMembers = hasOtherMembers
       self.selectedMarkerNumber = selectedMarkerNumber
+      self.areMarkersHidden = areMarkersHidden
+      self.isLightboxPresented = isLightboxPresented
       self.scrollTargetEntryId = scrollTargetEntryId
       self.uploadProgress = uploadProgress
       self.isUploadingToCloud = isUploadingToCloud
@@ -85,6 +94,9 @@ public struct MediaDetailFeature: Sendable {
     case dismissQuotaNotice
     case markerTapped(Int)
     case markerSelectionCleared
+    case markersVisibilityToggled
+    case photoTapped
+    case lightboxDismissed
     case scrollTargetHandled
     case addEntryTapped
     case editLocalEntryTapped(String)
@@ -136,23 +148,9 @@ public struct MediaDetailFeature: Sendable {
       case .task, .snapshotLoaded, .photoCacheReady, .syncEventReceived, .uploadToCloudTapped,
         .uploadToCloudFinished, .uploadToCloudFailed:
         return handleSyncAction(&state, action: action)
-      case .dismissError:
-        state.errorMessage = nil
-        return .none
-      case .dismissQuotaNotice:
-        state.quotaNoticeMessage = nil
-        return .none
-      case .markerTapped(let number):
-        state.selectedMarkerNumber = number
-        state.scrollTargetEntryId = state.entryId(owningMarker: number)
-        return .none
-      case .markerSelectionCleared:
-        state.selectedMarkerNumber = nil
-        state.scrollTargetEntryId = nil
-        return .none
-      case .scrollTargetHandled:
-        state.scrollTargetEntryId = nil
-        return .none
+      case .dismissError, .dismissQuotaNotice, .markerTapped, .markerSelectionCleared,
+        .markersVisibilityToggled, .photoTapped, .lightboxDismissed, .scrollTargetHandled:
+        return handleViewerAction(&state, action: action)
       case .addEntryTapped, .editLocalEntryTapped, .composerDismissed, .composerTextChanged,
         .composerToggleMarkerMode, .composerMarkerAdded, .composerMarkerDeleted,
         .composerSubmitted, .composerSucceeded, .composerFailed:

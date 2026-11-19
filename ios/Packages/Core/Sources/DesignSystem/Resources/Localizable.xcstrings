@@ -609,46 +609,79 @@
         }
       }
     },
-    "media.detail.timestamp.captured": {
+    "media.detail.entries.header": {
       "extractionState": "manual",
       "localizations": {
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zrobione: %@"
+            "value": "Wpisy"
           }
         }
       }
     },
-    "media.detail.timestamp.cloud": {
+    "media.detail.metadata.captured.label": {
       "extractionState": "manual",
       "localizations": {
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zapisane w chmurze: %@"
+            "value": "Zrobione"
           }
         }
       }
     },
-    "media.detail.sha256": {
+    "media.detail.metadata.cloud.label": {
       "extractionState": "manual",
       "localizations": {
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "SHA-256: %@"
+            "value": "Zapisane w chmurze"
           }
         }
       }
     },
-    "media.detail.timeline.title": {
+    "media.detail.metadata.source.label": {
       "extractionState": "manual",
       "localizations": {
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wpisy do zdjęcia"
+            "value": "Źródło"
+          }
+        }
+      }
+    },
+    "media.detail.metadata.status.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        }
+      }
+    },
+    "media.markers.show": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pokaż znaczniki"
+          }
+        }
+      }
+    },
+    "media.markers.hide": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ukryj znaczniki"
           }
         }
       }
@@ -693,6 +726,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wycofać wpis?"
+          }
+        }
+      }
+    },
+    "media.detail.entry.retract.confirm.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wpis zniknie dla wszystkich, ale zostanie ślad, że został wycofany."
           }
         }
       }
@@ -770,17 +814,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trwale usunąć lokalny wpis?"
-          }
-        }
-      }
-    },
-    "media.detail.timeline.empty": {
-      "extractionState": "manual",
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak wpisów do tego zdjęcia"
           }
         }
       }
@@ -2013,6 +2046,61 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tylko na tym telefonie"
+          }
+        }
+      }
+    },
+    "local.info.device.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapisane lokalnie"
+          }
+        }
+      }
+    },
+    "local.info.device.detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To zdjęcie istnieje tylko w pamięci tego telefonu i nie jest widoczne dla innych."
+          }
+        }
+      }
+    },
+    "local.info.unverified.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak daty z serwera"
+          }
+        }
+      }
+    },
+    "local.info.unverified.detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dopiero wysłanie do chmury utrwala zdjęcie i nadaje mu zweryfikowaną datę."
+          }
+        }
+      }
+    },
+    "local.info.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Możesz w każdej chwili wysłać zdjęcie do chmury, aby udostępnić je współuczestnikom mieszkania."
           }
         }
       }

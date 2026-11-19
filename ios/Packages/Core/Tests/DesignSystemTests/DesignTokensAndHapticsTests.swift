@@ -19,7 +19,7 @@ struct DesignTokensAndHapticsTests {
     #expect(CornerRadius.lg < CornerRadius.xl)
     #expect(CornerRadius.xl < CornerRadius.pill)
 
-    #expect(DesignMetrics.unselectedMarkerOpacity < DesignMetrics.selectedMarkerOpacity)
+    #expect(DesignMetrics.dimmedMarkerOpacity < DesignMetrics.selectedMarkerOpacity)
     #expect(DesignMetrics.selectedMarkerOpacity == 1.0)
   }
 

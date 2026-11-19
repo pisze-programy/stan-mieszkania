@@ -125,6 +125,7 @@ struct MediaDetailEntriesLifecycleTests {
         mediaAuthorColorHex: snapshot.mediaAuthorColorHex,
         entries: snapshot.entries,
         currentUser: snapshot.currentUser,
+        hasOtherMembers: snapshot.hasOtherMembers,
         selectedMarkerNumber: selectedMarkerNumber
       )
     ) {

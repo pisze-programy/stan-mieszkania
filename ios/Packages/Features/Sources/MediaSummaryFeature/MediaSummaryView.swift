@@ -139,7 +139,6 @@ public struct MediaSummaryView: View {
   private func canvas(for page: MediaSummaryPageState) -> some View {
     SummaryPhotoCanvasView(
       page: page,
-      authorColorHex: store.currentUser.color,
       isMarkerPlacementMode: store.isMarkerPlacementMode,
       onSelectMarker: { store.send(.markerSelected($0)) },
       onDeselectAll: { store.send(.markerSelectionCleared) },

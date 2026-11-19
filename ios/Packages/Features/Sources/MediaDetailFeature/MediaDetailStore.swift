@@ -41,12 +41,14 @@ enum MediaDetailStore {
         in: db
       )
 
+      let activeMembersCount = membersById.values.filter { $0.leftAt == nil }.count
       return MediaDetailSnapshot(
         media: media,
         mediaAuthorName: mediaAuthor.name,
         mediaAuthorColorHex: mediaAuthor.colorHex,
         entries: entries,
-        currentUser: currentUser
+        currentUser: currentUser,
+        hasOtherMembers: activeMembersCount > 1
       )
     }
   }

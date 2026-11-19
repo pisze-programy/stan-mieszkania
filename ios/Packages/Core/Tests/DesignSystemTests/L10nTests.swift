@@ -48,6 +48,19 @@ struct L10nTests {
       "media.summary.pager.previous",
       "media.summary.pager.next",
       "media.summary.marker.delete",
+      "media.markers.show",
+      "media.markers.hide",
+      "media.detail.entries.header",
+      "media.detail.entry.retract.confirm.message",
+      "media.detail.metadata.captured.label",
+      "media.detail.metadata.cloud.label",
+      "media.detail.metadata.source.label",
+      "media.detail.metadata.status.label",
+      "local.info.device.title",
+      "local.info.device.detail",
+      "local.info.unverified.title",
+      "local.info.unverified.detail",
+      "local.info.footer",
     ]
     for key in ws2Keys {
       let value = L10n.string(key)

@@ -74,7 +74,7 @@ struct MediaDetailSyncAndMediaDeletionTests {
       MediaDetailFeature()
     }
     if let media = softDeleted.media {
-      _ = (MediaDetailView(store: viewStore), DetailMetadataSheetView(media: media, onClose: {}))
+      _ = (MediaDetailView(store: viewStore), DetailMetadataSheetView(media: media))
     }
   }
 
@@ -96,7 +96,8 @@ struct MediaDetailSyncAndMediaDeletionTests {
         mediaAuthorName: snapshot.mediaAuthorName,
         mediaAuthorColorHex: snapshot.mediaAuthorColorHex,
         entries: snapshot.entries,
-        currentUser: snapshot.currentUser
+        currentUser: snapshot.currentUser,
+        hasOtherMembers: snapshot.hasOtherMembers
       )
     ) {
       MediaDetailFeature()
