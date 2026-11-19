@@ -31,9 +31,17 @@ extension AppFeature {
     delegate: ApartmentsListFeature.Action.Delegate
   ) -> Effect<Action> {
     switch delegate {
-    case .didSelectApartment(let apartmentId):
+    case .didSelectApartment(let item):
       state.path.append(
-        .apartmentTimeline(ApartmentTimelineFeature.State(apartmentId: apartmentId)))
+        .apartmentTimeline(
+          ApartmentTimelineFeature.State(
+            apartmentId: item.id,
+            apartment: item.apartment,
+            cloudMediaCount: item.apartment.cloudMediaCount,
+            now: now
+          )
+        )
+      )
       return .none
     case .didTapProfile:
       state.path.append(

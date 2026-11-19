@@ -74,6 +74,7 @@ public struct ApartmentsListFeature: Sendable {
 
   public enum Action: Equatable, Sendable {
     case task
+    case viewDisappeared
     case pulledToRefresh
     case reloadLocalState
     case localDataLoaded(user: UserProfile?, items: [ApartmentListItem])
@@ -101,12 +102,13 @@ public struct ApartmentsListFeature: Sendable {
 
     @CasePathable
     public enum Delegate: Equatable, Sendable {
-      case didSelectApartment(String)
+      case didSelectApartment(ApartmentListItem)
       case didTapProfile
     }
   }
 
-  enum CancelID {
+  enum CancelID: Hashable, Sendable {
+    case sync
     case syncEvents
   }
 
@@ -127,6 +129,9 @@ public struct ApartmentsListFeature: Sendable {
           startSync(&state),
           listenToSyncEvents()
         )
+      case .viewDisappeared:
+        state.isSyncing = false
+        return .cancel(id: CancelID.sync)
       case .pulledToRefresh:
         return startSync(&state)
       case .reloadLocalState:
@@ -150,7 +155,10 @@ public struct ApartmentsListFeature: Sendable {
         state.errorMessage = nil
         return .none
       case .apartmentTapped(let apartmentId):
-        return .send(.delegate(.didSelectApartment(apartmentId)))
+        guard let item = state.items.first(where: { $0.id == apartmentId }) else {
+          return .none
+        }
+        return .send(.delegate(.didSelectApartment(item)))
       case .profileTapped:
         return .send(.delegate(.didTapProfile))
       case .createMenuTapped, .createSheetDismissed, .createNameChanged,

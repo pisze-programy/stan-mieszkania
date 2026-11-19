@@ -16,14 +16,6 @@ public struct ProfileView: View {
         await store.send(.task).finish()
       }
       .navigationTitle(L10n.string("profile.screen.title"))
-      .toolbar {
-        if store.isLoading {
-          ToolbarItem(placement: .automatic) {
-            ProgressView()
-              .controlSize(.small)
-          }
-        }
-      }
       .confirmationDialog(
         L10n.string("profile.sign.out.confirm.title"),
         isPresented: signOutConfirmationBinding,

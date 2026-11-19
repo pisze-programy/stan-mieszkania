@@ -59,12 +59,6 @@ public struct SharingView: View {
           store.send(.closeTapped)
         }
       }
-      if store.isLoading {
-        ToolbarItem(placement: .automatic) {
-          ProgressView()
-            .controlSize(.small)
-        }
-      }
     }
     .confirmationDialog(
       L10n.string("sharing.code.reset.confirm.title"),

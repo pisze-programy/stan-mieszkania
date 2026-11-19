@@ -8,9 +8,6 @@ import SyncEngine
 
 extension ApartmentsListFeature {
   func startSync(_ state: inout State) -> Effect<Action> {
-    guard !state.isSyncing else {
-      return .none
-    }
     state.isSyncing = true
     state.errorMessage = nil
     return .run { send in
@@ -27,6 +24,7 @@ extension ApartmentsListFeature {
         await send(.syncFailed(mapError(error)))
       }
     }
+    .cancellable(id: CancelID.sync, cancelInFlight: true)
   }
 
   func listenToSyncEvents() -> Effect<Action> {

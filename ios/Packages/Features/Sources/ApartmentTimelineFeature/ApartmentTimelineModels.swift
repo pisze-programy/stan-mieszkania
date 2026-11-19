@@ -48,17 +48,23 @@ public struct ApartmentTimelineSnapshot: Equatable, Sendable {
   public let sections: [TimelineDaySection]
   public let localUnsyncedCount: Int
   public let cloudMediaCount: Int
+  public let showsAuthor: Bool
+  public let hasOtherMembers: Bool
 
   public init(
     apartment: Apartment?,
     sections: [TimelineDaySection],
     localUnsyncedCount: Int,
-    cloudMediaCount: Int
+    cloudMediaCount: Int,
+    showsAuthor: Bool = false,
+    hasOtherMembers: Bool = false
   ) {
     self.apartment = apartment
     self.sections = sections
     self.localUnsyncedCount = localUnsyncedCount
     self.cloudMediaCount = cloudMediaCount
+    self.showsAuthor = showsAuthor
+    self.hasOtherMembers = hasOtherMembers
   }
 }
 

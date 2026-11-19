@@ -16,6 +16,7 @@ struct TimelineThumbnailCellView: View {
 
   let item: TimelineMediaItem
   let uploadProgress: Double?
+  let showsAuthor: Bool
 
   @State private var thumbnailImage: CGImage?
   @Dependency(\.syncEngine) private var syncEngine
@@ -30,14 +31,16 @@ struct TimelineThumbnailCellView: View {
       }
     }
     .aspectRatio(DesignMetrics.timelineThumbnailAspectRatio, contentMode: .fit)
-    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))
+    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.field, style: .continuous))
     .overlay(alignment: .bottomLeading) {
-      AuthorAvatarView(
-        displayName: item.authorDisplayName,
-        colorHex: item.authorColorHex,
-        size: DesignMetrics.avatarSmallSize
-      )
-      .padding(Spacing.xxs)
+      if showsAuthor {
+        AuthorAvatarView(
+          displayName: item.authorDisplayName,
+          colorHex: item.authorColorHex,
+          size: DesignMetrics.avatarSmallSize
+        )
+        .padding(Spacing.xxs)
+      }
     }
     .overlay(alignment: .topTrailing) {
       if !item.media.isSoftDeleted {

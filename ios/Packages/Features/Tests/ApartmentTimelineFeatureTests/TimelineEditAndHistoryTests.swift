@@ -57,6 +57,9 @@ struct TimelineEditAndHistoryTests {
     await store.receive(.editSucceeded(updated)) {
       $0.editSheet = nil
       $0.apartment = updated.apartment
+      $0.hasLoadedLocalSnapshot = true
+      $0.showsAuthor = true
+      $0.hasOtherMembers = true
       $0.localUnsyncedCount = updated.localUnsyncedCount
       $0.cloudMediaCount = updated.cloudMediaCount
     }

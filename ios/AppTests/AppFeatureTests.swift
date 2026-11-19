@@ -45,14 +45,32 @@ struct AppFeatureTests {
     isFromCacheOrFallback: false
   )
 
+  private static let expectedCloudCount = 5
+  private static let sampleApartment = Apartment(
+    id: apartmentId,
+    ownerId: userId,
+    name: "Kawalerka Mokotów",
+    street: "Puławska 10",
+    city: "Warszawa",
+    role: .owner,
+    cloudMediaCount: expectedCloudCount,
+    createdAt: baseDate,
+    updatedAt: baseDate
+  )
+
   @MainActor
-  @Test("Boots unauthenticated, authenticates via Onboarding, and pushes timeline")
+  @Test("Boots unauthenticated, authenticates via Onboarding, and pushes hydrated timeline")
   func bootAuthenticateAndPushTimeline() async throws {
     let database = try makeInMemoryDatabase()
+    let listItem = ApartmentListItem(
+      apartment: Self.sampleApartment,
+      photoCount: Self.expectedCloudCount
+    )
     let store = TestStore(initialState: AppFeature.State()) {
       AppFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.date.now = Self.baseDate
       $0.authClient.loadStoredSession = { nil }
       $0.themePreference.load = { .light }
       $0.appConfigClient.refresh = { Self.upToDateConfig }
@@ -77,9 +95,16 @@ struct AppFeatureTests {
       $0.currentUser = Self.profile
       $0.apartmentsList = ApartmentsListFeature.State(currentUser: Self.profile)
     }
-    await store.send(.apartmentsList(.delegate(.didSelectApartment(Self.apartmentId)))) {
+    await store.send(.apartmentsList(.delegate(.didSelectApartment(listItem)))) {
       $0.path.append(
-        .apartmentTimeline(ApartmentTimelineFeature.State(apartmentId: Self.apartmentId))
+        .apartmentTimeline(
+          ApartmentTimelineFeature.State(
+            apartmentId: Self.apartmentId,
+            apartment: Self.sampleApartment,
+            cloudMediaCount: Self.expectedCloudCount,
+            now: Self.baseDate
+          )
+        )
       )
     }
   }

@@ -13,10 +13,6 @@ public struct ApartmentsListView: View {
   public var body: some View {
     ScrollView {
       VStack(spacing: Spacing.md) {
-        if let errorMessage = store.errorMessage {
-          errorBanner(errorMessage)
-        }
-
         if store.items.isEmpty && !store.isSyncing {
           emptyStateView
         } else {
@@ -27,7 +23,7 @@ public struct ApartmentsListView: View {
               } label: {
                 ApartmentCardView(item: item)
               }
-              .buttonStyle(.plain)
+              .buttonStyle(PressableCardButtonStyle())
             }
           }
         }
@@ -42,18 +38,26 @@ public struct ApartmentsListView: View {
     .task {
       await store.send(.task).finish()
     }
+    .onDisappear {
+      store.send(.viewDisappeared)
+    }
+    .overlay(alignment: .top) {
+      if let errorMessage = store.errorMessage {
+        ToastBanner(message: errorMessage, style: .error) {
+          store.send(.dismissError)
+        }
+        .padding(.horizontal, Spacing.md)
+        .padding(.top, Spacing.xs)
+        .transition(.move(edge: .top).combined(with: .opacity))
+      }
+    }
+    .animation(Motion.smooth, value: store.errorMessage)
     .overlay(alignment: .bottomTrailing) {
       addMenuButton
         .padding(Spacing.lg)
     }
     .navigationTitle(L10n.string("apartments.list.title"))
     .toolbar {
-      if store.isSyncing {
-        ToolbarItem(placement: .automatic) {
-          ProgressView()
-            .controlSize(.small)
-        }
-      }
       ToolbarItem(placement: .automatic) {
         Button {
           store.send(.profileTapped)
@@ -117,24 +121,6 @@ public struct ApartmentsListView: View {
       description: Text(L10n.string("apartments.list.empty.subtitle"))
     )
     .padding(.top, Spacing.xxl)
-  }
-
-  private func errorBanner(_ message: String) -> some View {
-    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
-      HStack(spacing: Spacing.sm) {
-        Image(systemName: "exclamationmark.triangle.fill")
-          .foregroundStyle(.yellow)
-        Text(message)
-          .font(Typography.callout)
-          .frame(maxWidth: .infinity, alignment: .leading)
-        Button {
-          store.send(.dismissError)
-        } label: {
-          Image(systemName: "xmark")
-        }
-        .buttonStyle(.plain)
-      }
-    }
   }
 }
 

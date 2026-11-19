@@ -329,7 +329,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Własność zostanie przekazana najstarszemu współuczestnikowi lub mieszkanie zostanie trwale usunięte, jeśli nie ma innych członków."
+            "value": "Mieszkanie i wszystkie zdjęcia zostaną trwale usunięte."
           }
         }
       }
@@ -2136,6 +2136,28 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "apartment.timeline.quota.popover": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "W chmurze: %lld z %lld zdjęć. Zdjęcia w chmurze są zweryfikowane i widoczne dla wszystkich członków."
+          }
+        }
+      }
+    },
+    "apartment.delete.confirmation.message.transfer": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mieszkanie przejdzie na najdłużej obecnego współuczestnika."
           }
         }
       }

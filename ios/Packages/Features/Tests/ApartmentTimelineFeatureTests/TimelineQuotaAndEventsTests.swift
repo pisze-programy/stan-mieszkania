@@ -21,9 +21,23 @@ struct TimelineQuotaAndEventsTests {
   private static let expectedCloudCount = 2
   private static let halfProgress = 0.5
 
+  private static let progressEvent = SyncEvent.uploadProgress(
+    mediaId: TimelineTestFixtures.mediaLocalId,
+    fractionCompleted: halfProgress
+  )
+  private static let otherQuotaEvent = SyncEvent.quotaExceeded(
+    apartmentId: TimelineTestFixtures.otherApartmentId,
+    mediaId: TimelineTestFixtures.mediaLocalId
+  )
+  private static let apartmentQuotaEvent = SyncEvent.quotaExceeded(
+    apartmentId: TimelineTestFixtures.apartmentId,
+    mediaId: TimelineTestFixtures.mediaLocalId
+  )
+
   @MainActor
-  @Test("SyncEvent stream surfaces QUOTA_EXCEEDED alert and tracks upload progress")
-  func quotaExceededEventStream() async throws {
+  @Test("SyncEvent stream tracks upload progress and auto-dismisses quota toast after 4 seconds")
+  func quotaExceededEventStreamAutoDismisses() async throws {
+    let clock = TestClock()
     let database = try TimelineTestFixtures.seedTimelineDatabase()
     let warningHaptics = LockIsolated(0)
     let (stream, continuation) = AsyncStream.makeStream(of: SyncEvent.self)
@@ -32,7 +46,9 @@ struct TimelineQuotaAndEventsTests {
       now: TimelineTestFixtures.thursdayLaterDate,
       calendar: TimelineTestFixtures.warsawCalendar, timeZone: TimelineTestFixtures.warsawTimeZone
     )
-    let store = makeStreamStore(database: database, stream: stream, warningHaptics: warningHaptics)
+    let store = makeStreamStore(
+      database: database, clock: clock, stream: stream, warningHaptics: warningHaptics
+    )
 
     let taskEffect = await store.send(.task) {
       $0.now = TimelineTestFixtures.thursdayLaterDate
@@ -41,36 +57,29 @@ struct TimelineQuotaAndEventsTests {
     await store.receive(.localSnapshotLoaded(snapshot)) {
       $0.apartment = snapshot.apartment
       $0.sections = snapshot.sections
+      $0.hasLoadedLocalSnapshot = true
+      $0.showsAuthor = true
+      $0.hasOtherMembers = true
       $0.localUnsyncedCount = 1
       $0.cloudMediaCount = Self.expectedCloudCount
     }
     await store.receive(.syncCompleted(snapshot)) { $0.isSyncing = false }
 
-    let progressEvent = SyncEvent.uploadProgress(
-      mediaId: TimelineTestFixtures.mediaLocalId, fractionCompleted: Self.halfProgress
-    )
-    continuation.yield(progressEvent)
-    await store.receive(.syncEventReceived(progressEvent)) {
+    continuation.yield(Self.progressEvent)
+    await store.receive(.syncEventReceived(Self.progressEvent)) {
       $0.uploadProgressByMediaId[TimelineTestFixtures.mediaLocalId] = Self.halfProgress
     }
+    continuation.yield(Self.otherQuotaEvent)
+    await store.receive(.syncEventReceived(Self.otherQuotaEvent))
 
-    let otherQuota = SyncEvent.quotaExceeded(
-      apartmentId: TimelineTestFixtures.otherApartmentId, mediaId: TimelineTestFixtures.mediaLocalId
-    )
-    continuation.yield(otherQuota)
-    await store.receive(.syncEventReceived(otherQuota))
-
-    let apartmentQuota = SyncEvent.quotaExceeded(
-      apartmentId: TimelineTestFixtures.apartmentId, mediaId: TimelineTestFixtures.mediaLocalId
-    )
-    continuation.yield(apartmentQuota)
-    await store.receive(.syncEventReceived(apartmentQuota)) {
+    continuation.yield(Self.apartmentQuotaEvent)
+    await store.receive(.syncEventReceived(Self.apartmentQuotaEvent)) {
       $0.uploadProgressByMediaId[TimelineTestFixtures.mediaLocalId] = nil
       $0.quotaNoticeMessage = L10n.string("media.summary.quota.notice")
     }
     await store.receive(.localSnapshotLoaded(snapshot))
-    await store.send(.dismissQuotaNotice) { $0.quotaNoticeMessage = nil }
-
+    await clock.advance(by: ApartmentTimelineConstants.quotaToastAutoDismissDelay)
+    await store.receive(.dismissQuotaNotice) { $0.quotaNoticeMessage = nil }
     continuation.finish()
     await taskEffect.cancel()
     #expect(warningHaptics.value == 1)
@@ -79,6 +88,7 @@ struct TimelineQuotaAndEventsTests {
   @MainActor
   private func makeStreamStore(
     database: any DatabaseWriter,
+    clock: TestClock<Duration>,
     stream: AsyncStream<SyncEvent>,
     warningHaptics: LockIsolated<Int>
   ) -> TestStoreOf<ApartmentTimelineFeature> {
@@ -88,6 +98,7 @@ struct TimelineQuotaAndEventsTests {
       ApartmentTimelineFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.continuousClock = clock
       $0.date.now = TimelineTestFixtures.thursdayLaterDate
       $0.calendar = TimelineTestFixtures.warsawCalendar
       $0.timeZone = TimelineTestFixtures.warsawTimeZone

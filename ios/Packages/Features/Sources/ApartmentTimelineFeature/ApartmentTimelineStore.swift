@@ -18,7 +18,21 @@ enum ApartmentTimelineStore {
         .where { $0.id.eq(apartmentId) && $0.deletedAt.is(nil) }
         .fetchOne(db)?
         .toDomain()
-      let mediaItems = try fetchTimelineItems(apartmentId: apartmentId, in: db)
+      let memberRecords =
+        try MemberRecord
+        .where { $0.apartmentId.eq(apartmentId) }
+        .fetchAll(db)
+      let currentUser =
+        try LocalUserRecord
+        .where { $0.isCurrentUser.eq(true) }
+        .fetchOne(db)?
+        .toDomain()
+      let mediaItems = try fetchTimelineItems(
+        apartmentId: apartmentId,
+        memberRecords: memberRecords,
+        currentUser: currentUser,
+        in: db
+      )
       let sections = groupSections(
         items: mediaItems,
         now: now,
@@ -33,33 +47,44 @@ enum ApartmentTimelineStore {
       // Invariant 6: Cloud quota counts all server-confirmed media including soft-deleted items.
       let confirmedCloudCount = mediaItems.count { $0.media.serverReceivedAt != nil }
       let cloudMediaCount = max(apartment?.cloudMediaCount ?? 0, confirmedCloudCount)
+      let showsAuthor = Set(mediaItems.map(\.media.authorId)).count > 1
+      let hasOtherMembers = Self.hasOtherActiveMembers(
+        in: memberRecords,
+        currentUser: currentUser
+      )
 
       return ApartmentTimelineSnapshot(
         apartment: apartment,
         sections: sections,
         localUnsyncedCount: localUnsyncedCount,
-        cloudMediaCount: cloudMediaCount
+        cloudMediaCount: cloudMediaCount,
+        showsAuthor: showsAuthor,
+        hasOtherMembers: hasOtherMembers
       )
     }
   }
 
+  private static func hasOtherActiveMembers(
+    in memberRecords: [MemberRecord],
+    currentUser: UserProfile?
+  ) -> Bool {
+    let activeMembers = memberRecords.filter { $0.leftAt == nil }
+    if let currentUser {
+      return activeMembers.contains { $0.userId != currentUser.id }
+    }
+    return activeMembers.count > 1
+  }
+
   private static func fetchTimelineItems(
     apartmentId: String,
+    memberRecords: [MemberRecord],
+    currentUser: UserProfile?,
     in db: Database
   ) throws -> [TimelineMediaItem] {
-    let memberRecords =
-      try MemberRecord
-      .where { $0.apartmentId.eq(apartmentId) }
-      .fetchAll(db)
     var membersByUserId: [String: MemberRecord] = [:]
     for member in memberRecords {
       membersByUserId[member.userId] = member
     }
-    let currentUser =
-      try LocalUserRecord
-      .where { $0.isCurrentUser.eq(true) }
-      .fetchOne(db)?
-      .toDomain()
     let mediaRecords =
       try MediaRecord
       .where { $0.apartmentId.eq(apartmentId) }

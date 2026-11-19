@@ -6,26 +6,7 @@ extension ApartmentTimelineView {
   @ToolbarContentBuilder
   var timelineToolbar: some ToolbarContent {
     ToolbarItem(placement: .automatic) {
-      quotaPill
-    }
-
-    if store.localUnsyncedCount > 0 {
-      ToolbarItem(placement: .automatic) {
-        Button {
-          store.send(.syncAllLocalTapped)
-        } label: {
-          if store.isSyncingAllLocal {
-            ProgressView()
-              .controlSize(.small)
-          } else {
-            Text(L10n.format("apartment.timeline.sync.all", store.localUnsyncedCount))
-              .font(Typography.badge)
-              .monospacedDigit()
-              .contentTransition(.numericText())
-          }
-        }
-        .disabled(store.isSyncingAllLocal)
-      }
+      cloudStatusItem
     }
 
     if store.isOwner {
@@ -52,51 +33,107 @@ extension ApartmentTimelineView {
     }
 
     ToolbarItem(placement: .automatic) {
-      Menu {
-        if store.isOwner {
-          Button {
-            store.send(.editMenuTapped)
-          } label: {
-            Label(L10n.string("apartment.edit.sheet.title"), systemImage: "pencil")
-          }
-        }
+      moreMenu
+    }
+  }
 
-        Button {
-          store.send(.historyMenuTapped)
-        } label: {
-          Label(L10n.string("apartment.history.sheet.title"), systemImage: "clock.arrow.circlepath")
-        }
-
-        Button(role: .destructive) {
-          store.send(.leaveOrDeleteMenuTapped)
-        } label: {
-          Label(
-            store.isOwner
-              ? L10n.string("apartment.delete.confirmation.title")
-              : L10n.string("apartment.leave.confirmation.title"),
-            systemImage: store.isOwner ? "trash" : "rectangle.portrait.and.arrow.right"
-          )
-        }
+  @ViewBuilder
+  private var cloudStatusItem: some View {
+    if store.localUnsyncedCount > 0 {
+      Button {
+        store.send(.syncAllLocalTapped)
       } label: {
-        Image(systemName: "ellipsis.circle")
+        Label("\(store.localUnsyncedCount)", systemImage: "icloud.and.arrow.up")
+          .font(.footnote.weight(.semibold))
+          .monospacedDigit()
+          .contentTransition(.numericText())
+          .foregroundStyle(Color.accentColor)
+          .symbolEffect(.pulse, isActive: store.isSyncingAllLocal)
+          .frame(minWidth: ApartmentTimelineConstants.cloudStatusMinWidth)
+      }
+      .disabled(store.isSyncingAllLocal)
+      .accessibilityLabel(L10n.format("apartment.timeline.sync.all", store.localUnsyncedCount))
+    } else {
+      Button {
+        isQuotaPopoverPresented = true
+      } label: {
+        Label(
+          L10n.format(
+            "apartment.timeline.quota.badge",
+            store.cloudMediaCount,
+            store.quotaLimit
+          ),
+          systemImage: "icloud"
+        )
+        .font(.footnote.weight(.semibold))
+        .monospacedDigit()
+        .contentTransition(.numericText())
+        .lineLimit(ApartmentTimelineConstants.quotaBadgeLineLimit)
+        .frame(minWidth: ApartmentTimelineConstants.cloudStatusMinWidth)
+      }
+      .popover(isPresented: $isQuotaPopoverPresented) {
+        Text(
+          L10n.format(
+            "apartment.timeline.quota.popover",
+            store.cloudMediaCount,
+            store.quotaLimit
+          )
+        )
+        .font(Typography.callout)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: ApartmentTimelineConstants.quotaPopoverMaxWidth)
+        .padding(Spacing.md)
+        .presentationCompactAdaptation(.popover)
       }
     }
   }
 
-  private var quotaPill: some View {
-    Text(
-      L10n.format(
-        "apartment.timeline.quota.badge",
-        store.cloudMediaCount,
-        store.quotaLimit
-      )
-    )
-    .font(Typography.badge)
-    .monospacedDigit()
-    .contentTransition(.numericText())
-    .lineLimit(ApartmentTimelineConstants.quotaBadgeLineLimit)
-    .padding(.horizontal, Spacing.xs)
-    .padding(.vertical, Spacing.xxs)
+  private var moreMenu: some View {
+    Menu {
+      if store.isOwner {
+        Button {
+          store.send(.editMenuTapped)
+        } label: {
+          Label(L10n.string("apartment.edit.sheet.title"), systemImage: "pencil")
+        }
+      }
+
+      Button {
+        store.send(.historyMenuTapped)
+      } label: {
+        Label(L10n.string("apartment.history.sheet.title"), systemImage: "clock.arrow.circlepath")
+      }
+
+      Button(role: .destructive) {
+        store.send(.leaveOrDeleteMenuTapped)
+      } label: {
+        Label(
+          store.isOwner
+            ? L10n.string("apartment.delete.confirmation.title")
+            : L10n.string("apartment.leave.confirmation.title"),
+          systemImage: store.isOwner ? "trash" : "rectangle.portrait.and.arrow.right"
+        )
+      }
+    } label: {
+      Image(systemName: "ellipsis")
+    }
+    .confirmationDialog(
+      leaveDialogTitle,
+      isPresented: Binding(
+        get: { store.leaveConfirmationMode != nil },
+        set: { if !$0 { store.send(.leaveConfirmationDismissed) } }
+      ),
+      titleVisibility: .visible
+    ) {
+      Button(leaveDialogConfirmLabel, role: .destructive) {
+        store.send(.leaveOrDeleteConfirmed)
+      }
+      Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
+        store.send(.leaveConfirmationDismissed)
+      }
+    } message: {
+      Text(leaveDialogMessage)
+    }
   }
 
   var leaveDialogTitle: String {
@@ -111,9 +148,12 @@ extension ApartmentTimelineView {
   var leaveDialogMessage: String {
     switch store.leaveConfirmationMode {
     case .ownerDeleteOrLeave:
-      L10n.string("apartment.delete.confirmation.message")
+      if store.hasOtherMembers {
+        return L10n.string("apartment.delete.confirmation.message.transfer")
+      }
+      return L10n.string("apartment.delete.confirmation.message")
     case .contributorLeave, .none:
-      L10n.string("apartment.leave.confirmation.message")
+      return L10n.string("apartment.leave.confirmation.message")
     }
   }
 

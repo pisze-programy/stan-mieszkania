@@ -62,6 +62,9 @@ struct TimelineGroupingAndSyncTests {
     await store.receive(.localSnapshotLoaded(snapshot)) {
       $0.apartment = snapshot.apartment
       $0.sections = snapshot.sections
+      $0.hasLoadedLocalSnapshot = true
+      $0.showsAuthor = true
+      $0.hasOtherMembers = true
       $0.localUnsyncedCount = 1
       $0.cloudMediaCount = Self.twoCount
     }
@@ -95,6 +98,9 @@ struct TimelineGroupingAndSyncTests {
     await store.receive(.syncAllLocalCompleted(updated)) {
       $0.isSyncingAllLocal = false
       $0.sections = updated.sections
+      $0.hasLoadedLocalSnapshot = true
+      $0.showsAuthor = true
+      $0.hasOtherMembers = true
       $0.localUnsyncedCount = 0
     }
 

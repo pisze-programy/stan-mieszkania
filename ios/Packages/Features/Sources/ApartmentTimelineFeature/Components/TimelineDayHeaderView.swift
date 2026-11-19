@@ -7,10 +7,10 @@ struct TimelineDayHeaderView: View {
   var body: some View {
     HStack {
       Text(title)
-        .font(Typography.sectionHeader)
+        .font(.subheadline.weight(.semibold))
         .foregroundStyle(.primary)
         .padding(.horizontal, Spacing.sm)
-        .padding(.vertical, Spacing.xs)
+        .padding(.vertical, ApartmentTimelineConstants.dayHeaderVerticalPadding)
         .glassEffect(.regular, in: .capsule)
       Spacer()
     }

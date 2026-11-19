@@ -5,6 +5,7 @@ import SwiftUI
 
 public struct ApartmentTimelineView: View {
   @Bindable var store: StoreOf<ApartmentTimelineFeature>
+  @State var isQuotaPopoverPresented = false
   private let zoomNamespace: Namespace.ID?
 
   private var gridColumns: [GridItem] {
@@ -12,6 +13,10 @@ public struct ApartmentTimelineView: View {
       repeating: GridItem(.flexible(), spacing: Spacing.xs),
       count: ApartmentTimelineConstants.gridColumnCount
     )
+  }
+
+  private var activeToastKey: String? {
+    store.errorMessage ?? store.quotaNoticeMessage
   }
 
   public init(
@@ -25,27 +30,10 @@ public struct ApartmentTimelineView: View {
   public var body: some View {
     ScrollView {
       LazyVStack(alignment: .leading, spacing: Spacing.md, pinnedViews: [.sectionHeaders]) {
-        if let quotaNotice = store.quotaNoticeMessage {
-          noticeBanner(
-            message: quotaNotice,
-            systemImage: "icloud.slash.fill",
-            tint: .orange
-          ) {
-            store.send(.dismissQuotaNotice)
-          }
-        }
-
-        if let errorMessage = store.errorMessage {
-          noticeBanner(
-            message: errorMessage,
-            systemImage: "exclamationmark.triangle.fill",
-            tint: .yellow
-          ) {
-            store.send(.dismissError)
-          }
-        }
-
-        if store.sections.isEmpty && !store.isSyncing {
+        if !store.hasLoadedLocalSnapshot {
+          Color.clear
+            .frame(height: ApartmentTimelineConstants.loadingPlaceholderHeight)
+        } else if store.sections.isEmpty {
           emptyStateView
         } else {
           ForEach(store.sections) { section in
@@ -71,6 +59,13 @@ public struct ApartmentTimelineView: View {
     .task {
       await store.send(.task).finish()
     }
+    .onDisappear {
+      store.send(.viewDisappeared)
+    }
+    .overlay(alignment: .top) {
+      toastOverlay
+    }
+    .animation(Motion.smooth, value: activeToastKey)
     .overlay(alignment: .bottomTrailing) {
       TimelineCaptureMenuButtonView(isDisabled: store.isCaptureInProgress) { source in
         store.send(.captureSourceSelected(source))
@@ -102,22 +97,24 @@ public struct ApartmentTimelineView: View {
         store.send(.historySheetDismissed)
       }
     }
-    .confirmationDialog(
-      leaveDialogTitle,
-      isPresented: Binding(
-        get: { store.leaveConfirmationMode != nil },
-        set: { if !$0 { store.send(.leaveConfirmationDismissed) } }
-      ),
-      titleVisibility: .visible
-    ) {
-      Button(leaveDialogConfirmLabel, role: .destructive) {
-        store.send(.leaveOrDeleteConfirmed)
+  }
+
+  @ViewBuilder
+  private var toastOverlay: some View {
+    if let errorMessage = store.errorMessage {
+      ToastBanner(message: errorMessage, style: .error) {
+        store.send(.dismissError)
       }
-      Button(L10n.string("apartments.create.cancel.cta"), role: .cancel) {
-        store.send(.leaveConfirmationDismissed)
+      .padding(.horizontal, Spacing.md)
+      .padding(.top, Spacing.xs)
+      .transition(.move(edge: .top).combined(with: .opacity))
+    } else if let quotaNotice = store.quotaNoticeMessage {
+      ToastBanner(message: quotaNotice, style: .info) {
+        store.send(.dismissQuotaNotice)
       }
-    } message: {
-      Text(leaveDialogMessage)
+      .padding(.horizontal, Spacing.md)
+      .padding(.top, Spacing.xs)
+      .transition(.move(edge: .top).combined(with: .opacity))
     }
   }
 
@@ -127,7 +124,8 @@ public struct ApartmentTimelineView: View {
     } label: {
       TimelineThumbnailCellView(
         item: item,
-        uploadProgress: store.uploadProgressByMediaId[item.id]
+        uploadProgress: store.uploadProgressByMediaId[item.id],
+        showsAuthor: store.showsAuthor
       )
     }
     .buttonStyle(.plain)
@@ -146,26 +144,5 @@ public struct ApartmentTimelineView: View {
       description: Text(L10n.string("apartment.timeline.empty.subtitle"))
     )
     .padding(.top, Spacing.xxl)
-  }
-
-  private func noticeBanner(
-    message: String,
-    systemImage: String,
-    tint: Color,
-    onDismiss: @escaping () -> Void
-  ) -> some View {
-    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
-      HStack(spacing: Spacing.sm) {
-        Image(systemName: systemImage)
-          .foregroundStyle(tint)
-        Text(message)
-          .font(Typography.callout)
-          .frame(maxWidth: .infinity, alignment: .leading)
-        Button(action: onDismiss) {
-          Image(systemName: "xmark")
-        }
-        .buttonStyle(.plain)
-      }
-    }
   }
 }

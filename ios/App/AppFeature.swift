@@ -104,16 +104,13 @@ public struct AppFeature: Sendable {
   @Dependency(\.syncEngine) var syncEngine
   @Dependency(\.themePreference) var themePreference
   @Dependency(\.appEnvironment) var appEnvironment
+  @Dependency(\.date.now) var now
 
   public init() {}
 
   public var body: some ReducerOf<Self> {
-    Scope(state: \.onboarding, action: \.onboarding) {
-      OnboardingFeature()
-    }
-    Scope(state: \.apartmentsList, action: \.apartmentsList) {
-      ApartmentsListFeature()
-    }
+    Scope(state: \.onboarding, action: \.onboarding) { OnboardingFeature() }
+    Scope(state: \.apartmentsList, action: \.apartmentsList) { ApartmentsListFeature() }
     Reduce { state, action in
       switch action {
       case .task, .bootstrapResolved, .appConfigResolved, .syncEventReceived:

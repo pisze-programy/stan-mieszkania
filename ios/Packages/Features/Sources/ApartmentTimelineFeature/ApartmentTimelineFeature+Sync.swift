@@ -13,6 +13,9 @@ extension ApartmentTimelineFeature {
       state.now = now
       state.quotaLimit = appConfigClient.loadCachedOrDefault().cloudMediaQuotaPerApartment
       return .merge(startSync(&state), listenToSyncEvents())
+    case .viewDisappeared:
+      state.isSyncing = false
+      return .cancel(id: CancelID.sync)
     case .pulledToRefresh:
       state.now = now
       return startSync(&state)
@@ -59,14 +62,14 @@ extension ApartmentTimelineFeature {
   func applySnapshot(_ snapshot: ApartmentTimelineSnapshot, to state: inout State) {
     state.apartment = snapshot.apartment
     state.sections = snapshot.sections
+    state.hasLoadedLocalSnapshot = true
+    state.showsAuthor = snapshot.showsAuthor
+    state.hasOtherMembers = snapshot.hasOtherMembers
     state.localUnsyncedCount = snapshot.localUnsyncedCount
     state.cloudMediaCount = snapshot.cloudMediaCount
   }
 
   func startSync(_ state: inout State) -> Effect<Action> {
-    guard !state.isSyncing else {
-      return .none
-    }
     state.isSyncing = true
     state.errorMessage = nil
     let apartmentId = state.apartmentId
@@ -94,6 +97,7 @@ extension ApartmentTimelineFeature {
         await send(.syncFailed(mapError(error)))
       }
     }
+    .cancellable(id: CancelID.sync, cancelInFlight: true)
   }
 
   private func listenToSyncEvents() -> Effect<Action> {
@@ -120,7 +124,8 @@ extension ApartmentTimelineFeature {
       state.quotaNoticeMessage = L10n.string("media.summary.quota.notice")
       return .merge(
         reloadLocalSnapshot(apartmentId: state.apartmentId),
-        .run { _ in await haptics.warning() }
+        .run { _ in await haptics.warning() },
+        scheduleQuotaNoticeDismiss()
       )
     case .apartmentSynced(let apartmentId, _):
       guard apartmentId == state.apartmentId else {
@@ -133,6 +138,14 @@ extension ApartmentTimelineFeature {
     case .forceUpdateRequired:
       return .none
     }
+  }
+
+  private func scheduleQuotaNoticeDismiss() -> Effect<Action> {
+    .run { send in
+      try await clock.sleep(for: ApartmentTimelineConstants.quotaToastAutoDismissDelay)
+      await send(.dismissQuotaNotice)
+    }
+    .cancellable(id: CancelID.quotaNoticeDismiss, cancelInFlight: true)
   }
 
   private func startSyncAllLocal(_ state: inout State) -> Effect<Action> {

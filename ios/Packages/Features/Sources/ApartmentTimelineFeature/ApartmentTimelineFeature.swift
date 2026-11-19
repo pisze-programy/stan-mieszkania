@@ -15,6 +15,9 @@ public struct ApartmentTimelineFeature: Sendable {
     public let apartmentId: String
     public var apartment: Apartment?
     public var sections: [TimelineDaySection]
+    public var hasLoadedLocalSnapshot: Bool
+    public var showsAuthor: Bool
+    public var hasOtherMembers: Bool
     public var localUnsyncedCount: Int
     public var cloudMediaCount: Int
     public var quotaLimit: Int
@@ -43,6 +46,9 @@ public struct ApartmentTimelineFeature: Sendable {
       apartmentId: String,
       apartment: Apartment? = nil,
       sections: [TimelineDaySection] = [],
+      hasLoadedLocalSnapshot: Bool = false,
+      showsAuthor: Bool = false,
+      hasOtherMembers: Bool = false,
       localUnsyncedCount: Int = 0,
       cloudMediaCount: Int = 0,
       quotaLimit: Int = ContractConstants.defaultCloudMediaQuotaPerApartment,
@@ -61,6 +67,9 @@ public struct ApartmentTimelineFeature: Sendable {
       self.apartmentId = apartmentId
       self.apartment = apartment
       self.sections = sections
+      self.hasLoadedLocalSnapshot = hasLoadedLocalSnapshot
+      self.showsAuthor = showsAuthor
+      self.hasOtherMembers = hasOtherMembers
       self.localUnsyncedCount = localUnsyncedCount
       self.cloudMediaCount = cloudMediaCount
       self.quotaLimit = quotaLimit
@@ -80,6 +89,7 @@ public struct ApartmentTimelineFeature: Sendable {
 
   public enum Action: Equatable, Sendable {
     case task
+    case viewDisappeared
     case pulledToRefresh
     case reloadLocalState
     case localSnapshotLoaded(ApartmentTimelineSnapshot)
@@ -123,7 +133,9 @@ public struct ApartmentTimelineFeature: Sendable {
   }
 
   enum CancelID: Hashable, Sendable {
+    case sync
     case syncEvents
+    case quotaNoticeDismiss
   }
 
   @Dependency(\.defaultDatabase) var database
@@ -136,22 +148,23 @@ public struct ApartmentTimelineFeature: Sendable {
   @Dependency(\.calendar) var calendar
   @Dependency(\.timeZone) var timeZone
   @Dependency(\.idGenerator) var idGenerator
+  @Dependency(\.continuousClock) var clock
 
   public init() {}
 
   public var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .task, .pulledToRefresh, .reloadLocalState, .localSnapshotLoaded, .syncCompleted,
-        .syncFailed, .syncEventReceived, .syncAllLocalTapped, .syncAllLocalCompleted,
-        .syncAllLocalFailed:
+      case .task, .viewDisappeared, .pulledToRefresh, .reloadLocalState, .localSnapshotLoaded,
+        .syncCompleted, .syncFailed, .syncEventReceived, .syncAllLocalTapped,
+        .syncAllLocalCompleted, .syncAllLocalFailed:
         return handleSyncAction(&state, action: action)
       case .dismissError:
         state.errorMessage = nil
         return .none
       case .dismissQuotaNotice:
         state.quotaNoticeMessage = nil
-        return .none
+        return .cancel(id: CancelID.quotaNoticeDismiss)
       case .mediaTapped(let mediaId):
         return .send(.delegate(.didSelectMedia(mediaId: mediaId)))
       case .shareTapped:

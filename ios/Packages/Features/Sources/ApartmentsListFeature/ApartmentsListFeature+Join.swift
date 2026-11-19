@@ -22,11 +22,17 @@ extension ApartmentsListFeature {
       state.joinSheet = nil
       state.currentUser = user
       state.items = items
+      let selectEffect: Effect<Action> =
+        if let item = items.first(where: { $0.id == apartmentId }) {
+          .send(.delegate(.didSelectApartment(item)))
+        } else {
+          .none
+        }
       return .merge(
         .run { _ in
           await haptics.actionSucceeded()
         },
-        .send(.delegate(.didSelectApartment(apartmentId)))
+        selectEffect
       )
     case .joinFailed(let message):
       state.joinSheet?.isJoining = false

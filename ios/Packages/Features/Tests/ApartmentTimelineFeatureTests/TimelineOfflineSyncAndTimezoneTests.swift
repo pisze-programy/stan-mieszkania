@@ -42,6 +42,7 @@ struct TimelineOfflineSyncAndTimezoneTests {
     }
     await store.receive(.localSnapshotLoaded(expectedSnapshot)) {
       $0.apartment = expectedSnapshot.apartment
+      $0.hasLoadedLocalSnapshot = true
     }
     await store.receive(.syncCompleted(expectedSnapshot)) {
       $0.isSyncing = false
@@ -126,6 +127,7 @@ struct TimelineOfflineSyncAndTimezoneTests {
     }
     await store.receive(.localSnapshotLoaded(expectedSnapshot)) {
       $0.apartment = expectedSnapshot.apartment
+      $0.hasLoadedLocalSnapshot = true
     }
     #expect(store.state.errorMessage == nil)
   }
