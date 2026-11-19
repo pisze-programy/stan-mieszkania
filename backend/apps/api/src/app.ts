@@ -22,6 +22,7 @@ import { createEntriesRoutes } from './modules/entries';
 import { createIdentityRoutes } from './modules/identity';
 import { createLocalStorageRoutes, createMediaRoutes } from './modules/media';
 import { createMembershipRoutes } from './modules/membership';
+import { createSyncRoutes } from './modules/sync';
 
 export interface CreateAppOptions {
   readonly overrides?: RequestContainerOverrides;
@@ -118,6 +119,10 @@ export function createApp(options: CreateAppOptions = {}): OpenAPIHono<AppHonoEn
   app.route(
     '/v1',
     createAccountDeletionRoutes<AppHonoEnv>((c) => c.get('container').deleteMyAccount),
+  );
+  app.route(
+    '/v1',
+    createSyncRoutes<AppHonoEnv>((c) => c.get('container').sync),
   );
   app.route(
     '/v1',

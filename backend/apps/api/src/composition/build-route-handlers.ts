@@ -42,6 +42,12 @@ import {
   type MembershipRepository,
   type MembershipRouteHandlers,
 } from '../modules/membership';
+import {
+  createListApartmentChangesFeedUseCase,
+  createListMyApartmentsSyncUseCase,
+  type SyncRepository,
+  type SyncRouteHandlers,
+} from '../modules/sync';
 
 export interface BuildModuleHandlersInput {
   readonly appConfig: AppConfig;
@@ -51,6 +57,7 @@ export interface BuildModuleHandlersInput {
   readonly membershipRepository: MembershipRepository;
   readonly mediaRepository: MediaRepository;
   readonly entryRepository: EntryRepository;
+  readonly syncRepository: SyncRepository;
   readonly inviteRateLimiter: InviteCodeRateLimiterPort;
   readonly objectStorage: ObjectStoragePort;
   readonly mediaCleanup: MediaCleanupPort;
@@ -62,6 +69,7 @@ export interface ModuleHandlersBundle {
   readonly membership: MembershipRouteHandlers;
   readonly media: MediaRouteHandlers;
   readonly entries: EntriesRouteHandlers;
+  readonly sync: SyncRouteHandlers;
   readonly localStorage: LocalStorageHandlers;
 }
 
@@ -74,6 +82,7 @@ export function buildModuleRouteHandlers(input: BuildModuleHandlersInput): Modul
     membershipRepository,
     mediaRepository,
     entryRepository,
+    syncRepository,
     inviteRateLimiter,
     objectStorage,
     mediaCleanup,
@@ -127,6 +136,10 @@ export function buildModuleRouteHandlers(input: BuildModuleHandlersInput): Modul
       createEntry: createCreateEntryUseCase({ entryRepository, clock }),
       listEntries: createListMediaEntriesUseCase({ entryRepository }),
       retractEntry: createRetractEntryUseCase({ entryRepository, clock }),
+    },
+    sync: {
+      listApartmentChanges: createListApartmentChangesFeedUseCase({ syncRepository }),
+      listMyApartmentsSync: createListMyApartmentsSyncUseCase({ syncRepository }),
     },
     localStorage: {
       storageMode: appConfig.storageMode,

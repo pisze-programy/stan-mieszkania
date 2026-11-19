@@ -30,6 +30,7 @@ import type {
   MembershipRepository,
   MembershipRouteHandlers,
 } from '../modules/membership';
+import type { SyncRepository, SyncRouteHandlers } from '../modules/sync';
 
 export interface AppBindings {
   readonly DB: D1Database;
@@ -59,6 +60,7 @@ export interface RequestContainer {
   readonly membershipRepository: MembershipRepository;
   readonly mediaRepository: MediaRepository;
   readonly entryRepository: EntryRepository;
+  readonly syncRepository: SyncRepository;
   readonly accountDeletionRepository: AccountDeletionRepository;
   readonly inviteRateLimiter: InviteCodeRateLimiterPort;
   readonly objectStorage: ObjectStoragePort;
@@ -73,6 +75,7 @@ export interface RequestContainer {
   readonly membership: MembershipRouteHandlers;
   readonly media: MediaRouteHandlers;
   readonly entries: EntriesRouteHandlers;
+  readonly sync: SyncRouteHandlers;
   readonly localStorage: LocalStorageHandlers;
 }
 

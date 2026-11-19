@@ -51,6 +51,7 @@ import {
   type InviteCodeRateLimiterPort,
   type MembershipRepository,
 } from '../modules/membership';
+import { createD1SyncRepository, type SyncRepository } from '../modules/sync';
 import { buildModuleRouteHandlers } from './build-route-handlers';
 import type { RequestContainer } from './hono-variables';
 
@@ -63,6 +64,7 @@ export interface RequestContainerOverrides {
   readonly membershipRepository?: MembershipRepository;
   readonly mediaRepository?: MediaRepository;
   readonly entryRepository?: EntryRepository;
+  readonly syncRepository?: SyncRepository;
   readonly accountDeletionRepository?: AccountDeletionRepository;
   readonly inviteRateLimiter?: InviteCodeRateLimiterPort;
   readonly objectStorage?: ObjectStoragePort;
@@ -98,6 +100,7 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     input.overrides?.membershipRepository ?? createD1MembershipRepository(input.db);
   const mediaRepository = input.overrides?.mediaRepository ?? createD1MediaRepository(input.db);
   const entryRepository = input.overrides?.entryRepository ?? createD1EntryRepository(input.db);
+  const syncRepository = input.overrides?.syncRepository ?? createD1SyncRepository(input.db);
   const accountDeletionRepository =
     input.overrides?.accountDeletionRepository ?? createD1AccountDeletionRepository(input.db);
 
@@ -166,6 +169,7 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     membershipRepository,
     mediaRepository,
     entryRepository,
+    syncRepository,
     inviteRateLimiter,
     objectStorage,
     mediaCleanup,
@@ -182,6 +186,7 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     membershipRepository,
     mediaRepository,
     entryRepository,
+    syncRepository,
     accountDeletionRepository,
     inviteRateLimiter,
     objectStorage,

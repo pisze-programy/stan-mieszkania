@@ -1,6 +1,7 @@
 import { HTTP_STATUS } from '@stanmieszkania/http-contracts';
 import { ENTRY_ERROR_HTTP_MAP, ENTRY_HTTP_ERROR_CODES } from './entries-error-map';
 import { MEDIA_ERROR_HTTP_MAP, MEDIA_HTTP_ERROR_CODES } from './media-error-map';
+import { SYNC_ERROR_HTTP_MAP, SYNC_HTTP_ERROR_CODES } from './sync-error-map';
 
 export const COMMON_ERROR_CODES = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
@@ -36,6 +37,7 @@ export const COMMON_ERROR_CODES = {
   INVALID_APPLE_AUTHORIZATION_CODE: 'INVALID_APPLE_AUTHORIZATION_CODE',
   ...MEDIA_HTTP_ERROR_CODES,
   ...ENTRY_HTTP_ERROR_CODES,
+  ...SYNC_HTTP_ERROR_CODES,
 } as const;
 
 export type HttpErrorStatusCode =
@@ -175,6 +177,7 @@ export const ERROR_CODE_HTTP_MAP: Readonly<Record<string, HttpErrorMappingEntry>
   },
   ...MEDIA_ERROR_HTTP_MAP,
   ...ENTRY_ERROR_HTTP_MAP,
+  ...SYNC_ERROR_HTTP_MAP,
 };
 
 export const FALLBACK_HTTP_ERROR: HttpErrorMappingEntry = {
