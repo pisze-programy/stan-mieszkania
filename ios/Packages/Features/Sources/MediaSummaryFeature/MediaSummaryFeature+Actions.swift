@@ -64,7 +64,7 @@ extension MediaSummaryFeature {
   }
 
   func updateDescription(_ state: inout State, value: String) -> Effect<Action> {
-    guard state.pages.indices.contains(state.selectedIndex) else {
+    guard !state.isSaving, state.pages.indices.contains(state.selectedIndex) else {
       return .none
     }
     state.pages[state.selectedIndex].description = value

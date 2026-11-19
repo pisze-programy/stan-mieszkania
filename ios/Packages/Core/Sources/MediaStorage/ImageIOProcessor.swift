@@ -131,9 +131,10 @@ enum ImageIOProcessor: Sendable {
     preservedMetadata: [CFString: Any],
     compression: JpegCompressionSettings
   ) throws -> Data {
+    let opaqueImage = OpaqueImageConverter.makeOpaqueIfNeeded(cgImage)
     var quality = compression.quality
     var lastData = try encodeJpeg(
-      cgImage: cgImage,
+      cgImage: opaqueImage,
       metadata: preservedMetadata,
       quality: quality
     )
@@ -150,7 +151,7 @@ enum ImageIOProcessor: Sendable {
         quality - MediaStorageConstants.qualityStepDecrement
       )
       lastData = try encodeJpeg(
-        cgImage: cgImage,
+        cgImage: opaqueImage,
         metadata: preservedMetadata,
         quality: quality
       )

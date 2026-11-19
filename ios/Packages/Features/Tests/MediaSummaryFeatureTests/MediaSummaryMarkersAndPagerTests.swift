@@ -122,6 +122,24 @@ struct MediaSummaryMarkersAndPagerTests {
   }
 
   @MainActor
+  @Test("Ignores late descriptionChanged updates while save is in flight")
+  func ignoresDescriptionChangedWhileSaving() async {
+    var initialState = MediaSummaryFeature.State(
+      apartmentId: MediaSummaryTestFixtures.apartmentId,
+      drafts: [MediaSummaryTestFixtures.makeDraft()],
+      origin: .camera,
+      currentUser: MediaSummaryTestFixtures.author,
+      isSaving: true
+    )
+    initialState.pages[0].description = "Rysa"
+    let store = TestStore(initialState: initialState) {
+      MediaSummaryFeature()
+    }
+    await store.send(.descriptionChanged("Rysa po zamknieciu"))
+    #expect(store.state.pages[0].description == "Rysa")
+  }
+
+  @MainActor
   private func makeStore(
     drafts: [CapturedPhotoDraft],
     origin: CaptureSourceKind,

@@ -1,6 +1,7 @@
 import DesignSystem
 import Foundation
 import ImageIO
+import MediaStorage
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -99,7 +100,8 @@ import UniformTypeIdentifiers
             Self.cgImageOrientation(for: image.imageOrientation).rawValue
         }
         properties[kCGImageDestinationLossyCompressionQuality] = CaptureConstants.jpegExportQuality
-        CGImageDestinationAddImage(destination, cgImage, properties as CFDictionary)
+        let opaqueImage = OpaqueImageConverter.makeOpaqueIfNeeded(cgImage)
+        CGImageDestinationAddImage(destination, opaqueImage, properties as CFDictionary)
         guard CGImageDestinationFinalize(destination) else {
           return nil
         }

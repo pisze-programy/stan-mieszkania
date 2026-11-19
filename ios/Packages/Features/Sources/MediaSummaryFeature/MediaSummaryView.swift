@@ -5,16 +5,33 @@ import SwiftUI
 
 public struct MediaSummaryView: View {
   @Bindable private var store: StoreOf<MediaSummaryFeature>
+  @FocusState private var isDescriptionFocused: Bool
+  @State private var isClosing = false
 
   public init(store: StoreOf<MediaSummaryFeature>) {
     self.store = store
+  }
+
+  private var isDescriptionInteractive: Bool {
+    !store.isSaving && !isClosing
   }
 
   public var body: some View {
     VStack(spacing: 0) {
       ScrollView {
         VStack(alignment: .leading, spacing: Spacing.md) {
-          retakeHeaderBar
+          SummaryHeaderBarView(
+            isSaving: store.isSaving,
+            isMultiPhoto: store.isMultiPhoto,
+            selectedIndex: store.selectedIndex,
+            pageCount: store.pages.count,
+            onRetake: {
+              isDescriptionFocused = false
+              isClosing = true
+              store.send(.retakeTapped)
+            },
+            onSelectPage: { store.send(.pageSelected($0)) }
+          )
 
           if let errorMessage = store.errorMessage {
             errorBanner(errorMessage)
@@ -33,7 +50,15 @@ public struct MediaSummaryView: View {
               onSelectMarker: { store.send(.markerSelected($0)) },
               onDeleteMarker: { store.send(.markerDeleted($0)) }
             )
-            descriptionSection(for: page)
+            SummaryDescriptionSectionView(
+              description: page.description,
+              markers: page.markers,
+              selectedMarkerNumber: page.selectedMarkerNumber,
+              authorColorHex: store.currentUser.color,
+              isInteractive: isDescriptionInteractive,
+              isFocused: $isDescriptionFocused,
+              onDescriptionChanged: { store.send(.descriptionChanged($0)) }
+            )
           }
         }
         .padding(.horizontal, Spacing.md)
@@ -43,14 +68,31 @@ public struct MediaSummaryView: View {
       SummaryActionBarView(
         isSaving: store.isSaving,
         showsCaptureAnother: store.showsCaptureAnotherAction,
-        onSaveLocal: { store.send(.saveTapped(mode: .localOnly, captureAnother: false)) },
-        onSaveCloud: { store.send(.saveTapped(mode: .cloud, captureAnother: false)) },
-        onSaveAndCaptureNext: { store.send(.saveTapped(mode: .cloud, captureAnother: true)) }
+        onSaveLocal: { triggerSave(mode: .localOnly, captureAnother: false) },
+        onSaveCloud: { triggerSave(mode: .cloud, captureAnother: false) },
+        onSaveAndCaptureNext: { triggerSave(mode: .cloud, captureAnother: true) }
       )
+    }
+    .onChange(of: store.isSaving) { _, isSaving in
+      if isSaving {
+        isDescriptionFocused = false
+        isClosing = true
+      }
+    }
+    .onChange(of: store.errorMessage) { _, errorMessage in
+      if errorMessage != nil {
+        isClosing = false
+      }
+    }
+    .onDisappear {
+      isDescriptionFocused = false
+      isClosing = true
     }
     .toolbar {
       ToolbarItem(placement: .cancellationAction) {
         Button(L10n.string("apartments.create.cancel.cta")) {
+          isDescriptionFocused = false
+          isClosing = true
           store.send(.cancelTapped)
         }
         .disabled(store.isSaving)
@@ -58,48 +100,13 @@ public struct MediaSummaryView: View {
     }
   }
 
-  private var retakeHeaderBar: some View {
-    HStack {
-      Button {
-        store.send(.retakeTapped)
-      } label: {
-        Label(L10n.string("capture.retake.cta"), systemImage: "arrow.counterclockwise")
-          .font(Typography.callout.weight(.medium))
-      }
-      .buttonStyle(.glass)
-      .disabled(store.isSaving)
-
-      Spacer()
-
-      if store.isMultiPhoto {
-        pagerControls
-      }
+  private func triggerSave(mode: MediaSummarySaveMode, captureAnother: Bool) {
+    isDescriptionFocused = false
+    isClosing = true
+    store.send(.saveTapped(mode: mode, captureAnother: captureAnother))
+    if !store.isSaving {
+      isClosing = false
     }
-  }
-
-  private var pagerControls: some View {
-    HStack(spacing: Spacing.xs) {
-      Button {
-        store.send(.pageSelected(store.selectedIndex - 1))
-      } label: {
-        Image(systemName: "chevron.left")
-      }
-      .disabled(store.selectedIndex <= 0)
-
-      Text("\(store.selectedIndex + 1)/\(store.pages.count)")
-        .font(Typography.badge)
-        .monospacedDigit()
-
-      Button {
-        store.send(.pageSelected(store.selectedIndex + 1))
-      } label: {
-        Image(systemName: "chevron.right")
-      }
-      .disabled(store.selectedIndex >= store.pages.count - 1)
-    }
-    .padding(.horizontal, Spacing.xs)
-    .padding(.vertical, Spacing.xxs)
-    .glassEffect(.regular, in: .capsule)
   }
 
   @ViewBuilder
@@ -108,7 +115,12 @@ public struct MediaSummaryView: View {
       TabView(
         selection: Binding(
           get: { store.selectedIndex },
-          set: { store.send(.pageSelected($0)) }
+          set: { newIndex in
+            guard isDescriptionInteractive, newIndex != store.selectedIndex else {
+              return
+            }
+            store.send(.pageSelected(newIndex))
+          }
         )
       ) {
         ForEach(Array(store.pages.enumerated()), id: \.element.id) { index, page in
@@ -148,36 +160,6 @@ public struct MediaSummaryView: View {
         source: page.draft.source,
         capturedAtFromImport: page.draft.capturedAtFromImport
       )
-    }
-  }
-
-  private func descriptionSection(for page: MediaSummaryPageState) -> some View {
-    VStack(alignment: .leading, spacing: Spacing.xs) {
-      TextField(
-        L10n.string("media.summary.description.placeholder"),
-        text: Binding(
-          get: { page.description },
-          set: { store.send(.descriptionChanged($0)) }
-        ),
-        axis: .vertical
-      )
-      .lineLimit(
-        MediaSummaryConstants
-          .descriptionLineRangeMin...MediaSummaryConstants.descriptionLineRangeMax
-      )
-      .padding(Spacing.sm)
-      .glassEffect(.regular, in: .rect(cornerRadius: CornerRadius.md))
-
-      if !page.description.isEmpty && !page.markers.isEmpty {
-        GlassCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
-          HighlightedEntryTextView(
-            text: page.description,
-            selectedMarkerNumber: page.selectedMarkerNumber,
-            authorColorHex: store.currentUser.color
-          )
-          .frame(maxWidth: .infinity, alignment: .leading)
-        }
-      }
     }
   }
 
