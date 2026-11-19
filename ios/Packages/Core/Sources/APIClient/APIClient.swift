@@ -72,45 +72,91 @@ public struct APIClient: Sendable {
     return makeClient(executor: executor)
   }
 
-  private static func makeClient(executor: LiveAPIClientExecutor) -> Self {
-    Self(
-      getPublicConfig: { try await executor.getPublicConfig() },
-      getMyProfile: { try await executor.getMyProfile() },
-      updateMyProfile: { try await executor.updateMyProfile(displayName: $0) },
-      deleteMyAccount: { try await executor.deleteMyAccount(appleAuthorizationCode: $0) },
-      putApartment: { try await executor.putApartment($0) },
-      listApartments: { try await executor.listApartments() },
-      getApartment: { try await executor.getApartment(apartmentId: $0) },
-      updateApartment: { try await executor.updateApartment($0) },
-      resetApartmentInviteCode: { try await executor.resetApartmentInviteCode(apartmentId: $0) },
-      deleteOrLeaveApartment: { try await executor.deleteOrLeaveApartment(apartmentId: $0) },
-      listApartmentHistory: { try await executor.listApartmentHistory(apartmentId: $0) },
-      joinApartmentByCode: { try await executor.joinApartmentByCode(inviteCode: $0) },
-      listApartmentMembers: { try await executor.listApartmentMembers(apartmentId: $0) },
-      revokeApartmentMember: {
-        try await executor.revokeApartmentMember(apartmentId: $0, userId: $1)
-      },
-      leaveApartment: { try await executor.leaveApartment(apartmentId: $0) },
-      initMediaUpload: { try await executor.initMediaUpload($0) },
-      confirmMediaUpload: { try await executor.confirmMediaUpload(apartmentId: $0, mediaId: $1) },
-      listApartmentMedia: {
-        try await executor.listApartmentMedia(apartmentId: $0, after: $1, limit: $2)
-      },
-      getMedia: { try await executor.getMedia(apartmentId: $0, mediaId: $1) },
-      getMediaDownloadUrl: {
-        try await executor.getMediaDownloadUrl(apartmentId: $0, mediaId: $1)
-      },
-      softDeleteMedia: { try await executor.softDeleteMedia(apartmentId: $0, mediaId: $1) },
-      putMediaEntry: { try await executor.putMediaEntry($0) },
-      listMediaEntries: { try await executor.listMediaEntries(apartmentId: $0, mediaId: $1) },
-      retractMediaEntry: {
-        try await executor.retractMediaEntry(apartmentId: $0, mediaId: $1, entryId: $2)
-      },
-      listApartmentChanges: {
-        try await executor.listApartmentChanges(apartmentId: $0, after: $1, limit: $2)
-      },
-      listMyApartmentsSync: { try await executor.listMyApartmentsSync() }
-    )
+  private static func run<T: Sendable>(_ op: () async throws -> T) async throws -> T {
+    try await TransportErrorMapper.run(op)
+  }
+
+  private static func makeClient(executor exec: LiveAPIClientExecutor) -> Self {
+    var api = Self()
+    bindIdentityAndApartmentEndpoints(&api, executor: exec)
+    bindMediaAndSyncEndpoints(&api, executor: exec)
+    return api
+  }
+
+  private static func bindIdentityAndApartmentEndpoints(
+    _ api: inout Self,
+    executor exec: LiveAPIClientExecutor
+  ) {
+    api.getPublicConfig = { try await run { try await exec.getPublicConfig() } }
+    api.getMyProfile = { try await run { try await exec.getMyProfile() } }
+    api.updateMyProfile = { name in
+      try await run { try await exec.updateMyProfile(displayName: name) }
+    }
+    api.deleteMyAccount = { code in
+      try await run { try await exec.deleteMyAccount(appleAuthorizationCode: code) }
+    }
+    api.putApartment = { req in try await run { try await exec.putApartment(req) } }
+    api.listApartments = { try await run { try await exec.listApartments() } }
+    api.getApartment = { id in try await run { try await exec.getApartment(apartmentId: id) } }
+    api.updateApartment = { req in try await run { try await exec.updateApartment(req) } }
+    api.resetApartmentInviteCode = { id in
+      try await run { try await exec.resetApartmentInviteCode(apartmentId: id) }
+    }
+    api.deleteOrLeaveApartment = { id in
+      try await run { try await exec.deleteOrLeaveApartment(apartmentId: id) }
+    }
+    api.listApartmentHistory = { id in
+      try await run { try await exec.listApartmentHistory(apartmentId: id) }
+    }
+    api.joinApartmentByCode = { code in
+      try await run { try await exec.joinApartmentByCode(inviteCode: code) }
+    }
+    api.listApartmentMembers = { id in
+      try await run { try await exec.listApartmentMembers(apartmentId: id) }
+    }
+    api.revokeApartmentMember = { aptId, userId in
+      try await run { try await exec.revokeApartmentMember(apartmentId: aptId, userId: userId) }
+    }
+    api.leaveApartment = { id in try await run { try await exec.leaveApartment(apartmentId: id) } }
+  }
+
+  private static func bindMediaAndSyncEndpoints(
+    _ api: inout Self,
+    executor exec: LiveAPIClientExecutor
+  ) {
+    api.initMediaUpload = { req in try await run { try await exec.initMediaUpload(req) } }
+    api.confirmMediaUpload = { aptId, mediaId in
+      try await run { try await exec.confirmMediaUpload(apartmentId: aptId, mediaId: mediaId) }
+    }
+    api.listApartmentMedia = { aptId, after, limit in
+      try await run {
+        try await exec.listApartmentMedia(apartmentId: aptId, after: after, limit: limit)
+      }
+    }
+    api.getMedia = { aptId, mediaId in
+      try await run { try await exec.getMedia(apartmentId: aptId, mediaId: mediaId) }
+    }
+    api.getMediaDownloadUrl = { aptId, mediaId in
+      try await run { try await exec.getMediaDownloadUrl(apartmentId: aptId, mediaId: mediaId) }
+    }
+    api.softDeleteMedia = { aptId, mediaId in
+      try await run { try await exec.softDeleteMedia(apartmentId: aptId, mediaId: mediaId) }
+    }
+    api.putMediaEntry = { req in try await run { try await exec.putMediaEntry(req) } }
+    api.listMediaEntries = { aptId, mediaId in
+      try await run { try await exec.listMediaEntries(apartmentId: aptId, mediaId: mediaId) }
+    }
+    api.retractMediaEntry = { aptId, mediaId, entryId in
+      try await run {
+        try await exec.retractMediaEntry(apartmentId: aptId, mediaId: mediaId, entryId: entryId)
+      }
+    }
+    api.listApartmentChanges = { aptId, after, limit in
+      try await run {
+        try await exec.listApartmentChanges(apartmentId: aptId, after: after, limit: limit)
+      }
+    }
+    api.listMyApartmentsSync = { try await run { try await exec.listMyApartmentsSync() } }
   }
 }
 

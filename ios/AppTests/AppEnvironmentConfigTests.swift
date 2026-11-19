@@ -6,7 +6,7 @@ import Testing
 
 @Suite("AppEnvironmentConfig & Info.plist Tests")
 struct AppEnvironmentConfigTests {
-  private static let expectedDebugURL = "http://127.0.0.1:8787"
+  private static let expectedDebugURL = "http://127.0.0.1:8788"
   private static let expectedVersion = "1.0.0"
   private static let higherMinVersion = "1.0.1"
   private static let cameraUsageKey = "NSCameraUsageDescription"

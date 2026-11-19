@@ -138,12 +138,9 @@ public struct OnboardingFeature: Sendable {
   }
 
   private func mapErrorMessage(_ error: any Error) -> String {
-    if let problem = error as? APIProblemError {
-      return L10n.errorMessage(for: problem.code)
-    }
     if error is AuthClientError {
       return L10n.errorMessage(for: .authTokenInvalid)
     }
-    return L10n.errorMessage(for: .unknown("ONBOARDING_AUTH_ERROR"))
+    return L10n.errorMessage(for: error)
   }
 }

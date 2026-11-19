@@ -117,4 +117,25 @@ struct APIClientProblemTests {
       #expect(error.detail == "Added in newer backend deployment")
     }
   }
+
+  @Test("Maps ClientError wrapping URLError into NETWORK_UNAVAILABLE APIProblemError")
+  func mapsTransportURLErrorsToNetworkUnavailable() async throws {
+    let baseURL = try #require(URL(string: MockTransportConstants.baseURLString))
+    let codes: [URLError.Code] = [.cannotConnectToHost, .notConnectedToInternet, .timedOut]
+
+    for urlCode in codes {
+      let transport = MockClientTransport { _ in
+        throw URLError(urlCode)
+      }
+      let client = APIClient.live(serverURL: baseURL, transport: transport, tokenProvider: { nil })
+
+      do {
+        _ = try await client.getMyProfile()
+        Issue.record("Expected APIProblemError.networkUnavailable for \(urlCode)")
+      } catch let error as APIProblemError {
+        #expect(error.isNetworkUnavailable)
+        #expect(error.code == .unknown(APIClientConstants.networkUnavailableErrorCode))
+      }
+    }
+  }
 }

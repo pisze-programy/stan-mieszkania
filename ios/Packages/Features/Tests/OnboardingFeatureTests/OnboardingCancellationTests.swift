@@ -1,7 +1,9 @@
+import APIClient
 import AuthClient
 import ComposableArchitecture
 import Database
 import DesignSystem
+import Foundation
 import Testing
 
 @testable import OnboardingFeature
@@ -50,5 +52,39 @@ struct OnboardingCancellationTests {
     #expect(store.state.errorMessage == nil)
     #expect(await recorder.clearSessionCount == 0)
     #expect(await recorder.errorHapticCount == 0)
+  }
+
+  @MainActor
+  @Test("Maps transport URLError during profile fetch to NETWORK_UNAVAILABLE message")
+  func transportURLErrorShowsNetworkUnavailableMessage() async throws {
+    let database = try makeInMemoryDatabase()
+    let expectedMessage = L10n.string("error.NETWORK_UNAVAILABLE")
+
+    let store = TestStore(
+      initialState: OnboardingFeature.State(
+        isLocalDevLoginEnabled: true,
+        isLocalDevSheetPresented: true
+      )
+    ) {
+      OnboardingFeature()
+    } withDependencies: {
+      $0.defaultDatabase = database
+      $0.authClient.signInLocalDev = { uid, _ in
+        AuthSession(firebaseUid: uid, bearerToken: "dev:\(uid)")
+      }
+      $0.authClient.clearSession = {}
+      $0.apiClient.getMyProfile = {
+        throw URLError(.cannotConnectToHost)
+      }
+    }
+
+    await store.send(.localDevSignInSubmitted(uid: "local-owner", displayName: nil)) {
+      $0.isSigningIn = true
+      $0.isLocalDevSheetPresented = false
+    }
+    await store.receive(.authFailed(expectedMessage)) {
+      $0.isSigningIn = false
+      $0.errorMessage = expectedMessage
+    }
   }
 }

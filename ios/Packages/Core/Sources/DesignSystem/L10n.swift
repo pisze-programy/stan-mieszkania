@@ -5,10 +5,13 @@ public let designSystemBundle: Bundle = .module
 
 public enum L10n: Sendable {
   public static let polishLocale: Locale = Locale(identifier: "pl_PL")
+  public static let networkUnavailableErrorCode: String = "NETWORK_UNAVAILABLE"
 
   private static let photoCountKey: String = "apartments.card.photo.count"
   private static let errorKeyPrefix: String = "error."
+  private static let networkUnavailableKey: String = "error.NETWORK_UNAVAILABLE"
   private static let unknownErrorKey: String = "error.UNKNOWN"
+  private static let maxUnderlyingErrorDepth: Int = 4
   private static let missingSentinel: String = "__L10N_MISSING__"
   private static let xcstringsName: String = "Localizable"
   private static let xcstringsExtension: String = "xcstrings"
@@ -60,6 +63,8 @@ public enum L10n: Sendable {
     switch code {
     case .known(let domainCode):
       return string("\(errorKeyPrefix)\(domainCode.rawValue)")
+    case .unknown(let rawCode) where rawCode == networkUnavailableErrorCode:
+      return string(networkUnavailableKey)
     case .unknown:
       return string(unknownErrorKey)
     }
@@ -67,6 +72,45 @@ public enum L10n: Sendable {
 
   public static func errorMessage(for code: DomainErrorCode) -> String {
     errorMessage(for: .known(code))
+  }
+
+  public static func errorMessage(for error: any Error) -> String {
+    if let convertible = error as? any ServerErrorCodeConvertible {
+      return errorMessage(for: convertible.serverErrorCode)
+    }
+    if isNetworkUnavailableError(error) {
+      return string(networkUnavailableKey)
+    }
+    return string(unknownErrorKey)
+  }
+
+  public static func isNetworkUnavailableError(_ error: any Error) -> Bool {
+    var current: (any Error)? = error
+    var depth = 0
+    while let candidate = current, depth < maxUnderlyingErrorDepth {
+      if let urlError = candidate as? URLError, isConnectivityCode(urlError.code) {
+        return true
+      }
+      let nsError = candidate as NSError
+      let urlCode = URLError.Code(rawValue: nsError.code)
+      if nsError.domain == NSURLErrorDomain, isConnectivityCode(urlCode) {
+        return true
+      }
+      current = nsError.userInfo[NSUnderlyingErrorKey] as? any Error
+      depth += 1
+    }
+    return false
+  }
+
+  private static func isConnectivityCode(_ code: URLError.Code) -> Bool {
+    switch code {
+    case .notConnectedToInternet, .cannotConnectToHost, .cannotFindHost, .dnsLookupFailed,
+      .networkConnectionLost, .timedOut, .dataNotAllowed, .internationalRoamingOff,
+      .callIsActive, .secureConnectionFailed, .cannotLoadFromNetwork:
+      return true
+    default:
+      return false
+    }
   }
 
   private static func selectPolishPlural(count: Int, forms: PluralVariations) -> String? {

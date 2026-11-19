@@ -94,11 +94,7 @@ extension MediaDetailFeature {
         let updated = try MediaDetailStore.fetchSnapshot(mediaId: mediaId, from: database)
         await send(.entryDeleteSucceeded(updated, shouldSyncOutbox: shouldSyncOutbox))
       } catch {
-        await send(
-          .entryDeleteFailed(
-            L10n.errorMessage(for: .unknown(MediaDetailConstants.unknownErrorCode))
-          )
-        )
+        await send(.entryDeleteFailed(L10n.errorMessage(for: error)))
       }
     }
   }
@@ -179,11 +175,7 @@ extension MediaDetailFeature {
           await send(.mediaSoftDeleteSucceeded(updated))
         }
       } catch {
-        await send(
-          .mediaDeleteFailed(
-            L10n.errorMessage(for: .unknown(MediaDetailConstants.unknownErrorCode))
-          )
-        )
+        await send(.mediaDeleteFailed(L10n.errorMessage(for: error)))
       }
     }
   }

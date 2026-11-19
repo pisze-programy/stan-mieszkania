@@ -50,4 +50,23 @@ struct L10nTests {
     #expect(!unknownMessage.isEmpty)
     #expect(unknownMessage != "error.UNKNOWN")
   }
+
+  @Test("Maps NETWORK_UNAVAILABLE code and connectivity URLErrors to network unavailable message")
+  func mapsNetworkUnavailableErrors() {
+    let expected = L10n.string("error.NETWORK_UNAVAILABLE")
+    let unknown = L10n.string("error.UNKNOWN")
+    #expect(expected != unknown)
+    #expect(L10n.errorMessage(for: .unknown(L10n.networkUnavailableErrorCode)) == expected)
+    #expect(L10n.errorMessage(for: URLError(.cannotConnectToHost)) == expected)
+    #expect(L10n.errorMessage(for: URLError(.notConnectedToInternet)) == expected)
+    #expect(L10n.errorMessage(for: URLError(.timedOut)) == expected)
+
+    let wrapped = NSError(
+      domain: "TestWrapper",
+      code: 1,
+      userInfo: [NSUnderlyingErrorKey: URLError(.cannotConnectToHost)]
+    )
+    #expect(L10n.errorMessage(for: wrapped) == expected)
+    #expect(L10n.errorMessage(for: NSError(domain: "OtherDomain", code: 1)) == unknown)
+  }
 }

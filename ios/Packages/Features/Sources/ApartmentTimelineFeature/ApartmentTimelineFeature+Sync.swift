@@ -188,9 +188,6 @@ extension ApartmentTimelineFeature {
   }
 
   func mapError(_ error: any Error) -> String {
-    if let problem = error as? APIProblemError {
-      return L10n.errorMessage(for: problem.code)
-    }
-    return L10n.errorMessage(for: .unknown(ApartmentTimelineConstants.unknownErrorCode))
+    L10n.errorMessage(for: error)
   }
 }

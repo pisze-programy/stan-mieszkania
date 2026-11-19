@@ -162,10 +162,7 @@ extension ApartmentsListFeature {
     if error is MissingUserProfileError {
       return L10n.errorMessage(for: .userNotFound)
     }
-    if let problem = error as? APIProblemError {
-      return L10n.errorMessage(for: problem.code)
-    }
-    return L10n.errorMessage(for: .unknown("APARTMENTS_LIST_ERROR"))
+    return L10n.errorMessage(for: error)
   }
 }
 

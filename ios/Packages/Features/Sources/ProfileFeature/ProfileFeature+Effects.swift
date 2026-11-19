@@ -120,9 +120,6 @@ extension ProfileFeature {
   }
 
   func mapError(_ error: any Error) -> String {
-    if let problem = error as? APIProblemError {
-      return L10n.errorMessage(for: problem.code)
-    }
-    return L10n.errorMessage(for: .unknown("PROFILE_ERROR"))
+    L10n.errorMessage(for: error)
   }
 }

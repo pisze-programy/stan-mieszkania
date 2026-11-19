@@ -184,9 +184,7 @@ extension MediaDetailFeature {
         let updated = try MediaDetailStore.fetchSnapshot(mediaId: mediaId, from: database)
         await send(.composerSucceeded(updated))
       } catch {
-        await send(
-          .composerFailed(L10n.errorMessage(for: .unknown(MediaDetailConstants.unknownErrorCode)))
-        )
+        await send(.composerFailed(L10n.errorMessage(for: error)))
       }
     }
   }

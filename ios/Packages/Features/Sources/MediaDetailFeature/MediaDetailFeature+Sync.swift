@@ -130,10 +130,7 @@ extension MediaDetailFeature {
         let updated = try MediaDetailStore.fetchSnapshot(mediaId: mediaId, from: database)
         await send(.uploadToCloudFinished(updated))
       } catch {
-        await send(
-          .uploadToCloudFailed(
-            L10n.errorMessage(for: .unknown(MediaDetailConstants.unknownErrorCode)))
-        )
+        await send(.uploadToCloudFailed(L10n.errorMessage(for: error)))
       }
     }
   }

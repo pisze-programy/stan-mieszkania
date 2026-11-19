@@ -10,6 +10,8 @@ public enum APIClientConstants: Sendable {
   public static let maxProblemBodyBytes: Int = 65_536
   public static let upgradeRequiredStatusCode: Int = 426
   public static let httpStatusErrorCodePrefix: String = "HTTP_"
+  public static let networkUnavailableErrorCode: String = "NETWORK_UNAVAILABLE"
+  public static let networkUnavailableTitle: String = "Network unavailable"
   public static let unexpectedResponseDetail: String = "Unexpected response from server"
   public static let invalidResponseURLDetail: String = "Invalid URL returned by server"
 }
