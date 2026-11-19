@@ -17,6 +17,7 @@ export const APARTMENT_COORDINATOR_HTTP_STATUS = {
 } as const;
 
 export const DEFAULT_LEASE_TTL_MS = 30_000;
+export const MIN_LEASE_WAIT_MS = 1;
 export const DEFAULT_ABANDONED_PENDING_UPLOAD_TTL_MS = 86_400_000;
 export const ORPHAN_PURGE_RETRY_DELAY_MS = 60_000;
 export const MEDIA_ABANDONED_CLEANED_OP = 'abandoned_cleaned';

@@ -13,6 +13,7 @@ import type {
   CoordinatorPersistedState,
   MaintenanceRunResult,
 } from './apartment-coordinator.types';
+import { LeaseLockQueue } from './lease-lock-queue';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -44,36 +45,22 @@ export class ApartmentCoordinator<
 > {
   private readonly ctx: ApartmentCoordinatorStateLike;
   private readonly env: ApartmentCoordinatorEnv<TStatement>;
-  private activeLease: { readonly token: string; readonly expiresAtMs: number } | null = null;
-  private leaseCounter = 0;
-  private readonly waiters: (() => void)[] = [];
+  private readonly lockQueue = new LeaseLockQueue();
 
   constructor(ctx: ApartmentCoordinatorStateLike, env: ApartmentCoordinatorEnv<TStatement>) {
     this.ctx = ctx;
     this.env = env;
   }
 
-  async acquireLock(
+  acquireLock(
     leaseTtlMs: number = DEFAULT_LEASE_TTL_MS,
     nowMs: number = Date.now(),
   ): Promise<string> {
-    while (this.activeLease !== null && this.activeLease.expiresAtMs > nowMs) {
-      await new Promise<void>((resolve) => {
-        this.waiters.push(resolve);
-      });
-      nowMs = Date.now();
-    }
-    this.leaseCounter += 1;
-    const token = `lease-${String(this.leaseCounter)}`;
-    this.activeLease = { token, expiresAtMs: nowMs + leaseTtlMs };
-    return token;
+    return this.lockQueue.acquire(leaseTtlMs, nowMs);
   }
 
   releaseLock(token: string): boolean {
-    if (this.activeLease === null || this.activeLease.token !== token) return false;
-    this.activeLease = null;
-    this.waiters.shift()?.();
-    return true;
+    return this.lockQueue.release(token);
   }
 
   async scheduleOrphanPurge(apartmentId: string, orphanDeleteAfterMs: number): Promise<void> {

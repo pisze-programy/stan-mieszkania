@@ -147,4 +147,17 @@ describe('ApartmentCoordinator Durable Object', () => {
     );
     expect(badPayloadRes.status).toBe(APARTMENT_COORDINATOR_HTTP_STATUS.BAD_REQUEST);
   });
+
+  it('wakes a queued waiter automatically when an un-released lease expires', async () => {
+    const storage = new InMemoryCoordinatorStorage();
+    const coordinator = new ApartmentCoordinator({ storage }, {});
+
+    const firstToken = await coordinator.acquireLock(25);
+    expect(firstToken).toBe('lease-1');
+
+    const secondToken = await coordinator.acquireLock(1_000);
+    expect(secondToken).toBe('lease-2');
+    expect(coordinator.releaseLock(firstToken)).toBe(false);
+    expect(coordinator.releaseLock(secondToken)).toBe(true);
+  });
 });

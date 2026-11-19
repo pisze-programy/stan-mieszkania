@@ -29,6 +29,7 @@ export async function loadDurableObjectManifestModules(
     'user-guard.durable-object',
     'apartment-coordinator.constants',
     'apartment-coordinator.maintenance',
+    'lease-lock-queue',
     'apartment-coordinator.durable-object',
   ] as const;
 
