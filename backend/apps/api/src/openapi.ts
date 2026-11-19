@@ -6,9 +6,9 @@ import { ACCOUNT_DELETION_ERROR_CODES } from './modules/account-deletion';
 import { APARTMENT_ERROR_CODES } from './modules/apartments';
 import { ENTRY_ERROR_CODES } from './modules/entries';
 import { IDENTITY_ERROR_CODES } from './modules/identity';
-import { MEDIA_ERROR_CODES } from './modules/media';
+import { MEDIA_ERROR_CODES, PresignedUrlDtoSchema } from './modules/media';
 import { MEMBERSHIP_ERROR_CODES } from './modules/membership';
-import { SYNC_ERROR_CODES } from './modules/sync';
+import { SYNC_ERROR_CODES, SyncChangePayloadSchema } from './modules/sync';
 
 export const OPENAPI_VERSION = '3.0.3';
 export const OPENAPI_API_VERSION = '1.0.0';
@@ -108,6 +108,8 @@ export function buildOpenApiDocument(): Record<string, unknown> {
     description: 'Firebase ID token (or local dev bearer token in AUTH_MODE=local)',
   });
   app.openAPIRegistry.register('DomainErrorCode', DomainErrorCodeSchema);
+  app.openAPIRegistry.register('PresignedUrl', PresignedUrlDtoSchema);
+  app.openAPIRegistry.register('SyncChangePayload', SyncChangePayloadSchema);
 
   const rawDoc = app.getOpenAPIDocument({
     openapi: OPENAPI_VERSION,
@@ -151,7 +153,29 @@ export function buildOpenApiDocument(): Record<string, unknown> {
   if (!isPlainRecord(normalized)) {
     throw new Error('Normalized OpenAPI document must be a plain object');
   }
+  enforceNullableRefProperty(normalized, 'HydratedSyncChange', 'payload', 'SyncChangePayload');
   return normalized;
+}
+
+// Work around zod-to-openapi dropping nullable on registered discriminatedUnion $ref properties.
+function enforceNullableRefProperty(
+  document: Record<string, unknown>,
+  ownerSchemaName: string,
+  propertyName: string,
+  targetRefName: string,
+): void {
+  const components = document['components'];
+  if (!isPlainRecord(components)) return;
+  const schemas = components['schemas'];
+  if (!isPlainRecord(schemas)) return;
+  const ownerSchema = schemas[ownerSchemaName];
+  if (!isPlainRecord(ownerSchema)) return;
+  const properties = ownerSchema['properties'];
+  if (!isPlainRecord(properties)) return;
+  properties[propertyName] = {
+    allOf: [{ $ref: `#/components/schemas/${targetRefName}` }],
+    nullable: true,
+  };
 }
 
 export function renderOpenApiYaml(): string {

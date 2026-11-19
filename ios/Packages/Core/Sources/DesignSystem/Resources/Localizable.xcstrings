@@ -19,7 +19,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twórz niezmienny, oparty na dowodach rejestr stanu mieszkania i chronij swoje prawa przy zwrocie kaucji."
+            "value": "Twórz niezmienny, oparty na dowodach rejestr stanu mieszkania i chroń swoje prawa przy zwrocie kaucji."
           }
         }
       }
@@ -193,9 +193,33 @@
       "extractionState": "manual",
       "localizations": {
         "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld zdjęć"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zdjęcie"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zdjęcia"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zdjęć"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zdjęć"
+                }
+              }
+            }
           }
         }
       }
@@ -404,7 +428,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aplikacja wymaga dostępu do biblioteki zdjęć w celuimportu materiałów."
+            "value": "Aplikacja wymaga dostępu do biblioteki zdjęć w celu importu materiałów."
           }
         }
       }
@@ -635,7 +659,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dodaj komentarz lub uwagudo tego zdjęcia..."
+            "value": "Dodaj komentarz lub uwagę do tego zdjęcia..."
           }
         }
       }

@@ -91,7 +91,7 @@ export const PresignedUrlDtoSchema = z
 export const InitMediaUploadResponseSchema = z
   .object({
     media: MediaDtoSchema,
-    upload: PresignedUrlDtoSchema.nullable(),
+    upload: PresignedUrlDtoSchema.nullable().openapi({}),
   })
   .openapi('InitMediaUploadResponse');
 

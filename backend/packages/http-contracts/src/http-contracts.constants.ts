@@ -26,7 +26,7 @@ export const PROBLEM_JSON_CONTENT_TYPE = 'application/problem+json';
 export const PROBLEM_BASE_TYPE_URI = 'https://stanmieszkania.pl/problems/';
 
 export const UUID_V7_SCHEMA_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  /^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-7[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$/;
 
 export const SEMVER_REGEX = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z-.]+)?$/;
 export const APP_VERSION_MIN_LENGTH = 5;

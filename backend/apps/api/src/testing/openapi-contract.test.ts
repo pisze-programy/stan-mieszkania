@@ -45,9 +45,40 @@ const openApiSubsetSchema = z.object({
         enum: z.array(z.string()),
       }),
       ProblemDetails: z.record(z.string(), z.unknown()),
+      UuidV7: z.object({
+        type: z.literal('string'),
+        pattern: z.string(),
+      }),
+      PresignedUrl: z.record(z.string(), z.unknown()),
+      SyncChangePayload: z.record(z.string(), z.unknown()),
+      InitMediaUploadResponse: z.object({
+        properties: z.object({ upload: z.record(z.string(), z.unknown()) }),
+      }),
+      HydratedSyncChange: z.object({
+        properties: z.object({ payload: z.record(z.string(), z.unknown()) }),
+      }),
     }),
   }),
 });
+
+function collectPatterns(node: unknown, found: string[]): void {
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      collectPatterns(item, found);
+    }
+    return;
+  }
+  if (node === null || typeof node !== 'object') {
+    return;
+  }
+  for (const [key, value] of Object.entries(node)) {
+    if (key === 'pattern' && typeof value === 'string') {
+      found.push(value);
+    } else {
+      collectPatterns(value, found);
+    }
+  }
+}
 
 describe('OpenAPI contract (/contracts/openapi.yaml)', () => {
   it('matches the generated OpenAPI YAML on disk with zero drift', async () => {
@@ -59,10 +90,33 @@ describe('OpenAPI contract (/contracts/openapi.yaml)', () => {
     expect(reparsed).toEqual(buildOpenApiDocument());
   });
 
-  it('exposes unique operationIds, bearer security on non-public routes, complete DomainErrorCode enum, and excludes local storage', () => {
-    const doc = openApiSubsetSchema.parse(buildOpenApiDocument());
+  it('exposes unique operationIds, valid ECMA-262 patterns, non-nullable component refs, and complete DomainErrorCode enum', () => {
+    const rawDoc = buildOpenApiDocument();
+    const doc = openApiSubsetSchema.parse(rawDoc);
 
     expect(doc.paths['/v1/local-storage/objects']).toBeUndefined();
+
+    const patterns: string[] = [];
+    collectPatterns(rawDoc, patterns);
+    expect(patterns.length).toBeGreaterThan(0);
+    for (const pattern of patterns) {
+      expect(pattern).not.toMatch(/\/[a-z]+$/);
+      expect(() => new RegExp(pattern)).not.toThrow();
+    }
+    const uuidRegex = new RegExp(doc.components.schemas.UuidV7.pattern);
+    expect(uuidRegex.test('01933e2a-7b40-7000-8000-000000000001')).toBe(true);
+    expect(uuidRegex.test('01933E2A-7B40-7000-A000-000000000001')).toBe(true);
+
+    expect(doc.components.schemas.PresignedUrl['nullable']).toBeUndefined();
+    expect(doc.components.schemas.SyncChangePayload['nullable']).toBeUndefined();
+    expect(doc.components.schemas.InitMediaUploadResponse.properties.upload).toEqual({
+      allOf: [{ $ref: '#/components/schemas/PresignedUrl' }],
+      nullable: true,
+    });
+    expect(doc.components.schemas.HydratedSyncChange.properties.payload).toEqual({
+      allOf: [{ $ref: '#/components/schemas/SyncChangePayload' }],
+      nullable: true,
+    });
 
     const operationIds: string[] = [];
     for (const [routePath, pathItem] of Object.entries(doc.paths)) {

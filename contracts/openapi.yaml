@@ -337,7 +337,9 @@ components:
         createdAt:
           $ref: "#/components/schemas/IsoDateTime"
         payload:
-          $ref: "#/components/schemas/SyncChangePayload"
+          allOf:
+            - $ref: "#/components/schemas/SyncChangePayload"
+          nullable: true
       required:
         - seq
         - apartmentId
@@ -405,7 +407,9 @@ components:
         media:
           $ref: "#/components/schemas/Media"
         upload:
-          $ref: "#/components/schemas/PresignedUrl"
+          allOf:
+            - $ref: "#/components/schemas/PresignedUrl"
+          nullable: true
       required:
         - media
         - upload
@@ -611,7 +615,6 @@ components:
         - items
     PresignedUrl:
       type: object
-      nullable: true
       properties:
         url:
           type: string
@@ -732,7 +735,6 @@ components:
           required:
             - kind
             - entry
-      nullable: true
     SyncChangesResponse:
       type: object
       properties:
@@ -937,7 +939,7 @@ components:
         - createdAt
     UuidV7:
       type: string
-      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      pattern: ^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-7[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$
       example: 01933e2a-7b40-7000-8000-000000000001
   parameters: {}
 paths:
