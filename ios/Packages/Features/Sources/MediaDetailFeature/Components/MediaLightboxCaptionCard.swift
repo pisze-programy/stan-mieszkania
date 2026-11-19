@@ -1,5 +1,4 @@
 import DesignSystem
-import Domain
 import SwiftUI
 
 struct MediaLightboxCaptionCard: View {
@@ -8,17 +7,7 @@ struct MediaLightboxCaptionCard: View {
   let onSelectMarker: (Int) -> Void
 
   var body: some View {
-    let formattedDate = PolishDateFormatters.formatHumanTimestamp(
-      caption.createdAt,
-      now: referenceDate
-    )
-    let authorLine: String
-    if let shortTag = caption.authorShortTag, !shortTag.isEmpty {
-      authorLine = "\(caption.authorDisplayName) #\(shortTag) · \(formattedDate)"
-    } else {
-      authorLine = "\(caption.authorDisplayName) · \(formattedDate)"
-    }
-    return VStack(alignment: .leading, spacing: Spacing.xxs) {
+    VStack(alignment: .leading, spacing: Spacing.xxs) {
       HighlightedEntryTextView(
         text: caption.entryText,
         selectedMarkerNumber: caption.markerNumber,
@@ -26,7 +15,7 @@ struct MediaLightboxCaptionCard: View {
       )
       .frame(maxWidth: .infinity, alignment: .leading)
 
-      Text(authorLine)
+      Text(caption.formattedAuthorLine(referenceDate: referenceDate))
         .font(Typography.caption)
         .foregroundStyle(.secondary)
     }

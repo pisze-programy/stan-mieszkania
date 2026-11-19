@@ -104,6 +104,21 @@ public struct LightboxMarkerCaption: Equatable, Sendable {
     self.authorShortTag = authorShortTag
     self.createdAt = createdAt
   }
+
+  public func formattedAuthorLine(referenceDate: Date) -> String {
+    let formattedDate = PolishDateFormatters.formatHumanTimestamp(createdAt, now: referenceDate)
+    let fallbackPrefix = "\(DomainConstants.fallbackUserDisplayPrefix) #"
+    if let shortTag = authorShortTag {
+      let shouldAppend =
+        !shortTag.isEmpty
+        && !authorDisplayName.hasPrefix(fallbackPrefix)
+        && !authorDisplayName.hasSuffix("#\(shortTag)")
+      if shouldAppend {
+        return "\(authorDisplayName) #\(shortTag) · \(formattedDate)"
+      }
+    }
+    return "\(authorDisplayName) · \(formattedDate)"
+  }
 }
 
 public struct EntryComposerState: Equatable, Sendable {

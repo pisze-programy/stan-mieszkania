@@ -124,4 +124,40 @@ struct MediaDetailViewerAndLightboxTests {
     await store.send(.photoTapped)
     #expect(!store.state.isLightboxPresented)
   }
+
+  @Test("Lightbox caption formats author line without duplicating fallback shortTag")
+  func lightboxCaptionAuthorLineAvoidsDuplicateShortTag() {
+    let date = MediaDetailTestFixtures.baseDate
+    let expectedDate = PolishDateFormatters.formatHumanTimestamp(date, now: date)
+
+    let fallbackCaption = LightboxMarkerCaption(
+      markerNumber: 1,
+      entryText: "[1] Rysa",
+      authorDisplayName: "Użytkownik #DCSG",
+      authorShortTag: "DCSG",
+      createdAt: date
+    )
+    let fallbackLine = fallbackCaption.formattedAuthorLine(referenceDate: date)
+    #expect(fallbackLine == "Użytkownik #DCSG · \(expectedDate)")
+
+    let customCaption = LightboxMarkerCaption(
+      markerNumber: 1,
+      entryText: "[1] Rysa",
+      authorDisplayName: "Anna",
+      authorShortTag: "DCSG",
+      createdAt: date
+    )
+    let customLine = customCaption.formattedAuthorLine(referenceDate: date)
+    #expect(customLine == "Anna #DCSG · \(expectedDate)")
+
+    let emptyTagCaption = LightboxMarkerCaption(
+      markerNumber: 1,
+      entryText: "[1] Rysa",
+      authorDisplayName: "Anna",
+      authorShortTag: "",
+      createdAt: date
+    )
+    let emptyTagLine = emptyTagCaption.formattedAuthorLine(referenceDate: date)
+    #expect(emptyTagLine == "Anna · \(expectedDate)")
+  }
 }
