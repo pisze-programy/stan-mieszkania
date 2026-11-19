@@ -14,6 +14,9 @@ let package = Package(
     .library(name: "DesignSystem", targets: ["DesignSystem"]),
     .library(name: "Database", targets: ["Database"]),
     .library(name: "MediaStorage", targets: ["MediaStorage"]),
+    .library(name: "AuthClient", targets: ["AuthClient"]),
+    .library(name: "APIClient", targets: ["APIClient"]),
+    .library(name: "AppConfigClient", targets: ["AppConfigClient"]),
   ],
   dependencies: [
     .package(
@@ -27,6 +30,18 @@ let package = Package(
     .package(
       url: "https://github.com/pointfreeco/swift-dependencies",
       exact: "1.17.2"
+    ),
+    .package(
+      url: "https://github.com/apple/swift-openapi-generator",
+      exact: "1.14.4"
+    ),
+    .package(
+      url: "https://github.com/apple/swift-openapi-runtime",
+      exact: "1.13.4"
+    ),
+    .package(
+      url: "https://github.com/apple/swift-openapi-urlsession",
+      exact: "1.4.0"
     ),
   ],
   targets: [
@@ -53,6 +68,37 @@ let package = Package(
         .product(name: "DependenciesMacros", package: "swift-dependencies"),
       ]
     ),
+    .target(
+      name: "AuthClient",
+      dependencies: [
+        "Domain",
+        .product(name: "Dependencies", package: "swift-dependencies"),
+        .product(name: "DependenciesMacros", package: "swift-dependencies"),
+      ]
+    ),
+    .target(
+      name: "APIClient",
+      dependencies: [
+        "Domain",
+        "AuthClient",
+        .product(name: "Dependencies", package: "swift-dependencies"),
+        .product(name: "DependenciesMacros", package: "swift-dependencies"),
+        .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+        .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
+      ],
+      plugins: [
+        .plugin(name: "OpenAPIGenerator", package: "swift-openapi-generator")
+      ]
+    ),
+    .target(
+      name: "AppConfigClient",
+      dependencies: [
+        "Domain",
+        "APIClient",
+        .product(name: "Dependencies", package: "swift-dependencies"),
+        .product(name: "DependenciesMacros", package: "swift-dependencies"),
+      ]
+    ),
     .testTarget(
       name: "DomainTests",
       dependencies: ["Domain"]
@@ -74,6 +120,33 @@ let package = Package(
       name: "MediaStorageTests",
       dependencies: [
         "MediaStorage",
+        "Domain",
+        .product(name: "Dependencies", package: "swift-dependencies"),
+      ]
+    ),
+    .testTarget(
+      name: "AuthClientTests",
+      dependencies: [
+        "AuthClient",
+        "Domain",
+        .product(name: "Dependencies", package: "swift-dependencies"),
+      ]
+    ),
+    .testTarget(
+      name: "APIClientTests",
+      dependencies: [
+        "APIClient",
+        "AuthClient",
+        "Domain",
+        .product(name: "Dependencies", package: "swift-dependencies"),
+        .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+      ]
+    ),
+    .testTarget(
+      name: "AppConfigClientTests",
+      dependencies: [
+        "AppConfigClient",
+        "APIClient",
         "Domain",
         .product(name: "Dependencies", package: "swift-dependencies"),
       ]
