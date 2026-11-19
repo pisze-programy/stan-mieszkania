@@ -1,6 +1,6 @@
 name: StanMieszkania
 options:
-  bundleIdPrefix: pl.stanmieszkania
+  bundleIdPrefix: pl.piszeprogramy
   deploymentTarget:
     iOS: "26.0"
   xcodeVersion: "26.0"
@@ -48,6 +48,7 @@ targets:
           - StanMieszkania.entitlements
     settings:
       base:
+        PRODUCT_BUNDLE_IDENTIFIER: pl.piszeprogramy.stanmieszkania
         INFOPLIST_FILE: App/Info.plist
         CODE_SIGN_ENTITLEMENTS: App/StanMieszkania.entitlements
         ENABLE_PREVIEWS: YES

@@ -20,11 +20,11 @@ This runbook gives step-by-step procedures to connect Apple Developer, Firebase 
 3. Select **App IDs** and click **Continue**.
 4. Select **App** and click **Continue**.
 5. Enter `Stan Mieszkania` in **Description**.
-6. Enter `pl.stanmieszkania.app` in **Explicit Bundle ID**.
+6. Enter `pl.piszeprogramy.stanmieszkania` in **Explicit Bundle ID**.
 7. Enable the **Sign in with Apple** capability.
 8. Click **Continue**, then click **Register**.
 9. Record your 10-character Team ID as `APPLE_TEAM_ID`.
-10. Record `pl.stanmieszkania.app` as `APPLE_CLIENT_ID`.
+10. Record `pl.piszeprogramy.stanmieszkania` as `APPLE_CLIENT_ID`.
 
 ### 1.2 Create the Sign in with Apple Revocation Key (`.p8`)
 
@@ -34,7 +34,7 @@ The backend uses this key to sign an ES256 client secret and call `https://apple
 2. Enter `Stan Mieszkania SIwA Revoke` in **Key Name**.
 3. Enable **Sign in with Apple**.
 4. Click **Configure** next to **Sign in with Apple**.
-5. Select `pl.stanmieszkania.app` as the **Primary App ID** and click **Save**.
+5. Select `pl.piszeprogramy.stanmieszkania` as the **Primary App ID** and click **Save**.
 6. Click **Continue**, then click **Register**.
 7. Record the 10-character Key ID as `APPLE_KEY_ID`.
 8. Click **Download** to save the `.p8` private key file.
@@ -58,7 +58,7 @@ The backend uses this key to sign an ES256 client secret and call `https://apple
 
 1. Open **Project settings -> General**.
 2. Click **Add app** and select **iOS**.
-3. Enter `pl.stanmieszkania.app` as the **Apple bundle ID**.
+3. Enter `pl.piszeprogramy.stanmieszkania` as the **Apple bundle ID**.
 4. Click **Register app**.
 5. Click **Download GoogleService-Info.plist**.
 6. Place the downloaded file at `ios/App/GoogleService-Info.plist` (compare keys against `ios/App/Config/GoogleService-Info.template.plist`).
@@ -163,7 +163,7 @@ The backend uses this service account to call Firebase Identity Toolkit `account
 
 1. Confirm `ios/App/GoogleService-Info.plist` exists locally (or `FIREBASE_WEB_API_KEY` is set in `ios/App/Config/Release.xcconfig`).
 2. Confirm `ios/App/Config/Release.xcconfig` contains:
-   - `PRODUCT_BUNDLE_IDENTIFIER = pl.stanmieszkania.app`
+   - `PRODUCT_BUNDLE_IDENTIFIER = pl.piszeprogramy.stanmieszkania`
    - `API_BASE_URL = https:/$()/api.stanmieszkania.pl`
    - `AUTH_MODE = firebase`
    - 3-part SemVer `MARKETING_VERSION` (for example `1.0.0`) and incremented `CURRENT_PROJECT_VERSION`.
