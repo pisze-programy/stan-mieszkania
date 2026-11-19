@@ -1,0 +1,118 @@
+name: StanMieszkania
+options:
+  bundleIdPrefix: pl.stanmieszkania
+  deploymentTarget:
+    iOS: "26.0"
+  xcodeVersion: "26.0"
+  defaultConfig: Debug
+
+configs:
+  Debug: debug
+  Release: release
+
+configFiles:
+  Debug: App/Config/Debug.xcconfig
+  Release: App/Config/Release.xcconfig
+
+packages:
+  Core:
+    path: Packages/Core
+  Features:
+    path: Packages/Features
+  swift-composable-architecture:
+    url: https://github.com/pointfreeco/swift-composable-architecture
+    exactVersion: 1.26.2
+  sqlite-data:
+    url: https://github.com/pointfreeco/sqlite-data
+    exactVersion: 1.13.0
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  StanMieszkania:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: App
+        excludes:
+          - Config
+          - Info.plist
+          - StanMieszkania.entitlements
+    info:
+      path: App/Info.plist
+    entitlements:
+      path: App/StanMieszkania.entitlements
+    settings:
+      base:
+        INFOPLIST_FILE: App/Info.plist
+        CODE_SIGN_ENTITLEMENTS: App/StanMieszkania.entitlements
+        ENABLE_PREVIEWS: YES
+        GENERATE_INFOPLIST_FILE: NO
+    dependencies:
+      - package: Core
+        product: Domain
+      - package: Core
+        product: DesignSystem
+      - package: Core
+        product: Database
+      - package: Core
+        product: MediaStorage
+      - package: Core
+        product: AuthClient
+      - package: Core
+        product: APIClient
+      - package: Core
+        product: AppConfigClient
+      - package: Core
+        product: SyncEngine
+      - package: Features
+        product: OnboardingFeature
+      - package: Features
+        product: ApartmentsListFeature
+      - package: Features
+        product: ApartmentTimelineFeature
+      - package: Features
+        product: CaptureFeature
+      - package: Features
+        product: MediaSummaryFeature
+      - package: Features
+        product: MediaDetailFeature
+      - package: Features
+        product: SharingFeature
+      - package: Features
+        product: ProfileFeature
+      - package: swift-composable-architecture
+        product: ComposableArchitecture
+      - package: sqlite-data
+        product: SQLiteData
+
+  StanMieszkaniaTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: AppTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: StanMieszkania
+
+schemes:
+  StanMieszkania:
+    build:
+      targets:
+        StanMieszkania: all
+        StanMieszkaniaTests: [test]
+    test:
+      config: Debug
+      targets:
+        - StanMieszkaniaTests
