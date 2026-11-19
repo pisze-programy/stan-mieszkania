@@ -27,6 +27,7 @@ import {
   type MediaCleanupPort,
 } from '../modules/account-deletion';
 import { createD1ApartmentRepository, type ApartmentRepository } from '../modules/apartments';
+import { createD1EntryRepository, type EntryRepository } from '../modules/entries';
 import {
   createAuthenticateUserUseCase,
   createD1UserRepository,
@@ -61,6 +62,7 @@ export interface RequestContainerOverrides {
   readonly apartmentRepository?: ApartmentRepository;
   readonly membershipRepository?: MembershipRepository;
   readonly mediaRepository?: MediaRepository;
+  readonly entryRepository?: EntryRepository;
   readonly accountDeletionRepository?: AccountDeletionRepository;
   readonly inviteRateLimiter?: InviteCodeRateLimiterPort;
   readonly objectStorage?: ObjectStoragePort;
@@ -95,6 +97,7 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
   const membershipRepository =
     input.overrides?.membershipRepository ?? createD1MembershipRepository(input.db);
   const mediaRepository = input.overrides?.mediaRepository ?? createD1MediaRepository(input.db);
+  const entryRepository = input.overrides?.entryRepository ?? createD1EntryRepository(input.db);
   const accountDeletionRepository =
     input.overrides?.accountDeletionRepository ?? createD1AccountDeletionRepository(input.db);
 
@@ -162,6 +165,7 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     apartmentRepository,
     membershipRepository,
     mediaRepository,
+    entryRepository,
     inviteRateLimiter,
     objectStorage,
     mediaCleanup,
@@ -177,6 +181,7 @@ export function createRequestContainer<TStatement extends D1PreparedStatementLik
     apartmentRepository,
     membershipRepository,
     mediaRepository,
+    entryRepository,
     accountDeletionRepository,
     inviteRateLimiter,
     objectStorage,

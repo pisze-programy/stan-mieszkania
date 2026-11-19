@@ -13,6 +13,13 @@ import {
   type ApartmentRouteHandlers,
 } from '../modules/apartments';
 import {
+  createCreateEntryUseCase,
+  createListMediaEntriesUseCase,
+  createRetractEntryUseCase,
+  type EntriesRouteHandlers,
+  type EntryRepository,
+} from '../modules/entries';
+import {
   createConfirmMediaUploadUseCase,
   createGetMediaDownloadUrlUseCase,
   createGetMediaUseCase,
@@ -43,6 +50,7 @@ export interface BuildModuleHandlersInput {
   readonly apartmentRepository: ApartmentRepository;
   readonly membershipRepository: MembershipRepository;
   readonly mediaRepository: MediaRepository;
+  readonly entryRepository: EntryRepository;
   readonly inviteRateLimiter: InviteCodeRateLimiterPort;
   readonly objectStorage: ObjectStoragePort;
   readonly mediaCleanup: MediaCleanupPort;
@@ -53,6 +61,7 @@ export interface ModuleHandlersBundle {
   readonly apartments: ApartmentRouteHandlers;
   readonly membership: MembershipRouteHandlers;
   readonly media: MediaRouteHandlers;
+  readonly entries: EntriesRouteHandlers;
   readonly localStorage: LocalStorageHandlers;
 }
 
@@ -64,6 +73,7 @@ export function buildModuleRouteHandlers(input: BuildModuleHandlersInput): Modul
     apartmentRepository,
     membershipRepository,
     mediaRepository,
+    entryRepository,
     inviteRateLimiter,
     objectStorage,
     mediaCleanup,
@@ -112,6 +122,11 @@ export function buildModuleRouteHandlers(input: BuildModuleHandlersInput): Modul
         presignGetTtlMs: appConfig.presignGetTtlMs,
       }),
       softDelete: createSoftDeleteMediaUseCase({ mediaRepository, clock }),
+    },
+    entries: {
+      createEntry: createCreateEntryUseCase({ entryRepository, clock }),
+      listEntries: createListMediaEntriesUseCase({ entryRepository }),
+      retractEntry: createRetractEntryUseCase({ entryRepository, clock }),
     },
     localStorage: {
       storageMode: appConfig.storageMode,

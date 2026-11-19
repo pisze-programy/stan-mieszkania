@@ -18,6 +18,7 @@ import { createOpenApiDefaultHook } from './http/openapi-default-hook';
 import { createAccountDeletionRoutes } from './modules/account-deletion';
 import { createAppConfigRoutes } from './modules/app-config';
 import { createApartmentsRoutes } from './modules/apartments';
+import { createEntriesRoutes } from './modules/entries';
 import { createIdentityRoutes } from './modules/identity';
 import { createLocalStorageRoutes, createMediaRoutes } from './modules/media';
 import { createMembershipRoutes } from './modules/membership';
@@ -121,6 +122,10 @@ export function createApp(options: CreateAppOptions = {}): OpenAPIHono<AppHonoEn
   app.route(
     '/v1',
     createLocalStorageRoutes<AppHonoEnv>((c) => c.get('container').localStorage),
+  );
+  app.route(
+    '/v1',
+    createEntriesRoutes<AppHonoEnv>((c) => c.get('container').entries),
   );
   app.route(
     '/v1',

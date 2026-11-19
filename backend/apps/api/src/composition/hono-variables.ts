@@ -11,6 +11,7 @@ import type {
   MediaCleanupPort,
 } from '../modules/account-deletion';
 import type { ApartmentRepository, ApartmentRouteHandlers } from '../modules/apartments';
+import type { EntriesRouteHandlers, EntryRepository } from '../modules/entries';
 import type {
   AuthenticateUserUseCase,
   TokenVerifierPort,
@@ -57,6 +58,7 @@ export interface RequestContainer {
   readonly apartmentRepository: ApartmentRepository;
   readonly membershipRepository: MembershipRepository;
   readonly mediaRepository: MediaRepository;
+  readonly entryRepository: EntryRepository;
   readonly accountDeletionRepository: AccountDeletionRepository;
   readonly inviteRateLimiter: InviteCodeRateLimiterPort;
   readonly objectStorage: ObjectStoragePort;
@@ -70,6 +72,7 @@ export interface RequestContainer {
   readonly apartments: ApartmentRouteHandlers;
   readonly membership: MembershipRouteHandlers;
   readonly media: MediaRouteHandlers;
+  readonly entries: EntriesRouteHandlers;
   readonly localStorage: LocalStorageHandlers;
 }
 

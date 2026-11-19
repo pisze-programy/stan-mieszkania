@@ -1,6 +1,11 @@
 import type { DomainError, Result } from '@stanmieszkania/shared';
 import type { Entry, TargetMediaReadiness } from './entry.entity';
 
+export interface ApartmentEntryAccess {
+  readonly apartmentId: string;
+  readonly isActiveMember: boolean;
+}
+
 export interface EntryTargetMediaAccess extends TargetMediaReadiness {
   readonly apartmentId: string;
   readonly isActiveMember: boolean;
@@ -31,6 +36,10 @@ export interface RetractEntryParams {
 }
 
 export interface EntryRepository {
+  findApartmentMembership(
+    apartmentId: string,
+    userId: string,
+  ): Promise<Result<ApartmentEntryAccess | null, DomainError>>;
   findTargetMediaAccess(
     mediaId: string,
     userId: string,

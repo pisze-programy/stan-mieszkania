@@ -1,0 +1,53 @@
+import { HTTP_STATUS } from '@stanmieszkania/http-contracts';
+import type { HttpErrorMappingEntry } from './http.constants';
+
+export const ENTRY_HTTP_ERROR_CODES = {
+  ENTRY_NOT_FOUND: 'ENTRY_NOT_FOUND',
+  ENTRY_ACCESS_DENIED: 'ENTRY_ACCESS_DENIED',
+  ENTRY_AUTHOR_REQUIRED: 'ENTRY_AUTHOR_REQUIRED',
+  ENTRY_VALIDATION_FAILED: 'ENTRY_VALIDATION_FAILED',
+  ENTRY_ALREADY_RETRACTED: 'ENTRY_ALREADY_RETRACTED',
+  ENTRY_MEDIA_NOT_READY: 'ENTRY_MEDIA_NOT_READY',
+  ENTRY_CONFLICT: 'ENTRY_CONFLICT',
+  MARKER_INVALID_COORDINATES: 'MARKER_INVALID_COORDINATES',
+  MARKER_DUPLICATE_LOCAL_NUMBER: 'MARKER_DUPLICATE_LOCAL_NUMBER',
+} as const;
+
+export const ENTRY_ERROR_HTTP_MAP: Readonly<Record<string, HttpErrorMappingEntry>> = {
+  [ENTRY_HTTP_ERROR_CODES.ENTRY_NOT_FOUND]: {
+    status: HTTP_STATUS.NOT_FOUND,
+    title: 'Entry Not Found',
+  },
+  [ENTRY_HTTP_ERROR_CODES.ENTRY_ACCESS_DENIED]: {
+    status: HTTP_STATUS.FORBIDDEN,
+    title: 'Entry Access Denied',
+  },
+  [ENTRY_HTTP_ERROR_CODES.ENTRY_AUTHOR_REQUIRED]: {
+    status: HTTP_STATUS.FORBIDDEN,
+    title: 'Entry Author Required',
+  },
+  [ENTRY_HTTP_ERROR_CODES.ENTRY_VALIDATION_FAILED]: {
+    status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+    title: 'Invalid Entry Fields',
+  },
+  [ENTRY_HTTP_ERROR_CODES.ENTRY_ALREADY_RETRACTED]: {
+    status: HTTP_STATUS.CONFLICT,
+    title: 'Entry Already Retracted',
+  },
+  [ENTRY_HTTP_ERROR_CODES.ENTRY_MEDIA_NOT_READY]: {
+    status: HTTP_STATUS.CONFLICT,
+    title: 'Media Not Ready For Entries',
+  },
+  [ENTRY_HTTP_ERROR_CODES.ENTRY_CONFLICT]: {
+    status: HTTP_STATUS.CONFLICT,
+    title: 'Entry Conflict',
+  },
+  [ENTRY_HTTP_ERROR_CODES.MARKER_INVALID_COORDINATES]: {
+    status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+    title: 'Invalid Marker Coordinates',
+  },
+  [ENTRY_HTTP_ERROR_CODES.MARKER_DUPLICATE_LOCAL_NUMBER]: {
+    status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+    title: 'Duplicate Local Marker Number',
+  },
+};
