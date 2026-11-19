@@ -111,8 +111,21 @@ struct AppFeatureTests {
     )
     #expect(store.state.path.count == 1)
 
+    let updatedProfile = UserProfile(
+      id: Self.userId,
+      displayName: "Anna Nowak",
+      shortTag: "A1B2",
+      color: "#007AFF",
+      createdAt: Self.baseDate
+    )
     await store.send(.apartmentsList(.delegate(.didTapProfile)))
     let profileId = try #require(store.state.path.ids.last)
+    await store.send(
+      .path(.element(id: profileId, action: .profile(.delegate(.didUpdateProfile(updatedProfile)))))
+    )
+    #expect(store.state.currentUser == updatedProfile)
+    #expect(store.state.apartmentsList.currentUser == updatedProfile)
+
     await store.send(
       .path(.element(id: profileId, action: .profile(.delegate(.didChangeTheme(.dark)))))
     )
@@ -144,15 +157,6 @@ struct AppFeatureTests {
       $0.calendar = Calendar(identifier: .gregorian)
       $0.timeZone = .gmt
       $0.syncEngine.events = { AsyncStream { $0.finish() } }
-      $0.syncEngine.syncApartment = { _ in 0 }
-      $0.syncEngine.processOutbox = {
-        SyncOutboxReport(
-          processedCount: 0,
-          failedCount: 0,
-          deferredCount: 0,
-          pausedForForceUpdate: false
-        )
-      }
     }
   }
 }

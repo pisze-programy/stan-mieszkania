@@ -6,6 +6,24 @@ import Foundation
 import MediaSummaryFeature
 
 extension AppFeature {
+  func handleModalDismiss(_ state: inout State) -> Effect<Action> {
+    switch state.modal {
+    case .mediaSummary(let summaryState):
+      // Invariant 8: Interactive sheet swipe-dismiss cleans up unsaved draft JPEGs on disk.
+      let draftIds = summaryState.pages.map(\.draft.id)
+      let storage = mediaStorage
+      return .run { _ in
+        for mediaId in draftIds {
+          try? await storage.deleteLocalFile(mediaId)
+        }
+      }
+    case .sharing:
+      return reloadLocalData(in: state)
+    case .capture, nil:
+      return .none
+    }
+  }
+
   func handleModalDelegate(
     _ state: inout State,
     action: AppModalDestination.Action
@@ -13,7 +31,7 @@ extension AppFeature {
     switch action {
     case .sharing(.delegate(.didDismiss)):
       state.modal = nil
-      return .none
+      return reloadLocalData(in: state)
     case .capture(.delegate(let delegate)):
       return handleCaptureDelegate(&state, delegate: delegate)
     case .mediaSummary(.delegate(let delegate)):
@@ -63,10 +81,10 @@ extension AppFeature {
         state.modal = .capture(
           CaptureFeature.State(apartmentId: summaryState.apartmentId, source: .camera)
         )
-        return .none
+        return reloadLocalData(in: state)
       }
       state.modal = nil
-      return refreshTopTimelineIfPresent(in: state)
+      return reloadLocalData(in: state)
     case .didRequestRetake(let origin):
       state.modal = .capture(
         CaptureFeature.State(apartmentId: summaryState.apartmentId, source: origin)

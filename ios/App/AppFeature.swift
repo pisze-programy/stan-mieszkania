@@ -8,25 +8,32 @@ import Database
 import Domain
 import Foundation
 import MediaDetailFeature
+import MediaStorage
 import MediaSummaryFeature
 import OnboardingFeature
 import ProfileFeature
 import SharingFeature
 import SyncEngine
 
-@Reducer(state: .equatable, .sendable, action: .equatable, .sendable)
+@Reducer
 public enum AppPath {
   case apartmentTimeline(ApartmentTimelineFeature)
   case mediaDetail(MediaDetailFeature)
   case profile(ProfileFeature)
 }
 
-@Reducer(state: .equatable, .sendable, action: .equatable, .sendable)
+extension AppPath.State: Equatable, Sendable {}
+extension AppPath.Action: Equatable, Sendable {}
+
+@Reducer
 public enum AppModalDestination {
   case sharing(SharingFeature)
   case capture(CaptureFeature)
   case mediaSummary(MediaSummaryFeature)
 }
+
+extension AppModalDestination.State: Equatable, Sendable {}
+extension AppModalDestination.Action: Equatable, Sendable {}
 
 @Reducer
 public struct AppFeature: Sendable {
@@ -90,6 +97,7 @@ public struct AppFeature: Sendable {
   }
 
   @Dependency(\.defaultDatabase) var database
+  @Dependency(\.mediaStorage) var mediaStorage
   @Dependency(\.authClient) var authClient
   @Dependency(\.appConfigClient) var appConfigClient
   @Dependency(\.syncEngine) var syncEngine
@@ -137,7 +145,9 @@ public struct AppFeature: Sendable {
         return handlePathDelegate(&state, id: id, action: pathAction)
       case .modal(.presented(let modalAction)):
         return handleModalDelegate(&state, action: modalAction)
-      case .onboarding, .apartmentsList, .path, .modal:
+      case .modal(.dismiss):
+        return handleModalDismiss(&state)
+      case .onboarding, .apartmentsList, .path:
         return .none
       }
     }

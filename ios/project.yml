@@ -46,10 +46,6 @@ targets:
           - Config
           - Info.plist
           - StanMieszkania.entitlements
-    info:
-      path: App/Info.plist
-    entitlements:
-      path: App/StanMieszkania.entitlements
     settings:
       base:
         INFOPLIST_FILE: App/Info.plist

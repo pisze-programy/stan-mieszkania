@@ -5,6 +5,7 @@ import ComposableArchitecture
 import Database
 import Domain
 import Foundation
+import MediaStorage
 import MediaSummaryFeature
 import SharingFeature
 import SyncEngine
@@ -36,9 +37,10 @@ struct AppFeatureCaptureFlowTests {
   )
 
   @MainActor
-  @Test("Presents and dismisses Sharing modal from ApartmentTimelineFeature")
+  @Test("Sharing delegate and interactive dismiss reload local state without network sync")
   func sharingModalFlow() async throws {
     let store = try makeTimelineStore()
+    store.exhaustivity = .off
     let timelineId = try #require(store.state.path.ids.first)
     let shareAction = AppFeature.Action.path(
       .element(
@@ -51,23 +53,62 @@ struct AppFeatureCaptureFlowTests {
       $0.modal = .sharing(SharingFeature.State(apartmentId: AppFeatureTests.apartmentId))
     }
     await store.send(.modal(.presented(.sharing(.delegate(.didDismiss))))) { $0.modal = nil }
+    await store.receive(.apartmentsList(.reloadLocalState))
+    await store.receive(
+      .path(.element(id: timelineId, action: .apartmentTimeline(.reloadLocalState))))
+
+    await store.send(shareAction)
+    await store.send(.modal(.dismiss)) { $0.modal = nil }
+    await store.receive(.apartmentsList(.reloadLocalState))
+    await store.receive(
+      .path(.element(id: timelineId, action: .apartmentTimeline(.reloadLocalState))))
   }
 
   @MainActor
-  @Test("Routes Capture -> Summary -> Retake -> CaptureAnother loop")
-  func captureSummaryRetakeLoopFlow() async throws {
-    let store = try makeTimelineStore()
+  @Test("Interactive swipe-dismiss of MediaSummary deletes unsaved draft JPEGs on disk")
+  func interactiveSummaryDismissCleansUpDraftFiles() async throws {
+    let deletedIds = LockIsolated<[String]>([])
+    let store = try makeTimelineStore(deletedMediaIds: deletedIds)
+    let expectedSummary = MediaSummaryFeature.State(
+      apartmentId: AppFeatureTests.apartmentId,
+      drafts: [Self.draft],
+      origin: .camera,
+      currentUser: AppFeatureTests.author
+    )
     let timelineId = try #require(store.state.path.ids.first)
-    let captureAction = AppFeature.Action.path(
-      .element(
-        id: timelineId,
-        action: .apartmentTimeline(
-          .delegate(
-            .didSelectCaptureSource(apartmentId: AppFeatureTests.apartmentId, source: .camera)
+    await store.send(
+      .path(
+        .element(
+          id: timelineId,
+          action: .apartmentTimeline(
+            .delegate(
+              .didSelectCaptureSource(apartmentId: AppFeatureTests.apartmentId, source: .camera)
+            )
           )
         )
       )
-    )
+    ) {
+      $0.modal = .capture(
+        CaptureFeature.State(apartmentId: AppFeatureTests.apartmentId, source: .camera)
+      )
+    }
+    await store.send(
+      .modal(.presented(.capture(.delegate(.didFinishCapture([Self.draft], origin: .camera)))))
+    ) {
+      $0.modal = .mediaSummary(expectedSummary)
+    }
+    await store.send(.modal(.dismiss)) {
+      $0.modal = nil
+    }
+    #expect(deletedIds.value == [Self.draft.id])
+  }
+
+  @MainActor
+  @Test("Routes Capture -> Summary -> Retake -> CaptureAnother and reloads local state")
+  func captureSummaryRetakeLoopFlow() async throws {
+    let store = try makeTimelineStore()
+    store.exhaustivity = .off
+    let timelineId = try #require(store.state.path.ids.first)
     let expectedCapture = CaptureFeature.State(
       apartmentId: AppFeatureTests.apartmentId,
       source: .camera
@@ -79,29 +120,39 @@ struct AppFeatureCaptureFlowTests {
       currentUser: AppFeatureTests.author
     )
 
-    await store.send(captureAction) { $0.modal = .capture(expectedCapture) }
+    await store.send(
+      .path(
+        .element(
+          id: timelineId,
+          action: .apartmentTimeline(
+            .delegate(
+              .didSelectCaptureSource(apartmentId: AppFeatureTests.apartmentId, source: .camera)
+            )
+          )
+        )
+      )
+    ) { $0.modal = .capture(expectedCapture) }
     await store.send(
       .modal(.presented(.capture(.delegate(.didFinishCapture([Self.draft], origin: .camera)))))
-    ) {
-      $0.modal = .mediaSummary(expectedSummary)
-    }
+    ) { $0.modal = .mediaSummary(expectedSummary) }
     await store.send(.modal(.presented(.mediaSummary(.delegate(.didRequestRetake(.camera)))))) {
       $0.modal = .capture(expectedCapture)
     }
     await store.send(
       .modal(.presented(.capture(.delegate(.didFinishCapture([Self.draft], origin: .camera)))))
-    ) {
-      $0.modal = .mediaSummary(expectedSummary)
-    }
+    ) { $0.modal = .mediaSummary(expectedSummary) }
     await store.send(
-      .modal(.presented(.mediaSummary(.delegate(.didSave(mode: .cloud, captureAnother: true)))))
-    ) {
-      $0.modal = .capture(expectedCapture)
-    }
+      .modal(.presented(.mediaSummary(.delegate(.didSave(mode: .localOnly, captureAnother: true)))))
+    ) { $0.modal = .capture(expectedCapture) }
+    await store.receive(.apartmentsList(.reloadLocalState))
+    await store.receive(
+      .path(.element(id: timelineId, action: .apartmentTimeline(.reloadLocalState))))
   }
 
   @MainActor
-  private func makeTimelineStore() throws -> TestStoreOf<AppFeature> {
+  private func makeTimelineStore(
+    deletedMediaIds: LockIsolated<[String]> = LockIsolated([])
+  ) throws -> TestStoreOf<AppFeature> {
     let database = try makeInMemoryDatabase()
     var initial = AppFeature.State(
       isBootstrapping: false,
@@ -131,7 +182,12 @@ struct AppFeatureCaptureFlowTests {
       AppFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.calendar = Calendar(identifier: .gregorian)
+      $0.timeZone = .gmt
       $0.syncEngine.events = { AsyncStream { $0.finish() } }
+      $0.mediaStorage.deleteLocalFile = { mediaId in
+        deletedMediaIds.withValue { $0.append(mediaId) }
+      }
     }
   }
 }

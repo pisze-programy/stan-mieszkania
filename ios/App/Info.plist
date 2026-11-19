@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>API_BASE_URL</key>
+	<string>$(API_BASE_URL)</string>
+	<key>AUTH_MODE</key>
+	<string>$(AUTH_MODE)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -15,8 +19,21 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikacja potrzebuje dostępu do aparatu, aby robić zdjęcia dokumentujące stan mieszkania.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aplikacja opcjonalnie zapisuje lokalizację w metadanych zdjęcia jako dodatkowy dowód stanu mieszkania.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Aplikacja potrzebuje dostępu do biblioteki zdjęć, aby importować zdjęcia dokumentujące stan mieszkania.</string>
+	<key>UILaunchScreen</key>
+	<dict/>
 </dict>
 </plist>

@@ -19,6 +19,7 @@
 		77CDCE5F8410C74769E05FA5 /* AppConfigClient in Frameworks */ = {isa = PBXBuildFile; productRef = DB68ABA1C335FAD33275787A /* AppConfigClient */; };
 		7A68AFFA75B458AE3AD9D17E /* SharingFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 3B2A99B840420D2E13DA973F /* SharingFeature */; };
 		7AC948CE6D35AFEE69EEFCA3 /* SyncEngine in Frameworks */ = {isa = PBXBuildFile; productRef = A08C69FB56C9400493A52802 /* SyncEngine */; };
+		8A1428ADA72F33E8BF79E0C1 /* AppEnvironmentConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C02ED265EFA4107663302480 /* AppEnvironmentConfigTests.swift */; };
 		96064AD6AA1605AAE0AFC6AF /* CaptureFeature in Frameworks */ = {isa = PBXBuildFile; productRef = BE11AB51F84EB0F24D046307 /* CaptureFeature */; };
 		9BCFFBCA005D8743467FC892 /* AppDependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC9F7A5B2942C76F504B22F /* AppDependencies.swift */; };
 		B1F994549FBCF60C9470EB4A /* AppFeature+Modals.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC6426C44300437A2B7563A1 /* AppFeature+Modals.swift */; };
@@ -65,6 +66,7 @@
 		A91240D428DDACC5976AAD83 /* Core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Core; path = Packages/Core; sourceTree = SOURCE_ROOT; };
 		AB7C8FA9AD6AC8A7CED2152F /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
 		AC6426C44300437A2B7563A1 /* AppFeature+Modals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppFeature+Modals.swift"; sourceTree = "<group>"; };
+		C02ED265EFA4107663302480 /* AppEnvironmentConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironmentConfigTests.swift; sourceTree = "<group>"; };
 		CC756A25488C6808E270882F /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -154,6 +156,7 @@
 		D2B7CE30A070FB12B1DF1ADE /* AppTests */ = {
 			isa = PBXGroup;
 			children = (
+				C02ED265EFA4107663302480 /* AppEnvironmentConfigTests.swift */,
 				852429CC2F77CB27E28F8C9D /* AppFeatureCaptureFlowTests.swift */,
 				5571134562C9ABB6201CDAC9 /* AppFeatureForceUpdateTests.swift */,
 				08ADA417A7FF20E48552E048 /* AppFeatureTests.swift */,
@@ -283,6 +286,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8A1428ADA72F33E8BF79E0C1 /* AppEnvironmentConfigTests.swift in Sources */,
 				C12CAAF042F9958AAF97207B /* AppFeatureCaptureFlowTests.swift in Sources */,
 				F0E568F662B6A6690B8BA3E4 /* AppFeatureForceUpdateTests.swift in Sources */,
 				CB60B6047AC34E68CB718880 /* AppFeatureTests.swift in Sources */,

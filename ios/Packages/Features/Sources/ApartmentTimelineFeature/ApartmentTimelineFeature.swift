@@ -78,6 +78,7 @@ public struct ApartmentTimelineFeature: Sendable {
   public enum Action: Equatable, Sendable {
     case task
     case pulledToRefresh
+    case reloadLocalState
     case localSnapshotLoaded(ApartmentTimelineSnapshot)
     case syncCompleted(ApartmentTimelineSnapshot)
     case syncFailed(String)
@@ -140,8 +141,9 @@ public struct ApartmentTimelineFeature: Sendable {
   public var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .task, .pulledToRefresh, .localSnapshotLoaded, .syncCompleted, .syncFailed,
-        .syncEventReceived, .syncAllLocalTapped, .syncAllLocalCompleted, .syncAllLocalFailed:
+      case .task, .pulledToRefresh, .reloadLocalState, .localSnapshotLoaded, .syncCompleted,
+        .syncFailed, .syncEventReceived, .syncAllLocalTapped, .syncAllLocalCompleted,
+        .syncAllLocalFailed:
         return handleSyncAction(&state, action: action)
       case .dismissError:
         state.errorMessage = nil

@@ -57,7 +57,7 @@ extension AppFeature {
       return handleTimelineDelegate(&state, id: id, delegate: delegate)
     case .mediaDetail(.delegate(.didDeleteLocalMedia)):
       state.path.pop(from: id)
-      return refreshTopTimelineIfPresent(in: state)
+      return reloadLocalData(in: state)
     case .profile(.delegate(let delegate)):
       return handleProfileDelegate(&state, delegate: delegate)
     default:
@@ -104,6 +104,10 @@ extension AppFeature {
     case .didChangeTheme(let preference):
       state.themePreference = preference
       return .none
+    case .didUpdateProfile(let profile):
+      state.currentUser = profile
+      state.apartmentsList.currentUser = profile
+      return .none
     case .didSignOut, .didDeleteAccount:
       state.isAuthenticated = false
       state.currentUser = nil
@@ -117,12 +121,16 @@ extension AppFeature {
     }
   }
 
-  func refreshTopTimelineIfPresent(in state: State) -> Effect<Action> {
+  func reloadLocalData(in state: State) -> Effect<Action> {
+    var effects: [Effect<Action>] = [.send(.apartmentsList(.reloadLocalState))]
     for (id, element) in zip(state.path.ids, state.path).reversed() {
       if case .apartmentTimeline = element {
-        return .send(.path(.element(id: id, action: .apartmentTimeline(.pulledToRefresh))))
+        effects.append(
+          .send(.path(.element(id: id, action: .apartmentTimeline(.reloadLocalState))))
+        )
+        break
       }
     }
-    return .none
+    return .merge(effects)
   }
 }

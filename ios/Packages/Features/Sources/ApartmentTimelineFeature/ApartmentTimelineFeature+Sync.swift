@@ -17,6 +17,8 @@ extension ApartmentTimelineFeature {
       )
     case .pulledToRefresh:
       return startSync(&state)
+    case .reloadLocalState:
+      return reloadLocalSnapshot(apartmentId: state.apartmentId)
     case .localSnapshotLoaded(let snapshot):
       applySnapshot(snapshot, to: &state)
       return .none
@@ -30,6 +32,15 @@ extension ApartmentTimelineFeature {
       return .none
     case .syncEventReceived(let event):
       return handleSyncEvent(&state, event: event)
+    case .syncAllLocalTapped, .syncAllLocalCompleted, .syncAllLocalFailed:
+      return handleSyncAllLocalAction(&state, action: action)
+    default:
+      return .none
+    }
+  }
+
+  private func handleSyncAllLocalAction(_ state: inout State, action: Action) -> Effect<Action> {
+    switch action {
     case .syncAllLocalTapped:
       return startSyncAllLocal(&state)
     case .syncAllLocalCompleted(let snapshot):

@@ -90,6 +90,37 @@ struct TimelineOfflineSyncAndTimezoneTests {
     #expect(snapshot.sections[0].title == "17 listopada, czwartek")
   }
 
+  @MainActor
+  @Test(
+    "reloadLocalState refreshes SQLite snapshot without calling network sync even while syncing")
+  func reloadLocalStateRefreshesOfflineWithoutNetworkCall() async throws {
+    let database = try seedOfflineCreatedApartment()
+    let expectedSnapshot = try ApartmentTimelineStore.fetchSnapshot(
+      apartmentId: TimelineTestFixtures.apartmentId,
+      from: database,
+      calendar: TimelineTestFixtures.warsawCalendar,
+      timeZone: TimelineTestFixtures.warsawTimeZone
+    )
+    let store = TestStore(
+      initialState: ApartmentTimelineFeature.State(
+        apartmentId: TimelineTestFixtures.apartmentId,
+        isSyncing: true
+      )
+    ) {
+      ApartmentTimelineFeature()
+    } withDependencies: {
+      $0.defaultDatabase = database
+      $0.calendar = TimelineTestFixtures.warsawCalendar
+      $0.timeZone = TimelineTestFixtures.warsawTimeZone
+    }
+
+    await store.send(.reloadLocalState)
+    await store.receive(.localSnapshotLoaded(expectedSnapshot)) {
+      $0.apartment = expectedSnapshot.apartment
+    }
+    #expect(store.state.errorMessage == nil)
+  }
+
   private func seedOfflineCreatedApartment() throws -> any DatabaseWriter {
     let database = try makeInMemoryDatabase()
     let aptStore = ApartmentMutationStore(database: database)

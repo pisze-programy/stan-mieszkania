@@ -68,6 +68,7 @@ public struct AppRootView: View {
         NavigationStack {
           MediaSummaryView(store: summaryStore)
         }
+        .interactiveDismissDisabled(summaryStore.isSaving)
       }
     }
   }
