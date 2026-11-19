@@ -1697,6 +1697,61 @@
           }
         }
       }
+    },
+    "sharing.code.pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kod zaproszenia będzie dostępny po pierwszej synchronizacji z chmurą."
+          }
+        }
+      }
+    },
+    "sharing.member.revoke.confirm.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Użytkownik straci dostęp do mieszkania, ale jego dotychczasowe zdjęcia i wpisy pozostaną zachowane."
+          }
+        }
+      }
+    },
+    "sharing.members.departed.header": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Byli członkowie"
+          }
+        }
+      }
+    },
+    "sharing.security.reset.cta": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zresetuj kod"
+          }
+        }
+      }
+    },
+    "sharing.sms.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dołącz do mieszkania \"%1$@\" w StanMieszkania kodem: %2$@"
+          }
+        }
+      }
     }
   }
 }
