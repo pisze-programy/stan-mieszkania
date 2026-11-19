@@ -6,7 +6,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "openapi:generate": "tsx scripts/generate-openapi.ts"
+    "openapi:generate": "tsx scripts/generate-openapi.ts",
+    "swift-constants:generate": "tsx scripts/generate-swift-constants.ts"
   },
   "dependencies": {
     "@hono/zod-openapi": "1.6.3",

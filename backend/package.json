@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "pnpm -r --if-present run test",
-    "openapi:generate": "pnpm --filter @stanmieszkania/api run openapi:generate"
+    "openapi:generate": "pnpm --filter @stanmieszkania/api run openapi:generate",
+    "swift-constants:generate": "pnpm --filter @stanmieszkania/api run swift-constants:generate"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
