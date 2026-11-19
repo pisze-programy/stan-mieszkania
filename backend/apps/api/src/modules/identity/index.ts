@@ -48,6 +48,11 @@ export {
   createLocalDevTokenVerifier,
 } from './infrastructure/local-dev-token-verifier';
 export {
+  createFirebaseJwksTokenVerifier,
+  type FetchFn,
+  type FirebaseJwksTokenVerifierDeps,
+} from './infrastructure/firebase-jwks-token-verifier';
+export {
   UpdateProfileRequestSchema,
   UserProfileSchema,
   type UpdateProfileRequestDto,

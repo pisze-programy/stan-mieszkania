@@ -74,6 +74,12 @@ export const EnvVarsSchema = z.object({
   AUTH_MODE: z.enum(['local', 'firebase']).default(DEFAULT_AUTH_MODE),
   STORAGE_MODE: z.enum(['local', 'r2']).default(DEFAULT_STORAGE_MODE),
   FIREBASE_PROJECT_ID: z.string().min(1).optional(),
+  FIREBASE_CLIENT_EMAIL: z.string().min(1).optional(),
+  FIREBASE_PRIVATE_KEY_PEM: z.string().min(1).optional(),
+  APPLE_TEAM_ID: z.string().min(1).optional(),
+  APPLE_CLIENT_ID: z.string().min(1).optional(),
+  APPLE_KEY_ID: z.string().min(1).optional(),
+  APPLE_PRIVATE_KEY_PEM: z.string().min(1).optional(),
 });
 
 export type RawEnvVars = z.infer<typeof EnvVarsSchema>;

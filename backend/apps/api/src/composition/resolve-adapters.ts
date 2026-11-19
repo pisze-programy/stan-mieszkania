@@ -14,9 +14,11 @@ import {
 } from '../durable-objects/user-guard.client';
 import type { UserGuardNamespaceLike } from '../durable-objects/user-guard.types';
 import {
+  createAppleAuthRevoker,
   createDirectR2MediaCleanup,
   createFailClosedAppleTokenRevoker,
   createFailClosedIdentityProviderDeleter,
+  createFirebaseIdentityDeleter,
   createLocalAppleTokenRevoker,
   createLocalIdentityProviderDeleter,
   type AppleTokenRevokerPort,
@@ -25,6 +27,7 @@ import {
 } from '../modules/account-deletion';
 import {
   createFailClosedTokenVerifier,
+  createFirebaseJwksTokenVerifier,
   createLocalDevTokenVerifier,
   type TokenVerifierPort,
 } from '../modules/identity';
@@ -68,6 +71,54 @@ export interface ResolvedAdapters {
   readonly tokenVerifier: TokenVerifierPort;
 }
 
+function resolveProductionAppleRevoker(appConfig: AppConfig, clock: Clock): AppleTokenRevokerPort {
+  if (
+    appConfig.appleTeamId !== undefined &&
+    appConfig.appleClientId !== undefined &&
+    appConfig.appleKeyId !== undefined &&
+    appConfig.applePrivateKeyPem !== undefined
+  ) {
+    return createAppleAuthRevoker({
+      teamId: appConfig.appleTeamId,
+      clientId: appConfig.appleClientId,
+      keyId: appConfig.appleKeyId,
+      privateKeyPem: appConfig.applePrivateKeyPem,
+      clock,
+    });
+  }
+  return createFailClosedAppleTokenRevoker();
+}
+
+function resolveProductionFirebaseDeleter(
+  appConfig: AppConfig,
+  clock: Clock,
+): IdentityProviderDeleterPort {
+  if (
+    appConfig.firebaseClientEmail !== undefined &&
+    appConfig.firebasePrivateKeyPem !== undefined
+  ) {
+    return createFirebaseIdentityDeleter({
+      clientEmail: appConfig.firebaseClientEmail,
+      privateKeyPem: appConfig.firebasePrivateKeyPem,
+      ...(appConfig.firebaseProjectId !== undefined
+        ? { projectId: appConfig.firebaseProjectId }
+        : {}),
+      clock,
+    });
+  }
+  return createFailClosedIdentityProviderDeleter();
+}
+
+function resolveProductionTokenVerifier(appConfig: AppConfig, clock: Clock): TokenVerifierPort {
+  if (appConfig.firebaseProjectId !== undefined) {
+    return createFirebaseJwksTokenVerifier({
+      firebaseProjectId: appConfig.firebaseProjectId,
+      clock,
+    });
+  }
+  return createFailClosedTokenVerifier();
+}
+
 export function resolveRuntimeAdapters(input: ResolveAdaptersInput): ResolvedAdapters {
   const { appConfig, clock, mediaBucket, userGuard, apartmentCoordinator, overrides } = input;
 
@@ -104,19 +155,19 @@ export function resolveRuntimeAdapters(input: ResolveAdaptersInput): ResolvedAda
     overrides?.appleTokenRevoker ??
     (appConfig.authMode === 'local'
       ? createLocalAppleTokenRevoker()
-      : createFailClosedAppleTokenRevoker());
+      : resolveProductionAppleRevoker(appConfig, clock));
 
   const identityProviderDeleter =
     overrides?.identityProviderDeleter ??
     (appConfig.authMode === 'local'
       ? createLocalIdentityProviderDeleter()
-      : createFailClosedIdentityProviderDeleter());
+      : resolveProductionFirebaseDeleter(appConfig, clock));
 
   const tokenVerifier =
     overrides?.tokenVerifier ??
     (appConfig.authMode === 'local'
       ? createLocalDevTokenVerifier()
-      : createFailClosedTokenVerifier());
+      : resolveProductionTokenVerifier(appConfig, clock));
 
   return {
     inviteRateLimiter,

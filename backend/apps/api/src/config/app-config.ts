@@ -25,6 +25,12 @@ export interface AppConfig {
   readonly authMode: AuthMode;
   readonly storageMode: StorageMode;
   readonly firebaseProjectId?: string;
+  readonly firebaseClientEmail?: string;
+  readonly firebasePrivateKeyPem?: string;
+  readonly appleTeamId?: string;
+  readonly appleClientId?: string;
+  readonly appleKeyId?: string;
+  readonly applePrivateKeyPem?: string;
 }
 
 export type AppConfigError = DomainError<'INVALID_APP_CONFIG'>;
@@ -58,6 +64,18 @@ export function safeParseAppConfig(rawEnv: unknown): Result<AppConfig, AppConfig
     storageMode: vars.STORAGE_MODE,
     ...(vars.FIREBASE_PROJECT_ID !== undefined
       ? { firebaseProjectId: vars.FIREBASE_PROJECT_ID }
+      : {}),
+    ...(vars.FIREBASE_CLIENT_EMAIL !== undefined
+      ? { firebaseClientEmail: vars.FIREBASE_CLIENT_EMAIL }
+      : {}),
+    ...(vars.FIREBASE_PRIVATE_KEY_PEM !== undefined
+      ? { firebasePrivateKeyPem: vars.FIREBASE_PRIVATE_KEY_PEM }
+      : {}),
+    ...(vars.APPLE_TEAM_ID !== undefined ? { appleTeamId: vars.APPLE_TEAM_ID } : {}),
+    ...(vars.APPLE_CLIENT_ID !== undefined ? { appleClientId: vars.APPLE_CLIENT_ID } : {}),
+    ...(vars.APPLE_KEY_ID !== undefined ? { appleKeyId: vars.APPLE_KEY_ID } : {}),
+    ...(vars.APPLE_PRIVATE_KEY_PEM !== undefined
+      ? { applePrivateKeyPem: vars.APPLE_PRIVATE_KEY_PEM }
       : {}),
   };
 

@@ -40,6 +40,15 @@ export {
   type R2ObjectDeleterLike,
 } from './infrastructure/local-external-auth-cleanup';
 export {
+  createAppleAuthRevoker,
+  type AppleAuthRevokerDeps,
+  type ExternalAuthFetchFn,
+} from './infrastructure/apple-auth-revoker';
+export {
+  createFirebaseIdentityDeleter,
+  type FirebaseIdentityDeleterDeps,
+} from './infrastructure/firebase-identity-deleter';
+export {
   DeleteAccountRequestSchema,
   type DeleteAccountRequestDto,
 } from './http/account-deletion.schema';
