@@ -45,11 +45,19 @@ struct ApartmentsListFeatureTests {
   }
 
   private actor SyncCounter {
+    var callOrder: [String] = []
     var syncAllCalls = 0
     var outboxCalls = 0
 
-    func recordSyncAll() { syncAllCalls += 1 }
-    func recordOutbox() { outboxCalls += 1 }
+    func recordSyncAll() {
+      syncAllCalls += 1
+      callOrder.append("syncAllOnEntry")
+    }
+
+    func recordOutbox() {
+      outboxCalls += 1
+      callOrder.append("processOutbox")
+    }
   }
 
   @MainActor
@@ -63,6 +71,7 @@ struct ApartmentsListFeatureTests {
       ApartmentsListFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.syncEngine.events = { AsyncStream { $0.finish() } }
       $0.syncEngine.syncAllOnEntry = {
         await counter.recordSyncAll()
         return 0
@@ -99,6 +108,14 @@ struct ApartmentsListFeatureTests {
 
     #expect(await counter.syncAllCalls == 2)
     #expect(await counter.outboxCalls == 2)
+    #expect(
+      await counter.callOrder == [
+        "processOutbox",
+        "syncAllOnEntry",
+        "processOutbox",
+        "syncAllOnEntry",
+      ]
+    )
   }
 
   private func seedApartmentWithMedia() throws -> any DatabaseWriter {

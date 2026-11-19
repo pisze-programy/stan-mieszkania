@@ -4,6 +4,7 @@ import Database
 import DesignSystem
 import Domain
 import Foundation
+import SyncEngine
 
 extension ApartmentsListFeature {
   func startSync(_ state: inout State) -> Effect<Action> {
@@ -17,13 +18,37 @@ extension ApartmentsListFeature {
         await send(.localDataLoaded(user: snapshot.user, items: snapshot.items))
       }
       do {
-        _ = try await syncEngine.syncAllOnEntry()
+        // Decision Q6 & S2-8: Flush pending local apartment creations before pulling remote state.
         _ = await syncEngine.processOutbox()
+        _ = try await syncEngine.syncAllOnEntry()
         let updated = try ApartmentsListStore.fetchSnapshot(from: database)
         await send(.syncCompleted(user: updated.user, items: updated.items))
       } catch {
         await send(.syncFailed(mapError(error)))
       }
+    }
+  }
+
+  func listenToSyncEvents() -> Effect<Action> {
+    .run { send in
+      let stream = await syncEngine.events()
+      for await event in stream {
+        await send(.syncEventReceived(event))
+      }
+    }
+    .cancellable(id: CancelID.syncEvents, cancelInFlight: true)
+  }
+
+  func handleSyncEvent(_ event: SyncEvent) -> Effect<Action> {
+    switch event {
+    case .apartmentSynced, .outboxCompleted, .quotaExceeded:
+      return .run { send in
+        if let snapshot = try? ApartmentsListStore.fetchSnapshot(from: database) {
+          await send(.localDataLoaded(user: snapshot.user, items: snapshot.items))
+        }
+      }
+    case .uploadProgress, .forceUpdateRequired:
+      return .none
     }
   }
 

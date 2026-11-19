@@ -36,6 +36,7 @@ public struct OnboardingFeature: Sendable {
     case localDevSignInSheetPresented(Bool)
     case localDevSignInSubmitted(uid: String, displayName: String?)
     case authSucceeded(UserProfile)
+    case authCancelled
     case authFailed(String)
     case dismissError
     case delegate(Delegate)
@@ -95,6 +96,10 @@ public struct OnboardingFeature: Sendable {
           .send(.delegate(.didAuthenticate(profile)))
         )
 
+      case .authCancelled:
+        state.isSigningIn = false
+        return .none
+
       case .authFailed(let message):
         state.isSigningIn = false
         state.errorMessage = message
@@ -122,6 +127,10 @@ public struct OnboardingFeature: Sendable {
       let store = ApartmentMutationStore(database: database)
       try store.saveLocalUser(profile, isCurrentUser: true)
       await send(.authSucceeded(profile))
+    } catch let authError as AuthClientError where authError == .cancelled {
+      await send(.authCancelled)
+    } catch is CancellationError {
+      await send(.authCancelled)
     } catch {
       try? await authClient.clearSession()
       await send(.authFailed(mapErrorMessage(error)))

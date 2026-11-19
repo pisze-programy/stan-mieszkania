@@ -78,6 +78,7 @@ public struct ApartmentsListFeature: Sendable {
     case localDataLoaded(user: UserProfile?, items: [ApartmentListItem])
     case syncCompleted(user: UserProfile?, items: [ApartmentListItem])
     case syncFailed(String)
+    case syncEventReceived(SyncEvent)
     case dismissError
     case apartmentTapped(String)
     case profileTapped
@@ -104,6 +105,10 @@ public struct ApartmentsListFeature: Sendable {
     }
   }
 
+  enum CancelID {
+    case syncEvents
+  }
+
   @Dependency(\.defaultDatabase) var database
   @Dependency(\.apiClient) var apiClient
   @Dependency(\.syncEngine) var syncEngine
@@ -116,7 +121,12 @@ public struct ApartmentsListFeature: Sendable {
   public var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .task, .pulledToRefresh:
+      case .task:
+        return .merge(
+          startSync(&state),
+          listenToSyncEvents()
+        )
+      case .pulledToRefresh:
         return startSync(&state)
       case .localDataLoaded(let user, let items):
         state.currentUser = user
@@ -131,6 +141,8 @@ public struct ApartmentsListFeature: Sendable {
         state.isSyncing = false
         state.errorMessage = message
         return .none
+      case .syncEventReceived(let event):
+        return handleSyncEvent(event)
       case .dismissError:
         state.errorMessage = nil
         return .none

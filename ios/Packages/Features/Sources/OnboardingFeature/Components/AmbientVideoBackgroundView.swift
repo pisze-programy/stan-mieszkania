@@ -80,6 +80,47 @@ public struct AmbientVideoBackgroundView: View {
   }
 }
 
+@MainActor
+private final class LoopingPlayerController {
+  let playerLayer = AVPlayerLayer()
+  private var queuePlayer: AVQueuePlayer?
+  private var playerLooper: AVPlayerLooper?
+  private var currentURL: URL?
+
+  init() {
+    playerLayer.videoGravity = .resizeAspectFill
+  }
+
+  func updateVideoURL(_ url: URL) {
+    guard currentURL != url else {
+      return
+    }
+    tearDown()
+    currentURL = url
+    let item = AVPlayerItem(url: url)
+    let player = AVQueuePlayer(playerItem: item)
+    player.isMuted = true
+    #if os(iOS)
+      player.allowsExternalPlayback = false
+    #endif
+    let looper = AVPlayerLooper(player: player, templateItem: item)
+    playerLayer.player = player
+    queuePlayer = player
+    playerLooper = looper
+    player.play()
+  }
+
+  func tearDown() {
+    playerLooper?.disableLooping()
+    playerLooper = nil
+    queuePlayer?.pause()
+    queuePlayer?.removeAllItems()
+    queuePlayer = nil
+    playerLayer.player = nil
+    currentURL = nil
+  }
+}
+
 #if os(iOS)
   private struct LoopingVideoPlayerView: UIViewRepresentable {
     let videoURL: URL
@@ -89,21 +130,21 @@ public struct AmbientVideoBackgroundView: View {
     }
 
     func updateUIView(_ uiView: PlayerContainerUIView, context: Context) {
-      uiView.updateVideoURL(videoURL)
+      uiView.controller.updateVideoURL(videoURL)
+    }
+
+    static func dismantleUIView(_ uiView: PlayerContainerUIView, coordinator: ()) {
+      uiView.controller.tearDown()
     }
   }
 
   private final class PlayerContainerUIView: UIView {
-    private var playerLayer = AVPlayerLayer()
-    private var queuePlayer: AVQueuePlayer?
-    private var playerLooper: AVPlayerLooper?
-    private var currentURL: URL?
+    let controller = LoopingPlayerController()
 
     init(videoURL: URL) {
       super.init(frame: .zero)
-      playerLayer.videoGravity = .resizeAspectFill
-      layer.addSublayer(playerLayer)
-      updateVideoURL(videoURL)
+      layer.addSublayer(controller.playerLayer)
+      controller.updateVideoURL(videoURL)
     }
 
     @available(*, unavailable)
@@ -113,23 +154,7 @@ public struct AmbientVideoBackgroundView: View {
 
     override func layoutSubviews() {
       super.layoutSubviews()
-      playerLayer.frame = bounds
-    }
-
-    func updateVideoURL(_ url: URL) {
-      guard currentURL != url else {
-        return
-      }
-      currentURL = url
-      let item = AVPlayerItem(url: url)
-      let player = AVQueuePlayer(playerItem: item)
-      player.isMuted = true
-      player.allowsExternalPlayback = false
-      let looper = AVPlayerLooper(player: player, templateItem: item)
-      playerLayer.player = player
-      queuePlayer = player
-      playerLooper = looper
-      player.play()
+      controller.playerLayer.frame = bounds
     }
   }
 #elseif os(macOS)
@@ -141,22 +166,22 @@ public struct AmbientVideoBackgroundView: View {
     }
 
     func updateNSView(_ nsView: PlayerContainerNSView, context: Context) {
-      nsView.updateVideoURL(videoURL)
+      nsView.controller.updateVideoURL(videoURL)
+    }
+
+    static func dismantleNSView(_ nsView: PlayerContainerNSView, coordinator: ()) {
+      nsView.controller.tearDown()
     }
   }
 
   private final class PlayerContainerNSView: NSView {
-    private let playerLayer = AVPlayerLayer()
-    private var queuePlayer: AVQueuePlayer?
-    private var playerLooper: AVPlayerLooper?
-    private var currentURL: URL?
+    let controller = LoopingPlayerController()
 
     init(videoURL: URL) {
       super.init(frame: .zero)
       wantsLayer = true
-      playerLayer.videoGravity = .resizeAspectFill
-      layer?.addSublayer(playerLayer)
-      updateVideoURL(videoURL)
+      layer?.addSublayer(controller.playerLayer)
+      controller.updateVideoURL(videoURL)
     }
 
     @available(*, unavailable)
@@ -166,22 +191,7 @@ public struct AmbientVideoBackgroundView: View {
 
     override func layout() {
       super.layout()
-      playerLayer.frame = bounds
-    }
-
-    func updateVideoURL(_ url: URL) {
-      guard currentURL != url else {
-        return
-      }
-      currentURL = url
-      let item = AVPlayerItem(url: url)
-      let player = AVQueuePlayer(playerItem: item)
-      player.isMuted = true
-      let looper = AVPlayerLooper(player: player, templateItem: item)
-      playerLayer.player = player
-      queuePlayer = player
-      playerLooper = looper
-      player.play()
+      controller.playerLayer.frame = bounds
     }
   }
 #endif
