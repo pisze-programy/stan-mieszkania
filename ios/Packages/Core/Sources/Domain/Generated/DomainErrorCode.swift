@@ -70,9 +70,9 @@ public enum ServerErrorCode: Sendable, Equatable, Codable {
 
   public var rawValue: String {
     switch self {
-    case let .known(knownCode):
+    case .known(let knownCode):
       return knownCode.rawValue
-    case let .unknown(rawCode):
+    case .unknown(let rawCode):
       return rawCode
     }
   }

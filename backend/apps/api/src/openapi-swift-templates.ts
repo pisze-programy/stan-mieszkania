@@ -31,6 +31,12 @@ function formatSwiftDouble(value: number): string {
   return Number.isInteger(value) ? `${String(value)}.0` : String(value);
 }
 
+function formatSwiftInt(value: number): string {
+  const digits = String(Math.abs(value));
+  const grouped = /^\d{5,}$/.test(digits) ? digits.replace(/\B(?=(\d{3})+(?!\d))/g, '_') : digits;
+  return value < 0 ? `-${grouped}` : grouped;
+}
+
 function screamingSnakeToCamelCase(code: string): string {
   const parts = code
     .toLowerCase()
@@ -72,7 +78,7 @@ export function renderContractConstantsSwift(values: SwiftContractConstantValues
     'import Foundation',
     '',
     'public enum ContractConstants: Sendable {',
-    ...intFields.map(([name, val]) => `  public static let ${name}: Int = ${String(val)}`),
+    ...intFields.map(([name, val]) => `  public static let ${name}: Int = ${formatSwiftInt(val)}`),
     `  public static let inviteCodeAlphabet: String = "${escapeSwiftString(values.inviteCodeAlphabet)}"`,
     `  public static let markerCoordMin: Double = ${formatSwiftDouble(values.markerCoordMin)}`,
     `  public static let markerCoordMax: Double = ${formatSwiftDouble(values.markerCoordMax)}`,
@@ -119,9 +125,9 @@ public enum ServerErrorCode: Sendable, Equatable, Codable {
 
   public var rawValue: String {
     switch self {
-    case let .known(knownCode):
+    case .known(let knownCode):
       return knownCode.rawValue
-    case let .unknown(rawCode):
+    case .unknown(let rawCode):
       return rawCode
     }
   }

@@ -16,7 +16,7 @@ public enum ContractConstants: Sendable {
   public static let sha256HexLength: Int = 64
   public static let defaultCloudMediaQuotaPerApartment: Int = 250
   public static let defaultJpegMaxDimensionPx: Int = 3000
-  public static let defaultJpegMaxBytes: Int = 3145728
+  public static let defaultJpegMaxBytes: Int = 3_145_728
   public static let inviteCodeAlphabet: String = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
   public static let markerCoordMin: Double = 0.0
   public static let markerCoordMax: Double = 1.0
