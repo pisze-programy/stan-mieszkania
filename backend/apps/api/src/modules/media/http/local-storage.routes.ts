@@ -6,7 +6,7 @@ import {
   notFoundErrorResponse,
   respondDomainError,
 } from '../../../http/domain-error-to-http.mapper';
-import { COMMON_ERROR_CODES } from '../../../http/http.constants';
+import { COMMON_ERROR_CODES, DIGITS_ONLY_REGEX } from '../../../http/http.constants';
 import type { HttpContextVariables } from '../../../http/http-env';
 import { MEDIA_CONTENT_TYPE_JPEG } from '../domain/media.constants';
 import { MEDIA_ERROR_CODES } from '../domain/media.errors';
@@ -28,6 +28,8 @@ export interface LocalStorageHandlers {
     readonly method: string;
     readonly r2Key: string;
     readonly expiresMs: number;
+    readonly bytes?: number;
+    readonly contentType?: string;
     readonly signatureHex: string;
     readonly nowMs: number;
   }) => Promise<boolean>;
@@ -35,29 +37,111 @@ export interface LocalStorageHandlers {
 
 const SIGNED_QUERY_RADIX = 10;
 
-async function authorizeLocalStorage(
-  c: Context,
+type AuthorizedPutResult =
+  | {
+      readonly ok: true;
+      readonly key: string;
+      readonly signedBytes: number;
+      readonly contentType: string;
+    }
+  | { readonly ok: false; readonly response: Response };
+
+type AuthorizedGetResult =
+  { readonly ok: true; readonly key: string } | { readonly ok: false; readonly response: Response };
+
+function forbiddenResponse<E extends { Variables: HttpContextVariables }>(
+  c: Context<E>,
+  message: string,
+): Response {
+  return respondDomainError(
+    c,
+    createDomainError(COMMON_ERROR_CODES.FORBIDDEN, message),
+    c.get('requestId'),
+    [HTTP_STATUS.FORBIDDEN],
+  );
+}
+
+function parsePositiveSafeInt(raw: string): number | null {
+  if (!DIGITS_ONLY_REGEX.test(raw)) return null;
+  const parsed = Number.parseInt(raw, SIGNED_QUERY_RADIX);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+async function authorizePut<E extends { Variables: HttpContextVariables }>(
+  c: Context<E>,
   deps: LocalStorageHandlers,
-  expectedMethod: 'PUT' | 'GET',
-): Promise<
-  { readonly ok: true; readonly key: string } | { readonly ok: false; readonly response: Response }
-> {
-  const requestId = c.get('requestId') as string;
+): Promise<AuthorizedPutResult> {
   if (deps.storageMode !== 'local') {
-    return { ok: false, response: notFoundErrorResponse(c, requestId) };
+    return { ok: false, response: notFoundErrorResponse(c, c.get('requestId')) };
   }
   const key = c.req.query('key') ?? '';
   const method = (c.req.query('method') ?? '').toUpperCase();
-  const expiresRaw = c.req.query('expires') ?? '';
+  const expiresMs = parsePositiveSafeInt(c.req.query('expires') ?? '');
+  const signedBytes = parsePositiveSafeInt(c.req.query('bytes') ?? '');
+  const contentType = c.req.query('contentType') ?? '';
   const sig = c.req.query('sig') ?? '';
-  const expiresMs = Number.parseInt(expiresRaw, SIGNED_QUERY_RADIX);
 
   const valid =
     key.length > 0 &&
-    method === expectedMethod &&
-    Number.isFinite(expiresMs) &&
+    method === 'PUT' &&
+    expiresMs !== null &&
+    signedBytes !== null &&
+    contentType === MEDIA_CONTENT_TYPE_JPEG &&
     (await deps.verifySignature({
-      method: expectedMethod,
+      method: 'PUT',
+      r2Key: key,
+      expiresMs,
+      bytes: signedBytes,
+      contentType,
+      signatureHex: sig,
+      nowMs: deps.clock.nowMs(),
+    }));
+
+  if (!valid) {
+    return {
+      ok: false,
+      response: forbiddenResponse(c, 'Invalid or expired local storage signature'),
+    };
+  }
+
+  const rawHeaderCt =
+    (c.req.header('Content-Type') ?? '').split(';')[0]?.trim().toLowerCase() ?? '';
+  if (rawHeaderCt !== MEDIA_CONTENT_TYPE_JPEG) {
+    return { ok: false, response: forbiddenResponse(c, 'Content-Type must be image/jpeg') };
+  }
+
+  const rawLen = c.req.header('Content-Length');
+  if (rawLen !== undefined) {
+    const parsedLen = parsePositiveSafeInt(rawLen.trim());
+    if (parsedLen !== signedBytes) {
+      return {
+        ok: false,
+        response: forbiddenResponse(c, 'Content-Length does not match signed bytes'),
+      };
+    }
+  }
+
+  return { ok: true, key, signedBytes, contentType };
+}
+
+async function authorizeGet<E extends { Variables: HttpContextVariables }>(
+  c: Context<E>,
+  deps: LocalStorageHandlers,
+): Promise<AuthorizedGetResult> {
+  if (deps.storageMode !== 'local') {
+    return { ok: false, response: notFoundErrorResponse(c, c.get('requestId')) };
+  }
+  const key = c.req.query('key') ?? '';
+  const method = (c.req.query('method') ?? '').toUpperCase();
+  const expiresMs = parsePositiveSafeInt(c.req.query('expires') ?? '');
+  const sig = c.req.query('sig') ?? '';
+
+  const valid =
+    key.length > 0 &&
+    method === 'GET' &&
+    expiresMs !== null &&
+    (await deps.verifySignature({
+      method: 'GET',
       r2Key: key,
       expiresMs,
       signatureHex: sig,
@@ -67,15 +151,7 @@ async function authorizeLocalStorage(
   if (!valid) {
     return {
       ok: false,
-      response: respondDomainError(
-        c,
-        createDomainError(
-          COMMON_ERROR_CODES.FORBIDDEN,
-          'Invalid or expired local storage signature',
-        ),
-        requestId,
-        [HTTP_STATUS.FORBIDDEN],
-      ),
+      response: forbiddenResponse(c, 'Invalid or expired local storage signature'),
     };
   }
   return { ok: true, key };
@@ -88,7 +164,7 @@ export function createLocalStorageRoutes<E extends { Variables: HttpContextVaria
 
   routes.put('/local-storage/objects', async (c) => {
     const deps = resolveHandlers(c);
-    const auth = await authorizeLocalStorage(c, deps, 'PUT');
+    const auth = await authorizePut(c, deps);
     if (!auth.ok) return auth.response;
 
     if (deps.bucket === undefined) {
@@ -100,14 +176,16 @@ export function createLocalStorageRoutes<E extends { Variables: HttpContextVaria
       );
     }
     const body = await c.req.arrayBuffer();
-    const contentType = c.req.header('Content-Type') ?? MEDIA_CONTENT_TYPE_JPEG;
-    await deps.bucket.put(auth.key, body, { httpMetadata: { contentType } });
+    if (body.byteLength !== auth.signedBytes) {
+      return forbiddenResponse(c, 'Request body byte length does not match signed bytes');
+    }
+    await deps.bucket.put(auth.key, body, { httpMetadata: { contentType: auth.contentType } });
     return c.json({ ok: true, bytes: body.byteLength }, HTTP_STATUS.OK);
   });
 
   routes.get('/local-storage/objects', async (c) => {
     const deps = resolveHandlers(c);
-    const auth = await authorizeLocalStorage(c, deps, 'GET');
+    const auth = await authorizeGet(c, deps);
     if (!auth.ok) return auth.response;
 
     if (deps.bucket === undefined) {

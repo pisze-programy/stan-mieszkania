@@ -101,13 +101,17 @@ export class InMemorySyncRepository implements SyncRepository {
     const slice = hasMore ? matching.slice(0, query.limit) : matching;
     const changes: HydratedSyncChange[] = slice.map((c) => ({
       ...c,
-      payload: this.hydrate(c, query.callerRole),
+      payload: this.hydrate(c, query.callerUserId, query.callerRole),
     }));
     const last = changes[changes.length - 1];
     return Promise.resolve(ok({ changes, nextSeq: last?.seq ?? null, hasMore }));
   }
 
-  private hydrate(change: StoredChange, callerRole: SyncRole): SyncChangePayload | null {
+  private hydrate(
+    change: StoredChange,
+    callerUserId: string,
+    callerRole: SyncRole,
+  ): SyncChangePayload | null {
     if (change.entityType === SYNC_ENTITY_TYPES.APARTMENT) {
       const apt = this.apartments.get(change.apartmentId);
       if (apt === undefined) return null;
@@ -128,7 +132,9 @@ export class InMemorySyncRepository implements SyncRepository {
     }
     if (change.entityType === SYNC_ENTITY_TYPES.MEDIA) {
       const item = this.media.get(change.entityId);
-      return item !== undefined ? { kind: 'media', media: item } : null;
+      if (item === undefined) return null;
+      if (item.uploadStatus !== 'uploaded' && item.authorId !== callerUserId) return null;
+      return { kind: 'media', media: item };
     }
     if (change.entityType === SYNC_ENTITY_TYPES.ENTRY) {
       const entry = this.entries.get(change.entityId);

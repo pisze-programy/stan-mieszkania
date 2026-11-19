@@ -51,6 +51,7 @@ function collectIds(rows: readonly ChangeLogRow[], entityType: string): readonly
 async function hydrateChangeRows(
   db: D1Queryable,
   apartmentId: string,
+  callerUserId: string,
   callerRole: 'owner' | 'contributor',
   rows: readonly ChangeLogRow[],
 ): Promise<Result<HydrationMaps, DomainError>> {
@@ -87,7 +88,7 @@ async function hydrateChangeRows(
   if (mediaIds.length > 0) {
     const mediaRes = await query(
       db,
-      listMediaForHydrationStatement(apartmentId, mediaIds),
+      listMediaForHydrationStatement(apartmentId, callerUserId, mediaIds),
       syncMediaHydrationRowSchema,
     );
     if (!mediaRes.ok) return mediaRes;
@@ -145,7 +146,7 @@ export function createD1SyncRepository<TStatement extends D1PreparedStatementLik
         };
       });
     },
-    listChangesAfter: async ({ apartmentId, callerRole, afterSeq, limit }) => {
+    listChangesAfter: async ({ apartmentId, callerUserId, callerRole, afterSeq, limit }) => {
       const logResult = await query(
         db,
         listChangeLogAfterStatement(apartmentId, afterSeq, limit),
@@ -155,7 +156,13 @@ export function createD1SyncRepository<TStatement extends D1PreparedStatementLik
 
       const hasMore = logResult.value.length > limit;
       const pageRows = hasMore ? logResult.value.slice(0, limit) : logResult.value;
-      const hydration = await hydrateChangeRows(db, apartmentId, callerRole, pageRows);
+      const hydration = await hydrateChangeRows(
+        db,
+        apartmentId,
+        callerUserId,
+        callerRole,
+        pageRows,
+      );
       if (!hydration.ok) return hydration;
 
       const lastRow = pageRows[pageRows.length - 1];

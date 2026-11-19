@@ -72,6 +72,7 @@ describe('D1SyncRepository & all 8 schema tables', () => {
 
     const page = await repo.listChangesAfter({
       apartmentId: 'apt-1',
+      callerUserId: 'usr-1',
       callerRole: 'owner',
       afterSeq: 0,
       limit: 10,

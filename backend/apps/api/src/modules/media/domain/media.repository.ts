@@ -22,6 +22,7 @@ export interface MediaWithAuthor {
 
 export interface MediaListQuery {
   readonly apartmentId: string;
+  readonly viewerUserId: string;
   readonly after?: string;
   readonly limit: number;
 }

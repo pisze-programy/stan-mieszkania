@@ -44,6 +44,7 @@ export function createListApartmentChangesFeedUseCase(
 
       return deps.syncRepository.listChangesAfter({
         apartmentId: input.apartmentId,
+        callerUserId: input.userId,
         callerRole: access.value.role,
         afterSeq,
         limit,

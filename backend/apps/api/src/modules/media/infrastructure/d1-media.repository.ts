@@ -64,7 +64,7 @@ export function createD1MediaRepository<TStatement extends D1PreparedStatementLi
       );
       return mapResult(result, (row) => (row === null ? null : mapMediaWithAuthorRow(row)));
     },
-    listByApartment: async ({ apartmentId, after, limit }) => {
+    listByApartment: async ({ apartmentId, viewerUserId, after, limit }) => {
       let decoded: DecodedMediaCursor | undefined;
       if (after !== undefined) {
         const parsed = decodeMediaCursor(after);
@@ -76,7 +76,7 @@ export function createD1MediaRepository<TStatement extends D1PreparedStatementLi
 
       const result = await query(
         db,
-        listApartmentMediaStatement(apartmentId, limit, decoded),
+        listApartmentMediaStatement(apartmentId, viewerUserId, limit, decoded),
         mediaWithAuthorRowSchema,
       );
       return mapResult(result, (rows) => {

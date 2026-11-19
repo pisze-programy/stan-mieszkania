@@ -40,6 +40,7 @@ export function createListApartmentMediaUseCase(
 
       return deps.mediaRepository.listByApartment({
         apartmentId: input.apartmentId,
+        viewerUserId: input.userId,
         ...(input.after !== undefined ? { after: input.after } : {}),
         limit: input.limit ?? DEFAULT_PAGE_SIZE,
       });

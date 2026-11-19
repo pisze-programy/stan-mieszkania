@@ -138,6 +138,7 @@ describe('D1MediaRepository', () => {
     const allPages = await exhaustCursorPages<MediaWithAuthor, string>(async (after) => {
       const page = await repo.listByApartment({
         apartmentId: 'apt-1',
+        viewerUserId: 'usr-owner',
         ...(after !== undefined ? { after } : {}),
         limit: 1,
       });

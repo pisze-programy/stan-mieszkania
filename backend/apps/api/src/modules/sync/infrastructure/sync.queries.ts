@@ -107,11 +107,12 @@ export function listMembersForHydrationStatement(
 
 export function listMediaForHydrationStatement(
   apartmentId: string,
+  callerUserId: string,
   mediaIds: readonly string[],
 ): SqlStatement {
   return createStatement(
-    `SELECT ${MEDIA_TABLE.columnList('m')}, u.display_name AS author_display_name, u.short_tag AS author_short_tag, u.color AS author_color, mb.${MB.role} AS author_role FROM ${MEDIA_TABLE.name} m INNER JOIN users u ON u.id = m.${MD.authorId} LEFT JOIN ${MEMBERSHIPS_TABLE.name} mb ON mb.${MB.apartmentId} = m.${MD.apartmentId} AND mb.${MB.userId} = m.${MD.authorId} WHERE m.${MD.apartmentId} = ? AND m.${MD.id} IN (${placeholders(mediaIds.length)})`,
-    [apartmentId, ...mediaIds],
+    `SELECT ${MEDIA_TABLE.columnList('m')}, u.display_name AS author_display_name, u.short_tag AS author_short_tag, u.color AS author_color, mb.${MB.role} AS author_role FROM ${MEDIA_TABLE.name} m INNER JOIN users u ON u.id = m.${MD.authorId} LEFT JOIN ${MEMBERSHIPS_TABLE.name} mb ON mb.${MB.apartmentId} = m.${MD.apartmentId} AND mb.${MB.userId} = m.${MD.authorId} WHERE m.${MD.apartmentId} = ? AND (m.${MD.uploadStatus} = 'confirmed' OR m.${MD.authorId} = ?) AND m.${MD.id} IN (${placeholders(mediaIds.length)})`,
+    [apartmentId, callerUserId, ...mediaIds],
   );
 }
 

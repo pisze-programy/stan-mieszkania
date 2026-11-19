@@ -16,6 +16,7 @@ import {
   mediaAlreadyDeletedError,
   mediaAuthorRequiredError,
   mediaHashMismatchError,
+  mediaObjectNotUploadedError,
   mediaValidationFailedError,
   videoDisabledInMvpError,
   type MediaError,
@@ -175,6 +176,9 @@ export function softDeleteMedia(
   }
   if (media.deletedAt !== null) {
     return ok(media);
+  }
+  if (media.uploadStatus !== 'uploaded') {
+    return err(mediaObjectNotUploadedError(media.id));
   }
   return ok({
     ...media,

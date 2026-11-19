@@ -9,6 +9,7 @@ export interface SyncApartmentAccess {
 
 export interface ListChangesAfterQuery {
   readonly apartmentId: string;
+  readonly callerUserId: string;
   readonly callerRole: SyncRole;
   readonly afterSeq: number;
   readonly limit: number;

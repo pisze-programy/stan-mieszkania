@@ -29,7 +29,12 @@ export function createGetMediaUseCase(deps: GetMediaDeps): GetMediaUseCase {
 
       const found = await deps.mediaRepository.findByIdWithAuthor(input.mediaId);
       if (!found.ok) return found;
-      if (found.value === null || found.value.media.apartmentId !== input.apartmentId) {
+      if (
+        found.value === null ||
+        found.value.media.apartmentId !== input.apartmentId ||
+        (found.value.media.uploadStatus !== 'uploaded' &&
+          found.value.media.authorId !== input.userId)
+      ) {
         return err(mediaNotFoundError(input.mediaId));
       }
 

@@ -114,7 +114,24 @@ describe('Sync HTTP routes (/v1/apartments/{id}/changes & /v1/me/apartments)', (
         locationSource: 'device',
       }),
     );
-    await app.request(init.upload?.url ?? '', { method: 'PUT', body: jpegBytes }, env);
+    const pendingFeedForOwner = SyncChangesResponseSchema.parse(
+      await okJson(
+        app,
+        `/v1/apartments/${aptId}/changes?after=0&limit=10`,
+        'dev:own-s',
+        env,
+        'GET',
+      ),
+    );
+    const pendingChange = pendingFeedForOwner.changes.find((c) => c.entityId === medId);
+    expect(pendingChange?.payload).toBeNull();
+
+    const putRes = await app.request(
+      init.upload?.url ?? '',
+      { method: 'PUT', headers: { 'Content-Type': 'image/jpeg' }, body: jpegBytes },
+      env,
+    );
+    expect(putRes.status).toBe(HTTP_STATUS.OK);
     await okJson(app, `/v1/apartments/${aptId}/media/${medId}/confirm`, 'dev:cnt-s', env, 'POST');
     await okJson(
       app,

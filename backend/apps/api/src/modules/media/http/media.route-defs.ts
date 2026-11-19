@@ -161,6 +161,10 @@ export const deleteMediaRoute = createRoute({
     [HTTP_STATUS.BAD_REQUEST]: { description: 'Validation error', content: problemJsonContent },
     [HTTP_STATUS.FORBIDDEN]: { description: 'Author required', content: problemJsonContent },
     [HTTP_STATUS.NOT_FOUND]: { description: 'Media not found', content: problemJsonContent },
+    [HTTP_STATUS.CONFLICT]: {
+      description: 'Media pending upload cannot be soft-deleted',
+      content: problemJsonContent,
+    },
     ...COMMON_AUTH_AND_SERVER_ERRORS,
   },
 });

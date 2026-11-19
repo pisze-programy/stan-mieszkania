@@ -73,7 +73,11 @@ export class InMemoryMediaRepository implements MediaRepository {
     query: MediaListQuery,
   ): Promise<Result<CursorPage<MediaWithAuthor, string>, DomainError>> {
     const sorted = Array.from(this.items.values())
-      .filter((m) => m.apartmentId === query.apartmentId)
+      .filter(
+        (m) =>
+          m.apartmentId === query.apartmentId &&
+          (m.uploadStatus === 'uploaded' || m.authorId === query.viewerUserId),
+      )
       .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt) || b.id.localeCompare(a.id));
     const slice = sorted.slice(0, query.limit);
     const items = slice.map((media) => ({

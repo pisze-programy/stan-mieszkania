@@ -99,10 +99,18 @@ describe('media.entity', () => {
     expect(isOk(replay) && replay.value).toEqual(confirmed.value);
   });
 
-  it('enforces author-only soft delete, preserves hashes/timestamps, and blocks post-delete confirm', () => {
+  it('enforces author-only soft delete, blocks pending soft delete, preserves hashes/timestamps, and blocks post-delete confirm', () => {
     const built = createPendingMedia(BASE_INPUT);
     expect(isOk(built)).toBe(true);
     if (!isOk(built)) return;
+
+    const pendingDelete = softDeleteMedia(built.value, {
+      actorUserId: 'usr-1',
+      nowIso: '2026-11-18T12:00:30.000Z',
+    });
+    expect(isErr(pendingDelete) && pendingDelete.error.code).toBe(
+      MEDIA_ERROR_CODES.MEDIA_OBJECT_NOT_UPLOADED,
+    );
 
     const confirmed = confirmMediaUploaded(built.value, {
       uploadedSha256: VALID_SHA,

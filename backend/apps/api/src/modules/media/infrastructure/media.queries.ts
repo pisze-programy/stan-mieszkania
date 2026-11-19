@@ -45,19 +45,20 @@ export function findMediaWithAuthorByIdStatement(mediaId: string): SqlStatement 
 
 export function listApartmentMediaStatement(
   apartmentId: string,
+  viewerUserId: string,
   limit: number,
   cursor?: DecodedMediaCursor,
 ): SqlStatement {
   const fetchLimit = limit + INITIAL_CHANGES_OFFSET;
   if (cursor === undefined) {
     return createStatement(
-      `SELECT ${MEDIA_TABLE.columnList('m')}, u.display_name AS author_display_name, u.short_tag AS author_short_tag, u.color AS author_color, mb.role AS author_role FROM ${MEDIA_TABLE.name} m INNER JOIN users u ON u.id = m.${M.authorId} LEFT JOIN memberships mb ON mb.apartment_id = m.${M.apartmentId} AND mb.user_id = m.${M.authorId} WHERE m.${M.apartmentId} = ? ORDER BY m.${M.capturedAt} DESC, m.${M.id} DESC LIMIT ?`,
-      [apartmentId, fetchLimit],
+      `SELECT ${MEDIA_TABLE.columnList('m')}, u.display_name AS author_display_name, u.short_tag AS author_short_tag, u.color AS author_color, mb.role AS author_role FROM ${MEDIA_TABLE.name} m INNER JOIN users u ON u.id = m.${M.authorId} LEFT JOIN memberships mb ON mb.apartment_id = m.${M.apartmentId} AND mb.user_id = m.${M.authorId} WHERE m.${M.apartmentId} = ? AND (m.${M.uploadStatus} = 'confirmed' OR m.${M.authorId} = ?) ORDER BY m.${M.capturedAt} DESC, m.${M.id} DESC LIMIT ?`,
+      [apartmentId, viewerUserId, fetchLimit],
     );
   }
   return createStatement(
-    `SELECT ${MEDIA_TABLE.columnList('m')}, u.display_name AS author_display_name, u.short_tag AS author_short_tag, u.color AS author_color, mb.role AS author_role FROM ${MEDIA_TABLE.name} m INNER JOIN users u ON u.id = m.${M.authorId} LEFT JOIN memberships mb ON mb.apartment_id = m.${M.apartmentId} AND mb.user_id = m.${M.authorId} WHERE m.${M.apartmentId} = ? AND (m.${M.capturedAt} < ? OR (m.${M.capturedAt} = ? AND m.${M.id} < ?)) ORDER BY m.${M.capturedAt} DESC, m.${M.id} DESC LIMIT ?`,
-    [apartmentId, cursor.capturedAt, cursor.capturedAt, cursor.id, fetchLimit],
+    `SELECT ${MEDIA_TABLE.columnList('m')}, u.display_name AS author_display_name, u.short_tag AS author_short_tag, u.color AS author_color, mb.role AS author_role FROM ${MEDIA_TABLE.name} m INNER JOIN users u ON u.id = m.${M.authorId} LEFT JOIN memberships mb ON mb.apartment_id = m.${M.apartmentId} AND mb.user_id = m.${M.authorId} WHERE m.${M.apartmentId} = ? AND (m.${M.uploadStatus} = 'confirmed' OR m.${M.authorId} = ?) AND (m.${M.capturedAt} < ? OR (m.${M.capturedAt} = ? AND m.${M.id} < ?)) ORDER BY m.${M.capturedAt} DESC, m.${M.id} DESC LIMIT ?`,
+    [apartmentId, viewerUserId, cursor.capturedAt, cursor.capturedAt, cursor.id, fetchLimit],
   );
 }
 

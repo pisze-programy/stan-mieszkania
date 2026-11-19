@@ -6,7 +6,9 @@ import { MEDIA_ERROR_CODES } from '../domain/media.errors';
 import { InMemoryMediaRepository, InMemoryObjectStorage } from '../testing/in-memory-media.doubles';
 import { createConfirmMediaUploadUseCase } from './confirm-media-upload.use-case';
 import { createGetMediaDownloadUrlUseCase } from './get-media-download-url.use-case';
+import { createGetMediaUseCase } from './get-media.use-case';
 import { createInitMediaUploadUseCase } from './init-media-upload.use-case';
+import { createListApartmentMediaUseCase } from './list-apartment-media.use-case';
 import { createSoftDeleteMediaUseCase } from './soft-delete-media.use-case';
 
 const VALID_SHA = 'a'.repeat(64);
@@ -57,6 +59,8 @@ function setupDeps(quota = 250) {
       presignPutTtlMs: 900_000,
     }),
     confirm: createConfirmMediaUploadUseCase({ mediaRepository, objectStorage, clock }),
+    getMedia: createGetMediaUseCase({ mediaRepository }),
+    listMedia: createListApartmentMediaUseCase({ mediaRepository }),
     getUrl: createGetMediaDownloadUrlUseCase({
       mediaRepository,
       objectStorage,
@@ -67,8 +71,9 @@ function setupDeps(quota = 250) {
 }
 
 describe('media application use cases', () => {
-  it('supports idempotent init, video/GPS/conflict/quota checks, and corrupt R2 cleanup on confirm', async () => {
-    const { mediaRepository, objectStorage, init, confirm, getUrl } = setupDeps(1);
+  it('supports idempotent init, video/GPS/conflict/quota checks, pending isolation, and corrupt R2 cleanup on confirm', async () => {
+    const { mediaRepository, objectStorage, init, confirm, getUrl, getMedia, listMedia } =
+      setupDeps(1);
 
     const video = await init.execute({ ...BASE_INIT, mediaId: 'med-vid', kind: 'video' });
     expect(isErr(video) && video.error.code).toBe(MEDIA_ERROR_CODES.VIDEO_DISABLED_IN_MVP);
@@ -113,6 +118,17 @@ describe('media application use cases', () => {
     expect(isErr(pendingUrl) && pendingUrl.error.code).toBe(
       MEDIA_ERROR_CODES.MEDIA_OBJECT_NOT_UPLOADED,
     );
+
+    const hiddenGet = await getMedia.execute({
+      apartmentId: 'apt-1',
+      mediaId: 'med-1',
+      userId: 'usr-2',
+    });
+    expect(isErr(hiddenGet) && hiddenGet.error.code).toBe(MEDIA_ERROR_CODES.MEDIA_NOT_FOUND);
+    const hiddenList = await listMedia.execute({ apartmentId: 'apt-1', userId: 'usr-2' });
+    expect(isOk(hiddenList) && hiddenList.value.items).toHaveLength(0);
+    const authorList = await listMedia.execute({ apartmentId: 'apt-1', userId: 'usr-1' });
+    expect(isOk(authorList) && authorList.value.items).toHaveLength(1);
 
     const r2Key = buildMediaR2Key('apt-1', 'med-1');
     objectStorage.seedObject(r2Key, 100_000, OTHER_SHA);

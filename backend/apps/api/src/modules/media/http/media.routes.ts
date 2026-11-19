@@ -171,6 +171,7 @@ export function createMediaRoutes<E extends { Variables: HttpContextVariables }>
       return respondDomainError(c, result.error, c.get('requestId'), [
         HTTP_STATUS.FORBIDDEN,
         HTTP_STATUS.NOT_FOUND,
+        HTTP_STATUS.CONFLICT,
       ]);
     }
     return c.json(toMediaDto(result.value), HTTP_STATUS.OK);
