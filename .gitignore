@@ -35,8 +35,11 @@ wrangler.toml.bak
 !.dev.vars.example
 *.pem
 *.key
+*-firebase-adminsdk-*.json
 *GoogleService-Info*.plist
 !GoogleService-Info.template.plist
+ios/GoogleService-Info.plist
+ios/App/Config/LocalSecrets.xcconfig
 
 # Xcode / Swift / iOS
 DerivedData/
