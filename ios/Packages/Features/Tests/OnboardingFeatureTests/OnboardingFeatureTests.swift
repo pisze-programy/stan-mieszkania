@@ -32,13 +32,11 @@ struct OnboardingFeatureTests {
 
   private actor Recorder {
     var signInAppleCount = 0
-    var localDevArgs: [(String, String?)] = []
     var clearSessionCount = 0
     var successHapticCount = 0
     var errorHapticCount = 0
 
     func recordSignInApple() { signInAppleCount += 1 }
-    func recordLocalDev(uid: String, name: String?) { localDevArgs.append((uid, name)) }
     func recordClearSession() { clearSessionCount += 1 }
     func recordSuccessHaptic() { successHapticCount += 1 }
     func recordErrorHaptic() { errorHapticCount += 1 }
@@ -90,7 +88,6 @@ struct OnboardingFeatureTests {
       OnboardingFeature()
     }
     await store.send(.signInWithAppleTapped)
-    await store.send(.localDevSignInSubmitted(uid: "dev", displayName: nil))
   }
 
   @MainActor
@@ -144,50 +141,9 @@ struct OnboardingFeatureTests {
   }
 
   @MainActor
-  @Test("Local dev login presents sheet, authenticates, persists user, and emits delegate")
-  func localDevLoginFlow() async throws {
-    let database = try makeInMemoryDatabase()
-    let recorder = Recorder()
-
-    let store = TestStore(
-      initialState: OnboardingFeature.State(isLocalDevLoginEnabled: true)
-    ) {
-      OnboardingFeature()
-    } withDependencies: {
-      $0.defaultDatabase = database
-      $0.authClient.signInLocalDev = { uid, name in
-        await recorder.recordLocalDev(uid: uid, name: name)
-        return AuthSession(firebaseUid: uid, displayName: name, bearerToken: "dev:\(uid)")
-      }
-      $0.apiClient.getMyProfile = {
-        Fixtures.profile
-      }
-      $0.haptics = .noop
-    }
-
-    await store.send(.localDevSignInSheetPresented(true)) {
-      $0.isLocalDevSheetPresented = true
-    }
-    await store.send(.localDevSignInSubmitted(uid: "dev-tenant", displayName: "Jan")) {
-      $0.isLocalDevSheetPresented = false
-      $0.isSigningIn = true
-    }
-    await store.receive(\.authSucceeded) {
-      $0.isSigningIn = false
-    }
-    await store.receive(\.delegate.didAuthenticate)
-
-    let calls = await recorder.localDevArgs
-    #expect(calls.count == 1)
-    #expect(calls.first?.0 == "dev-tenant")
-    #expect(calls.first?.1 == "Jan")
-    #expect(try ApartmentMutationStore(database: database).fetchCurrentUser() == Fixtures.profile)
-  }
-
-  @MainActor
   @Test("Instantiates OnboardingView and AmbientVideoBackgroundView cleanly")
   func instantiatesViews() {
-    let store = Store(initialState: OnboardingFeature.State(isLocalDevLoginEnabled: true)) {
+    let store = Store(initialState: OnboardingFeature.State()) {
       OnboardingFeature()
     }
     let view = OnboardingView(store: store)

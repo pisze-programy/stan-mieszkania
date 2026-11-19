@@ -114,9 +114,7 @@ extension AppFeature {
       state.path = StackState()
       state.modal = nil
       state.apartmentsList = ApartmentsListFeature.State()
-      state.onboarding = OnboardingFeature.State(
-        isLocalDevLoginEnabled: appEnvironment.isLocalDevLoginEnabled
-      )
+      state.onboarding = OnboardingFeature.State()
       return .none
     }
   }

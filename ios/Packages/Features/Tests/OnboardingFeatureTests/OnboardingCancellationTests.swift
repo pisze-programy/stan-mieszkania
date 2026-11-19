@@ -60,17 +60,12 @@ struct OnboardingCancellationTests {
     let database = try makeInMemoryDatabase()
     let expectedMessage = L10n.string("error.NETWORK_UNAVAILABLE")
 
-    let store = TestStore(
-      initialState: OnboardingFeature.State(
-        isLocalDevLoginEnabled: true,
-        isLocalDevSheetPresented: true
-      )
-    ) {
+    let store = TestStore(initialState: OnboardingFeature.State()) {
       OnboardingFeature()
     } withDependencies: {
       $0.defaultDatabase = database
-      $0.authClient.signInLocalDev = { uid, _ in
-        AuthSession(firebaseUid: uid, bearerToken: "dev:\(uid)")
+      $0.authClient.signInWithApple = {
+        AuthSession(firebaseUid: "apple-uid-1", bearerToken: "firebase-jwt-1")
       }
       $0.authClient.clearSession = {}
       $0.apiClient.getMyProfile = {
@@ -78,9 +73,8 @@ struct OnboardingCancellationTests {
       }
     }
 
-    await store.send(.localDevSignInSubmitted(uid: "local-owner", displayName: nil)) {
+    await store.send(.signInWithAppleTapped) {
       $0.isSigningIn = true
-      $0.isLocalDevSheetPresented = false
     }
     await store.receive(.authFailed(expectedMessage)) {
       $0.isSigningIn = false

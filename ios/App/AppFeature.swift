@@ -57,8 +57,7 @@ public struct AppFeature: Sendable {
       isForceUpdateRequired: Bool = false,
       forceUpdateMinVersion: String? = nil,
       currentUser: UserProfile? = nil,
-      isLocalDevLoginEnabled: Bool = false,
-      onboarding: OnboardingFeature.State? = nil,
+      onboarding: OnboardingFeature.State = OnboardingFeature.State(),
       apartmentsList: ApartmentsListFeature.State = ApartmentsListFeature.State(),
       path: StackState<AppPath.State> = StackState(),
       modal: AppModalDestination.State? = nil
@@ -69,8 +68,7 @@ public struct AppFeature: Sendable {
       self.isForceUpdateRequired = isForceUpdateRequired
       self.forceUpdateMinVersion = forceUpdateMinVersion
       self.currentUser = currentUser
-      self.onboarding =
-        onboarding ?? OnboardingFeature.State(isLocalDevLoginEnabled: isLocalDevLoginEnabled)
+      self.onboarding = onboarding
       self.apartmentsList = apartmentsList
       self.path = path
       self.modal = modal
@@ -122,7 +120,6 @@ public struct AppFeature: Sendable {
         state.isAuthenticated = isAuthenticated
         state.currentUser = currentUser
         state.themePreference = theme
-        state.onboarding.isLocalDevLoginEnabled = appEnvironment.isLocalDevLoginEnabled
         return .none
       case .appConfigResolved(let resolved):
         // Architecture A19: Trigger force-update gate without deleting local SQLiteData or outbox.
@@ -156,7 +153,6 @@ public struct AppFeature: Sendable {
   }
 
   private func startBootstrap(_ state: inout State) -> Effect<Action> {
-    state.onboarding.isLocalDevLoginEnabled = appEnvironment.isLocalDevLoginEnabled
     let bootstrapEffect: Effect<Action> = .run { send in
       let theme = themePreference.load()
       let session = try? await authClient.loadStoredSession()

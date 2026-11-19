@@ -12,29 +12,21 @@ public struct OnboardingFeature: Sendable {
   public struct State: Equatable, Sendable {
     public var isSigningIn: Bool
     public var errorMessage: String?
-    public var isLocalDevLoginEnabled: Bool
-    public var isLocalDevSheetPresented: Bool
     public var backgroundVideoURL: URL?
 
     public init(
       isSigningIn: Bool = false,
       errorMessage: String? = nil,
-      isLocalDevLoginEnabled: Bool = false,
-      isLocalDevSheetPresented: Bool = false,
       backgroundVideoURL: URL? = nil
     ) {
       self.isSigningIn = isSigningIn
       self.errorMessage = errorMessage
-      self.isLocalDevLoginEnabled = isLocalDevLoginEnabled
-      self.isLocalDevSheetPresented = isLocalDevSheetPresented
       self.backgroundVideoURL = backgroundVideoURL
     }
   }
 
   public enum Action: Equatable, Sendable {
     case signInWithAppleTapped
-    case localDevSignInSheetPresented(Bool)
-    case localDevSignInSubmitted(uid: String, displayName: String?)
     case authSucceeded(UserProfile)
     case authCancelled
     case authFailed(String)
@@ -64,26 +56,7 @@ public struct OnboardingFeature: Sendable {
         state.isSigningIn = true
         state.errorMessage = nil
         return .run { send in
-          await performAuthentication(send: send) {
-            _ = try await authClient.signInWithApple()
-          }
-        }
-
-      case .localDevSignInSheetPresented(let presented):
-        state.isLocalDevSheetPresented = presented
-        return .none
-
-      case .localDevSignInSubmitted(let uid, let displayName):
-        guard !state.isSigningIn else {
-          return .none
-        }
-        state.isSigningIn = true
-        state.isLocalDevSheetPresented = false
-        state.errorMessage = nil
-        return .run { send in
-          await performAuthentication(send: send) {
-            _ = try await authClient.signInLocalDev(uid, displayName)
-          }
+          await performAuthentication(send: send)
         }
 
       case .authSucceeded(let profile):
@@ -117,12 +90,9 @@ public struct OnboardingFeature: Sendable {
     }
   }
 
-  private func performAuthentication(
-    send: Send<Action>,
-    authenticate: () async throws -> Void
-  ) async {
+  private func performAuthentication(send: Send<Action>) async {
     do {
-      try await authenticate()
+      _ = try await authClient.signInWithApple()
       let profile = try await apiClient.getMyProfile()
       let store = ApartmentMutationStore(database: database)
       try store.saveLocalUser(profile, isCurrentUser: true)

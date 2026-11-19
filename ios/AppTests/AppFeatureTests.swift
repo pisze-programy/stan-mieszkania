@@ -59,7 +59,7 @@ struct AppFeatureTests {
       $0.syncEngine.events = { AsyncStream { $0.finish() } }
     }
 
-    await store.send(.task) { $0.onboarding.isLocalDevLoginEnabled = true }
+    await store.send(.task)
     let resolved = AppFeature.Action.bootstrapResolved(
       isAuthenticated: false,
       currentUser: nil,
@@ -144,7 +144,6 @@ struct AppFeatureTests {
       isAuthenticated: true,
       themePreference: .system,
       currentUser: Self.profile,
-      isLocalDevLoginEnabled: true,
       apartmentsList: ApartmentsListFeature.State(currentUser: Self.profile)
     )
     initial.path.append(

@@ -9,10 +9,7 @@ struct StanMieszkaniaApp: App {
     if AppDependencies.isRunningTests {
       self.store = nil
     } else {
-      let environment = AppEnvironmentConfig.fromBundle(.main)
-      self.store = Store(
-        initialState: AppFeature.State(isLocalDevLoginEnabled: environment.isLocalDevLoginEnabled)
-      ) {
+      self.store = Store(initialState: AppFeature.State()) {
         AppFeature()
       } withDependencies: { dependencies in
         AppDependencies.configureLive(&dependencies, bundle: .main)

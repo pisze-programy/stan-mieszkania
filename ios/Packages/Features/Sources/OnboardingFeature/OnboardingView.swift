@@ -52,41 +52,16 @@ public struct OnboardingView: View {
           }
         }
 
-        VStack(spacing: Spacing.sm) {
-          GlassActionButton(
-            title: L10n.string("onboarding.apple.cta"),
-            systemImage: "apple.logo",
-            variant: .primary,
-            isLoading: store.isSigningIn
-          ) {
-            store.send(.signInWithAppleTapped)
-          }
-
-          if store.isLocalDevLoginEnabled {
-            GlassActionButton(
-              title: L10n.string("onboarding.dev.login"),
-              systemImage: "hammer",
-              variant: .secondary,
-              isDisabled: store.isSigningIn
-            ) {
-              store.send(.localDevSignInSheetPresented(true))
-            }
-          }
+        GlassActionButton(
+          title: L10n.string("onboarding.apple.cta"),
+          systemImage: "apple.logo",
+          variant: .primary,
+          isLoading: store.isSigningIn
+        ) {
+          store.send(.signInWithAppleTapped)
         }
       }
       .padding(Spacing.lg)
-    }
-    .sheet(
-      isPresented: $store.isLocalDevSheetPresented.sending(\.localDevSignInSheetPresented)
-    ) {
-      LocalDevLoginSheetView(
-        onSubmit: { uid, displayName in
-          store.send(.localDevSignInSubmitted(uid: uid, displayName: displayName))
-        },
-        onCancel: {
-          store.send(.localDevSignInSheetPresented(false))
-        }
-      )
     }
   }
 }

@@ -20,10 +20,6 @@ public struct AppEnvironmentConfig: Equatable, Sendable {
   public let authMode: AppAuthMode
   public let appVersion: String
 
-  public var isLocalDevLoginEnabled: Bool {
-    authMode == .local
-  }
-
   public init(apiBaseURL: URL, authMode: AppAuthMode, appVersion: String) {
     self.apiBaseURL = apiBaseURL
     self.authMode = authMode
@@ -62,7 +58,7 @@ public enum AppEnvironmentKey: DependencyKey {
   public static var testValue: AppEnvironmentConfig {
     AppEnvironmentConfig(
       apiBaseURL: URL(string: APIClientConstants.defaultBaseURLString) ?? URL(fileURLWithPath: "/"),
-      authMode: .local,
+      authMode: .firebase,
       appVersion: AppConstants.fallbackAppVersion
     )
   }

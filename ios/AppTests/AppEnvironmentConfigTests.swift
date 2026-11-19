@@ -6,21 +6,20 @@ import Testing
 
 @Suite("AppEnvironmentConfig & Info.plist Tests")
 struct AppEnvironmentConfigTests {
-  private static let expectedDebugURL = "http://127.0.0.1:8788"
+  private static let expectedDefaultURL = "https://api.stanmieszkania.pl"
   private static let expectedVersion = "1.0.0"
   private static let higherMinVersion = "1.0.1"
   private static let cameraUsageKey = "NSCameraUsageDescription"
   private static let locationUsageKey = "NSLocationWhenInUseUsageDescription"
   private static let photoLibraryUsageKey = "NSPhotoLibraryUsageDescription"
 
-  @Test("Debug main bundle resolves Debug.xcconfig values, 3-part SemVer, and TCC strings")
+  @Test("Debug bundle resolves Cloudflare production URL, Firebase auth, SemVer, and TCC keys")
   func debugBundleResolvesConfigAndTCCKeys() {
     let bundle = Bundle.main
     let config = AppEnvironmentConfig.fromBundle(bundle)
 
-    #expect(config.apiBaseURL.absoluteString == Self.expectedDebugURL)
-    #expect(config.authMode == .local)
-    #expect(config.isLocalDevLoginEnabled)
+    #expect(config.apiBaseURL.absoluteString == Self.expectedDefaultURL)
+    #expect(config.authMode == .firebase)
     #expect(config.appVersion == Self.expectedVersion)
     #expect(
       AppVersionPolicy.isUpdateRequired(

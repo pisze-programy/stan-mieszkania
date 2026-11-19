@@ -52,7 +52,7 @@ struct AppFeatureForceUpdateTests {
       $0.syncEngine.events = { AsyncStream { $0.finish() } }
     }
 
-    await store.send(.task) { $0.onboarding.isLocalDevLoginEnabled = true }
+    await store.send(.task)
     await store.receive(
       .bootstrapResolved(isAuthenticated: true, currentUser: Self.user, theme: .system)
     ) {
@@ -90,7 +90,7 @@ struct AppFeatureForceUpdateTests {
       $0.syncEngine.events = { stream }
     }
 
-    let taskEffect = await store.send(.task) { $0.onboarding.isLocalDevLoginEnabled = true }
+    let taskEffect = await store.send(.task)
     await store.receive(
       .bootstrapResolved(isAuthenticated: false, currentUser: nil, theme: .system)
     ) {
