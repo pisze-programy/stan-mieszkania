@@ -34,6 +34,7 @@ import {
 import {
   createFailClosedObjectStorage,
   createLocalR2ObjectStorage,
+  createR2S3ObjectStorageOrFailClosed,
   type LocalR2BucketLike,
   type ObjectStoragePort,
 } from '../modules/media';
@@ -126,7 +127,21 @@ export function resolveRuntimeAdapters(input: ResolveAdaptersInput): ResolvedAda
     overrides?.objectStorage ??
     (appConfig.storageMode === 'local'
       ? createLocalR2ObjectStorage({ bucket: mediaBucket, clock })
-      : createFailClosedObjectStorage());
+      : createR2S3ObjectStorageOrFailClosed(
+          {
+            ...(appConfig.r2AccountId !== undefined ? { accountId: appConfig.r2AccountId } : {}),
+            ...(appConfig.r2BucketName !== undefined ? { bucketName: appConfig.r2BucketName } : {}),
+            ...(appConfig.r2AccessKeyId !== undefined
+              ? { accessKeyId: appConfig.r2AccessKeyId }
+              : {}),
+            ...(appConfig.r2SecretAccessKey !== undefined
+              ? { secretAccessKey: appConfig.r2SecretAccessKey }
+              : {}),
+            bucket: mediaBucket,
+            clock,
+          },
+          createFailClosedObjectStorage(),
+        ));
 
   const inviteRateLimiter =
     overrides?.inviteRateLimiter ??

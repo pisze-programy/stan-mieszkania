@@ -31,6 +31,10 @@ export interface AppConfig {
   readonly appleClientId?: string;
   readonly appleKeyId?: string;
   readonly applePrivateKeyPem?: string;
+  readonly r2AccountId?: string;
+  readonly r2BucketName?: string;
+  readonly r2AccessKeyId?: string;
+  readonly r2SecretAccessKey?: string;
 }
 
 export type AppConfigError = DomainError<'INVALID_APP_CONFIG'>;
@@ -76,6 +80,12 @@ export function safeParseAppConfig(rawEnv: unknown): Result<AppConfig, AppConfig
     ...(vars.APPLE_KEY_ID !== undefined ? { appleKeyId: vars.APPLE_KEY_ID } : {}),
     ...(vars.APPLE_PRIVATE_KEY_PEM !== undefined
       ? { applePrivateKeyPem: vars.APPLE_PRIVATE_KEY_PEM }
+      : {}),
+    ...(vars.R2_ACCOUNT_ID !== undefined ? { r2AccountId: vars.R2_ACCOUNT_ID } : {}),
+    ...(vars.R2_BUCKET_NAME !== undefined ? { r2BucketName: vars.R2_BUCKET_NAME } : {}),
+    ...(vars.R2_ACCESS_KEY_ID !== undefined ? { r2AccessKeyId: vars.R2_ACCESS_KEY_ID } : {}),
+    ...(vars.R2_SECRET_ACCESS_KEY !== undefined
+      ? { r2SecretAccessKey: vars.R2_SECRET_ACCESS_KEY }
       : {}),
   };
 

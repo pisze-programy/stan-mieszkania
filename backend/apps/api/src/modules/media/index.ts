@@ -118,6 +118,16 @@ export {
   type LocalR2ObjectStorageDeps,
 } from './infrastructure/local-r2-object-storage';
 export {
+  createR2S3ObjectStorage,
+  createR2S3ObjectStorageOrFailClosed,
+  type R2S3ObjectStorageDeps,
+} from './infrastructure/r2-s3-object-storage';
+export {
+  presignR2Url,
+  type PresignR2UrlInput,
+  type PresignedR2Result,
+} from './infrastructure/r2-sigv4-presigner';
+export {
   ApartmentMediaParamsSchema,
   InitMediaUploadRequestSchema,
   InitMediaUploadResponseSchema,

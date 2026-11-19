@@ -17,6 +17,7 @@ export const LAYER_TYPES = {
   APP_DURABLE_OBJECTS: 'app-durable-objects',
   APP_ENTRY: 'app-entry',
   APP_SCRIPTS: 'app-scripts',
+  ROOT_SCRIPTS: 'root-scripts',
   PACKAGE_SHARED: 'package-shared',
   PACKAGE_D1: 'package-d1',
   PACKAGE_HTTP_CONTRACTS: 'package-http-contracts',
@@ -115,6 +116,7 @@ export const BOUNDARY_ELEMENTS: ElementDescriptors = [
   rootElement(LAYER_TYPES.APP_DURABLE_OBJECTS, 'apps/api/src/durable-objects'),
   rootElement(LAYER_TYPES.APP_ENTRY, 'apps/api/src'),
   rootElement(LAYER_TYPES.APP_SCRIPTS, 'apps/api/scripts'),
+  rootElement(LAYER_TYPES.ROOT_SCRIPTS, 'scripts'),
   rootElement(LAYER_TYPES.PACKAGE_SHARED, 'packages/shared'),
   rootElement(LAYER_TYPES.PACKAGE_D1, 'packages/d1'),
   rootElement(LAYER_TYPES.PACKAGE_HTTP_CONTRACTS, 'packages/http-contracts'),
@@ -161,6 +163,7 @@ export const BOUNDARY_POLICIES: DependenciesPolicy[] = [
   ]),
   allowElements(APP_ORCHESTRATORS, [...APP_RUNTIME_LAYERS, ...CORE_PACKAGES]),
   allowModuleIndex(APP_ORCHESTRATORS),
+  allowElements(LAYER_TYPES.ROOT_SCRIPTS, [LAYER_TYPES.ROOT_SCRIPTS, ...CORE_PACKAGES]),
   // Architecture A6/3.5: domain, application, and packages/shared stay pure (no external/core imports).
   allowExternalAndCore([
     LAYER_TYPES.PACKAGE_D1,
@@ -172,6 +175,7 @@ export const BOUNDARY_POLICIES: DependenciesPolicy[] = [
     LAYER_TYPES.MODULE_TESTING,
     ...APP_RUNTIME_LAYERS,
     LAYER_TYPES.APP_SCRIPTS,
+    LAYER_TYPES.ROOT_SCRIPTS,
   ]),
   {
     from: { file: { categories: [FILE_CATEGORIES.TEST] } },

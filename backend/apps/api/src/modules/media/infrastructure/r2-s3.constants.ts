@@ -1,0 +1,13 @@
+export const R2_EU_HOST_SUFFIX = '.eu.r2.cloudflarestorage.com';
+export const R2_AWS_REGION = 'auto';
+export const R2_AWS_SERVICE = 's3';
+export const R2_AWS_REQUEST_TYPE = 'aws4_request';
+export const R2_AWS_ALGORITHM = 'AWS4-HMAC-SHA256';
+export const R2_UNSIGNED_PAYLOAD = 'UNSIGNED-PAYLOAD';
+export const R2_MIN_PRESIGN_EXPIRES_SECONDS = 1;
+export const R2_MAX_PRESIGN_EXPIRES_SECONDS = 604_800;
+export const SECONDS_PER_MILLISECOND = 1_000;
+export const HEX_RADIX = 16;
+export const HEX_BYTE_WIDTH = 2;
+export const BYTE_MASK = 0xff;
+export const DATE_STAMP_LENGTH = 8;

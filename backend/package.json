@@ -12,9 +12,11 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && pnpm -r --if-present run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "pnpm -r --if-present run test",
+    "test": "vitest run scripts && pnpm -r --if-present run test",
     "openapi:generate": "pnpm --filter @stanmieszkania/api run openapi:generate",
-    "swift-constants:generate": "pnpm --filter @stanmieszkania/api run swift-constants:generate"
+    "swift-constants:generate": "pnpm --filter @stanmieszkania/api run swift-constants:generate",
+    "deploy:dry-run": "pnpm --filter @stanmieszkania/api exec tsx ../../scripts/deploy.ts --dry-run",
+    "deploy:production": "pnpm --filter @stanmieszkania/api exec tsx ../../scripts/deploy.ts"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

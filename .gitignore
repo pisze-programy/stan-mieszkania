@@ -24,6 +24,7 @@ yarn-error.log*
 .wrangler/
 .mf/
 wrangler.toml.bak
+.deploy-bookmarks/
 
 # Environment / secrets
 .env
