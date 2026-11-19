@@ -6,7 +6,8 @@ import Testing
 
 @Suite("AppEnvironmentConfig & Info.plist Tests")
 struct AppEnvironmentConfigTests {
-  private static let expectedDefaultURL = "https://api.stanmieszkania.pl"
+  private static let expectedDefaultURL =
+    "https://stanmieszkania-api-production.stanmieszkania-api.workers.dev"
   private static let expectedVersion = "1.0.0"
   private static let higherMinVersion = "1.0.1"
   private static let cameraUsageKey = "NSCameraUsageDescription"
