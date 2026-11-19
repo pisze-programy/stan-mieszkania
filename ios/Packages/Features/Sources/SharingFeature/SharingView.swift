@@ -53,6 +53,11 @@ public struct SharingView: View {
     }
     .navigationTitle(L10n.string("sharing.screen.title"))
     .toolbar {
+      ToolbarItem(placement: .cancellationAction) {
+        Button(L10n.string("apartment.history.close.cta")) {
+          store.send(.closeTapped)
+        }
+      }
       if store.isLoading {
         ToolbarItem(placement: .automatic) {
           ProgressView()

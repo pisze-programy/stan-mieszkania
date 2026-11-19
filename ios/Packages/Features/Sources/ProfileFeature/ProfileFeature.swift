@@ -86,6 +86,7 @@ public struct ProfileFeature: Sendable {
     @CasePathable
     public enum Delegate: Equatable, Sendable {
       case didChangeTheme(AppThemePreference)
+      case didUpdateProfile(UserProfile)
       case didSignOut
       case didDeleteAccount
     }

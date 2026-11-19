@@ -8,6 +8,7 @@ final class LiveLocationCaptureBridge: NSObject, CLLocationManagerDelegate {
 
   private let manager: CLLocationManager
   private var authorizationContinuation: CheckedContinuation<LocationAuthorizationStatus, Never>?
+  private var authorizationTimeoutTask: Task<Void, Never>?
   private var locationContinuation: CheckedContinuation<CaptureLocationMetadata?, Never>?
   private var timeoutTask: Task<Void, Never>?
 
@@ -23,15 +24,26 @@ final class LiveLocationCaptureBridge: NSObject, CLLocationManagerDelegate {
     return mapAuthorizationStatus(raw)
   }
 
-  func requestAuthorization() async -> LocationAuthorizationStatus {
+  // Decision Q10: Bounded authorization timeout ensures GPS prompt can never block camera capture.
+  func requestAuthorization(
+    timeoutSeconds: Double = CaptureConstants.authorizationTimeoutSeconds
+  ) async -> LocationAuthorizationStatus {
     let current = Self.mapAuthorizationStatus(manager.authorizationStatus)
     guard current == .notDetermined else {
       return current
     }
 
     return await withCheckedContinuation { continuation in
-      authorizationContinuation?.resume(returning: current)
+      finishAuthorizationRequest(with: current)
       authorizationContinuation = continuation
+      authorizationTimeoutTask = Task { [weak self] in
+        try? await Task.sleep(for: .seconds(timeoutSeconds))
+        guard let self else {
+          return
+        }
+        let latest = Self.mapAuthorizationStatus(self.manager.authorizationStatus)
+        self.finishAuthorizationRequest(with: latest)
+      }
       manager.requestWhenInUseAuthorization()
     }
   }
@@ -60,8 +72,7 @@ final class LiveLocationCaptureBridge: NSObject, CLLocationManagerDelegate {
       guard let self, mapped != .notDetermined else {
         return
       }
-      self.authorizationContinuation?.resume(returning: mapped)
-      self.authorizationContinuation = nil
+      self.finishAuthorizationRequest(with: mapped)
     }
   }
 
@@ -90,6 +101,13 @@ final class LiveLocationCaptureBridge: NSObject, CLLocationManagerDelegate {
     Task { @MainActor [weak self] in
       self?.finishLocationRequest(with: nil)
     }
+  }
+
+  private func finishAuthorizationRequest(with status: LocationAuthorizationStatus) {
+    authorizationTimeoutTask?.cancel()
+    authorizationTimeoutTask = nil
+    authorizationContinuation?.resume(returning: status)
+    authorizationContinuation = nil
   }
 
   private func finishLocationRequest(with metadata: CaptureLocationMetadata?) {

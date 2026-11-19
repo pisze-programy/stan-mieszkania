@@ -116,6 +116,19 @@ struct SharingFeatureLoadAndCopyTests {
   }
 
   @MainActor
+  @Test("Close toolbar button emits delegate didDismiss")
+  func closeTappedEmitsDidDismissDelegate() async {
+    let store = TestStore(
+      initialState: SharingFeature.State(apartmentId: SharingTestFixtures.apartmentId)
+    ) {
+      SharingFeature()
+    }
+
+    await store.send(.closeTapped)
+    await store.receive(\.delegate.didDismiss)
+  }
+
+  @MainActor
   private func makeLoadTestStore(
     database: any DatabaseWriter,
     remoteMembers: [ApartmentMember],

@@ -75,6 +75,7 @@ public struct ApartmentsListFeature: Sendable {
   public enum Action: Equatable, Sendable {
     case task
     case pulledToRefresh
+    case reloadLocalState
     case localDataLoaded(user: UserProfile?, items: [ApartmentListItem])
     case syncCompleted(user: UserProfile?, items: [ApartmentListItem])
     case syncFailed(String)
@@ -128,6 +129,8 @@ public struct ApartmentsListFeature: Sendable {
         )
       case .pulledToRefresh:
         return startSync(&state)
+      case .reloadLocalState:
+        return reloadLocalSnapshot()
       case .localDataLoaded(let user, let items):
         state.currentUser = user
         state.items = items

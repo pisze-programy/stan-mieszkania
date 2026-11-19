@@ -21,7 +21,8 @@ public struct LocationCaptureClient: Sendable {
   public var captureCurrentLocation: @Sendable () async -> CaptureLocationMetadata? = { nil }
 
   public static func live(
-    timeoutSeconds: Double = CaptureConstants.locationTimeoutSeconds
+    timeoutSeconds: Double = CaptureConstants.locationTimeoutSeconds,
+    authorizationTimeoutSeconds: Double = CaptureConstants.authorizationTimeoutSeconds
   ) -> Self {
     Self(
       authorizationStatus: {
@@ -36,7 +37,7 @@ public struct LocationCaptureClient: Sendable {
       requestWhenInUseAuthorization: {
         await MainActor.run {
           LiveLocationCaptureBridge.shared
-        }.requestAuthorization()
+        }.requestAuthorization(timeoutSeconds: authorizationTimeoutSeconds)
       },
       captureCurrentLocation: {
         await MainActor.run {

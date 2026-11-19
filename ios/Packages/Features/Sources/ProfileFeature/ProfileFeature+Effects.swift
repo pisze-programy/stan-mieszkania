@@ -20,7 +20,7 @@ extension ProfileFeature {
       state.isLoading = false
       state.user = profile
       state.displayNameInput = profile.displayName
-      return .none
+      return .send(.delegate(.didUpdateProfile(profile)))
     case .profileLoadFailed(let message):
       state.isLoading = false
       state.errorMessage = message
@@ -44,9 +44,12 @@ extension ProfileFeature {
       state.user = updated
       state.displayNameInput = updated.displayName
       state.showNameSavedFeedback = true
-      return .run { _ in
-        await haptics.actionSucceeded()
-      }
+      return .merge(
+        .run { _ in
+          await haptics.actionSucceeded()
+        },
+        .send(.delegate(.didUpdateProfile(updated)))
+      )
     case .saveDisplayNameFailed(let message):
       state.isSavingName = false
       state.errorMessage = message

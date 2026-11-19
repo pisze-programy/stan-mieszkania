@@ -39,14 +39,18 @@ extension ApartmentsListFeature {
     .cancellable(id: CancelID.syncEvents, cancelInFlight: true)
   }
 
+  func reloadLocalSnapshot() -> Effect<Action> {
+    .run { send in
+      if let snapshot = try? ApartmentsListStore.fetchSnapshot(from: database) {
+        await send(.localDataLoaded(user: snapshot.user, items: snapshot.items))
+      }
+    }
+  }
+
   func handleSyncEvent(_ event: SyncEvent) -> Effect<Action> {
     switch event {
     case .apartmentSynced, .outboxCompleted, .quotaExceeded:
-      return .run { send in
-        if let snapshot = try? ApartmentsListStore.fetchSnapshot(from: database) {
-          await send(.localDataLoaded(user: snapshot.user, items: snapshot.items))
-        }
-      }
+      return reloadLocalSnapshot()
     case .uploadProgress, .forceUpdateRequired:
       return .none
     }

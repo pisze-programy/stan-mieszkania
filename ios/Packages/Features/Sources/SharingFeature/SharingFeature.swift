@@ -80,6 +80,7 @@ public struct SharingFeature: Sendable {
     case revokeMemberSucceeded(apartment: Apartment?, members: [ApartmentMember])
     case revokeMemberFailed(String)
     case dismissError
+    case closeTapped
     case delegate(Delegate)
 
     @CasePathable
@@ -129,6 +130,8 @@ public struct SharingFeature: Sendable {
       case .dismissError:
         state.errorMessage = nil
         return .none
+      case .closeTapped:
+        return .send(.delegate(.didDismiss))
       case .delegate:
         return .none
       }

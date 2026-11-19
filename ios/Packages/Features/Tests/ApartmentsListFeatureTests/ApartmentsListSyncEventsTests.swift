@@ -97,6 +97,47 @@ struct ApartmentsListSyncEventsTests {
     await task.cancel()
   }
 
+  @MainActor
+  @Test("reloadLocalState refreshes SQLiteData snapshot without triggering network sync")
+  func reloadLocalStateSkipsNetworkSync() async throws {
+    let database = try seedInitialDatabase()
+    try insertMedia(id: Fixtures.secondMediaId, into: database)
+    let networkCalls = LockIsolated(0)
+    let expectedItems = [
+      ApartmentListItem(apartment: Fixtures.apartment, photoCount: Fixtures.updatedPhotoCount)
+    ]
+
+    let store = TestStore(
+      initialState: ApartmentsListFeature.State(
+        currentUser: Fixtures.user,
+        items: [ApartmentListItem(apartment: Fixtures.apartment, photoCount: 1)]
+      )
+    ) {
+      ApartmentsListFeature()
+    } withDependencies: {
+      $0.defaultDatabase = database
+      $0.syncEngine.syncAllOnEntry = {
+        networkCalls.withValue { $0 += 1 }
+        return 0
+      }
+      $0.syncEngine.processOutbox = {
+        networkCalls.withValue { $0 += 1 }
+        return SyncOutboxReport(
+          processedCount: 0,
+          failedCount: 0,
+          deferredCount: 0,
+          pausedForForceUpdate: false
+        )
+      }
+    }
+
+    await store.send(.reloadLocalState)
+    await store.receive(.localDataLoaded(user: Fixtures.user, items: expectedItems)) {
+      $0.items = expectedItems
+    }
+    #expect(networkCalls.value == 0)
+  }
+
   private func seedInitialDatabase() throws -> any DatabaseWriter {
     let database = try makeInMemoryDatabase()
     let storeHelper = ApartmentMutationStore(database: database)

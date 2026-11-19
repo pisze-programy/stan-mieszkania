@@ -37,6 +37,7 @@ struct ProfileNameAndThemeTests {
       $0.user = ProfileTestFixtures.updatedUser
       $0.displayNameInput = ProfileTestFixtures.updatedUser.displayName
     }
+    await store.receive(.delegate(.didUpdateProfile(ProfileTestFixtures.updatedUser)))
 
     let memberName = try await database.read { db in
       try MemberRecord.where { $0.userId.eq(ProfileTestFixtures.userId) }.fetchOne(db)?.displayName
@@ -109,6 +110,7 @@ struct ProfileNameAndThemeTests {
       $0.displayNameInput = ProfileTestFixtures.updatedUser.displayName
       $0.showNameSavedFeedback = true
     }
+    await store.receive(.delegate(.didUpdateProfile(ProfileTestFixtures.updatedUser)))
 
     #expect(submittedName.value == "Anna Nowak")
     #expect(successHaptics.value == 1)
