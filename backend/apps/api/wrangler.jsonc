@@ -61,7 +61,7 @@
         {
           "binding": "DB",
           "database_name": "stanmieszkania-production",
-          "database_id": "00000000-0000-0000-0000-000000000000",
+          "database_id": "365ef9a2-2a71-41ce-92d9-988cba19cfe0",
           "migrations_dir": "migrations",
         },
       ],
