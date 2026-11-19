@@ -1,3 +1,4 @@
+import Dependencies
 import Foundation
 
 #if os(iOS)
@@ -53,4 +54,21 @@ public struct HapticsClient: Sendable {
       return .noop
     #endif
   }()
+}
+
+extension HapticsClient: DependencyKey {
+  public static var liveValue: HapticsClient {
+    .live
+  }
+
+  public static var testValue: HapticsClient {
+    .noop
+  }
+}
+
+extension DependencyValues {
+  public var haptics: HapticsClient {
+    get { self[HapticsClient.self] }
+    set { self[HapticsClient.self] = newValue }
+  }
 }

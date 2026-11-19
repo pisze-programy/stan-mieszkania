@@ -49,7 +49,7 @@ public struct OnboardingFeature: Sendable {
   @Dependency(\.authClient) private var authClient
   @Dependency(\.apiClient) private var apiClient
   @Dependency(\.defaultDatabase) private var database
-  @Dependency(\.hapticsClient) private var hapticsClient
+  @Dependency(\.haptics) private var haptics
 
   public init() {}
 
@@ -90,7 +90,7 @@ public struct OnboardingFeature: Sendable {
         state.errorMessage = nil
         return .merge(
           .run { _ in
-            await hapticsClient.actionSucceeded()
+            await haptics.actionSucceeded()
           },
           .send(.delegate(.didAuthenticate(profile)))
         )
@@ -99,7 +99,7 @@ public struct OnboardingFeature: Sendable {
         state.isSigningIn = false
         state.errorMessage = message
         return .run { _ in
-          await hapticsClient.error()
+          await haptics.error()
         }
 
       case .dismissError:

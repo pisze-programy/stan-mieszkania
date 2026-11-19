@@ -10,7 +10,8 @@ let package = Package(
     .macOS(.v26),
   ],
   products: [
-    .library(name: "OnboardingFeature", targets: ["OnboardingFeature"])
+    .library(name: "OnboardingFeature", targets: ["OnboardingFeature"]),
+    .library(name: "ApartmentsListFeature", targets: ["ApartmentsListFeature"]),
   ],
   dependencies: [
     .package(path: "../Core"),
@@ -31,6 +32,17 @@ let package = Package(
         .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
       ]
     ),
+    .target(
+      name: "ApartmentsListFeature",
+      dependencies: [
+        .product(name: "Domain", package: "Core"),
+        .product(name: "DesignSystem", package: "Core"),
+        .product(name: "Database", package: "Core"),
+        .product(name: "APIClient", package: "Core"),
+        .product(name: "SyncEngine", package: "Core"),
+        .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+      ]
+    ),
     .testTarget(
       name: "OnboardingFeatureTests",
       dependencies: [
@@ -40,6 +52,18 @@ let package = Package(
         .product(name: "Database", package: "Core"),
         .product(name: "AuthClient", package: "Core"),
         .product(name: "APIClient", package: "Core"),
+        .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+      ]
+    ),
+    .testTarget(
+      name: "ApartmentsListFeatureTests",
+      dependencies: [
+        "ApartmentsListFeature",
+        .product(name: "Domain", package: "Core"),
+        .product(name: "DesignSystem", package: "Core"),
+        .product(name: "Database", package: "Core"),
+        .product(name: "APIClient", package: "Core"),
+        .product(name: "SyncEngine", package: "Core"),
         .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
       ]
     ),

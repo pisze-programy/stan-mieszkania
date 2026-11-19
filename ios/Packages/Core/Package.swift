@@ -51,7 +51,10 @@ let package = Package(
     ),
     .target(
       name: "DesignSystem",
-      dependencies: ["Domain"],
+      dependencies: [
+        "Domain",
+        .product(name: "Dependencies", package: "swift-dependencies"),
+      ],
       resources: [.process("Resources")]
     ),
     .target(

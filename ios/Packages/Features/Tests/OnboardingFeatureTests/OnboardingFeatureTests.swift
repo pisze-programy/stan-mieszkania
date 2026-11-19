@@ -61,7 +61,7 @@ struct OnboardingFeatureTests {
       $0.apiClient.getMyProfile = {
         Fixtures.profile
       }
-      $0.hapticsClient = HapticsClient(
+      $0.haptics = HapticsClient(
         markerDropped: {},
         actionSucceeded: { Task { await recorder.recordSuccessHaptic() } },
         warning: {},
@@ -118,7 +118,7 @@ struct OnboardingFeatureTests {
       $0.apiClient.getMyProfile = {
         throw problem
       }
-      $0.hapticsClient = HapticsClient(
+      $0.haptics = HapticsClient(
         markerDropped: {},
         actionSucceeded: {},
         warning: {},
@@ -162,7 +162,7 @@ struct OnboardingFeatureTests {
       $0.apiClient.getMyProfile = {
         Fixtures.profile
       }
-      $0.hapticsClient = .noop
+      $0.haptics = .noop
     }
 
     await store.send(.localDevSignInSheetPresented(true)) {
