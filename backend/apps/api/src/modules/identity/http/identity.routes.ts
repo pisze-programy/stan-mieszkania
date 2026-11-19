@@ -13,6 +13,7 @@ import {
 } from './identity.schema';
 
 export const getMeRoute = createRoute({
+  operationId: 'getMyProfile',
   method: 'get',
   path: '/me',
   tags: ['Identity'],
@@ -54,6 +55,7 @@ export const getMeRoute = createRoute({
 });
 
 export const patchMeRoute = createRoute({
+  operationId: 'updateMyProfile',
   method: 'patch',
   path: '/me',
   tags: ['Identity'],

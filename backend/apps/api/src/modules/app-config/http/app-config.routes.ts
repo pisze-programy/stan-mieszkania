@@ -6,6 +6,7 @@ import { createGetPublicAppConfigUseCase } from '../application/get-public-app-c
 import { PublicAppConfigSchema } from './app-config.schema';
 
 export const getAppConfigRoute = createRoute({
+  operationId: 'getPublicConfig',
   method: 'get',
   path: '/config',
   tags: ['Config'],

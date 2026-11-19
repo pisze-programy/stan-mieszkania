@@ -15,6 +15,7 @@ const problemJsonContent = {
 } as const;
 
 export const deleteMeRoute = createRoute({
+  operationId: 'deleteMyAccount',
   method: 'delete',
   path: '/me',
   tags: ['AccountDeletion'],

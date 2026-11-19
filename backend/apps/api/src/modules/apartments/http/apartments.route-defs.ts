@@ -24,6 +24,7 @@ const COMMON_AUTH_AND_SERVER_ERRORS = {
 } as const;
 
 export const putApartmentRoute = createRoute({
+  operationId: 'putApartment',
   method: 'put',
   path: '/apartments/{apartmentId}',
   tags: ['Apartments'],
@@ -52,6 +53,7 @@ export const putApartmentRoute = createRoute({
 });
 
 export const listApartmentsRoute = createRoute({
+  operationId: 'listApartments',
   method: 'get',
   path: '/apartments',
   tags: ['Apartments'],
@@ -66,6 +68,7 @@ export const listApartmentsRoute = createRoute({
 });
 
 export const getApartmentRoute = createRoute({
+  operationId: 'getApartment',
   method: 'get',
   path: '/apartments/{apartmentId}',
   tags: ['Apartments'],
@@ -84,6 +87,7 @@ export const getApartmentRoute = createRoute({
 });
 
 export const patchApartmentRoute = createRoute({
+  operationId: 'updateApartment',
   method: 'patch',
   path: '/apartments/{apartmentId}',
   tags: ['Apartments'],
@@ -112,6 +116,7 @@ export const patchApartmentRoute = createRoute({
 });
 
 export const resetInviteCodeRoute = createRoute({
+  operationId: 'resetApartmentInviteCode',
   method: 'post',
   path: '/apartments/{apartmentId}/invite-code/reset',
   tags: ['Apartments'],
@@ -131,6 +136,7 @@ export const resetInviteCodeRoute = createRoute({
 });
 
 export const deleteApartmentRoute = createRoute({
+  operationId: 'deleteOrLeaveApartment',
   method: 'delete',
   path: '/apartments/{apartmentId}',
   tags: ['Apartments'],
@@ -146,6 +152,7 @@ export const deleteApartmentRoute = createRoute({
 });
 
 export const listApartmentHistoryRoute = createRoute({
+  operationId: 'listApartmentHistory',
   method: 'get',
   path: '/apartments/{apartmentId}/history',
   tags: ['Apartments'],

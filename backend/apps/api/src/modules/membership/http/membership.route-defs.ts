@@ -22,6 +22,7 @@ const COMMON_AUTH_AND_SERVER_ERRORS = {
 } as const;
 
 export const joinApartmentRoute = createRoute({
+  operationId: 'joinApartmentByCode',
   method: 'post',
   path: '/apartments/join',
   tags: ['Membership'],
@@ -56,6 +57,7 @@ export const joinApartmentRoute = createRoute({
 });
 
 export const listApartmentMembersRoute = createRoute({
+  operationId: 'listApartmentMembers',
   method: 'get',
   path: '/apartments/{apartmentId}/members',
   tags: ['Membership'],
@@ -74,6 +76,7 @@ export const listApartmentMembersRoute = createRoute({
 });
 
 export const revokeMemberRoute = createRoute({
+  operationId: 'revokeApartmentMember',
   method: 'delete',
   path: '/apartments/{apartmentId}/members/{userId}',
   tags: ['Membership'],
@@ -96,6 +99,7 @@ export const revokeMemberRoute = createRoute({
 });
 
 export const leaveApartmentRoute = createRoute({
+  operationId: 'leaveApartment',
   method: 'post',
   path: '/apartments/{apartmentId}/leave',
   tags: ['Membership'],

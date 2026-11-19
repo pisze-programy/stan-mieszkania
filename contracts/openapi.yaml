@@ -1,0 +1,2342 @@
+openapi: 3.0.3
+info:
+  title: Stan Mieszkania API
+  version: 1.0.0
+  description: Versioned REST API for shared rental apartment inspection timelines.
+servers:
+  - url: https://api.stanmieszkania.pl
+    description: Production API
+  - url: http://localhost:8787
+    description: Local Wrangler dev server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Firebase ID token (or local dev bearer token in AUTH_MODE=local)
+  schemas:
+    Apartment:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UuidV7"
+        ownerId:
+          $ref: "#/components/schemas/UuidV7"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        street:
+          type: string
+          minLength: 1
+          maxLength: 120
+        city:
+          type: string
+          minLength: 1
+          maxLength: 80
+        role:
+          $ref: "#/components/schemas/ApartmentRole"
+        inviteCode:
+          type: string
+          nullable: true
+        shouldSuggestInviteCodeReset:
+          type: boolean
+        cloudMediaCount:
+          type: integer
+          minimum: 0
+        createdAt:
+          $ref: "#/components/schemas/IsoDateTime"
+        updatedAt:
+          $ref: "#/components/schemas/IsoDateTime"
+      required:
+        - id
+        - ownerId
+        - name
+        - street
+        - city
+        - role
+        - inviteCode
+        - shouldSuggestInviteCodeReset
+        - cloudMediaCount
+        - createdAt
+        - updatedAt
+    ApartmentChange:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UuidV7"
+        apartmentId:
+          $ref: "#/components/schemas/UuidV7"
+        authorId:
+          $ref: "#/components/schemas/UuidV7"
+        field:
+          $ref: "#/components/schemas/ApartmentChangeField"
+        oldValue:
+          type: string
+        newValue:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/IsoDateTime"
+      required:
+        - id
+        - apartmentId
+        - authorId
+        - field
+        - oldValue
+        - newValue
+        - createdAt
+    ApartmentChangeField:
+      type: string
+      enum:
+        - name
+        - street
+        - city
+    ApartmentHistoryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApartmentChange"
+      required:
+        - items
+    ApartmentListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Apartment"
+      required:
+        - items
+    ApartmentMember:
+      type: object
+      properties:
+        userId:
+          $ref: "#/components/schemas/UuidV7"
+        displayName:
+          type: string
+        shortTag:
+          type: string
+        color:
+          type: string
+        role:
+          $ref: "#/components/schemas/ApartmentRole"
+        joinedAt:
+          $ref: "#/components/schemas/IsoDateTime"
+        leftAt:
+          allOf:
+            - $ref: "#/components/schemas/IsoDateTime"
+          nullable: true
+      required:
+        - userId
+        - displayName
+        - shortTag
+        - color
+        - role
+        - joinedAt
+        - leftAt
+    ApartmentMemberListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApartmentMember"
+      required:
+        - items
+    ApartmentRole:
+      type: string
+      enum:
+        - owner
+        - contributor
+    CreateEntryRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        createdAt:
+          $ref: "#/components/schemas/IsoDateTime"
+        markers:
+          type: array
+          items:
+            $ref: "#/components/schemas/DraftMarker"
+          default: []
+      required:
+        - text
+        - createdAt
+    DeleteAccountRequest:
+      type: object
+      properties:
+        appleAuthorizationCode:
+          type: string
+          minLength: 1
+          maxLength: 512
+          example: c9b4a3e2f1d0.0.abcde.12345
+    DomainErrorCode:
+      type: string
+      enum:
+        - ACCOUNT_DELETION_FAILED
+        - APARTMENT_ACCESS_DENIED
+        - APARTMENT_NOT_FOUND
+        - APARTMENT_OWNER_REQUIRED
+        - APARTMENT_VALIDATION_FAILED
+        - APP_UPDATE_REQUIRED
+        - AUTH_TOKEN_INVALID
+        - AUTH_TOKEN_MISSING
+        - CANNOT_REVOKE_OWNER
+        - CONFLICT
+        - DISPLAY_NAME_INVALID
+        - ENTRY_ACCESS_DENIED
+        - ENTRY_ALREADY_RETRACTED
+        - ENTRY_AUTHOR_REQUIRED
+        - ENTRY_CONFLICT
+        - ENTRY_MEDIA_NOT_READY
+        - ENTRY_NOT_FOUND
+        - ENTRY_VALIDATION_FAILED
+        - EXTERNAL_AUTH_CLEANUP_FAILED
+        - FORBIDDEN
+        - INTERNAL_ERROR
+        - INVALID_APPLE_AUTHORIZATION_CODE
+        - INVITE_CODE_COLLISION
+        - INVITE_CODE_INVALID
+        - INVITE_CODE_NOT_FOUND
+        - INVITE_CODE_RATE_LIMITED
+        - MARKER_DUPLICATE_LOCAL_NUMBER
+        - MARKER_INVALID_COORDINATES
+        - MEDIA_ACCESS_DENIED
+        - MEDIA_ALREADY_DELETED
+        - MEDIA_AUTHOR_REQUIRED
+        - MEDIA_CONFLICT
+        - MEDIA_HASH_MISMATCH
+        - MEDIA_INVALID_SHA256
+        - MEDIA_NOT_FOUND
+        - MEDIA_OBJECT_NOT_UPLOADED
+        - MEDIA_VALIDATION_FAILED
+        - MEMBERSHIP_ACCESS_DENIED
+        - MEMBERSHIP_NOT_FOUND
+        - MEMBERSHIP_OWNER_REQUIRED
+        - NOT_FOUND
+        - QUOTA_EXCEEDED
+        - RATE_LIMITED
+        - ROUTE_NOT_FOUND
+        - SYNC_ACCESS_DENIED
+        - SYNC_APARTMENT_NOT_FOUND
+        - SYNC_VALIDATION_FAILED
+        - UNAUTHORIZED
+        - UNPROCESSABLE_ENTITY
+        - USER_DELETED
+        - USER_NOT_FOUND
+        - VALIDATION_ERROR
+        - VIDEO_DISABLED_IN_MVP
+      description: Machine-readable domain error code returned in ProblemDetails.code
+    DraftMarker:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UuidV7"
+        localNumber:
+          type: integer
+          minimum: 1
+        x:
+          type: number
+          minimum: 0
+          maximum: 1
+        y:
+          type: number
+          minimum: 0
+          maximum: 1
+      required:
+        - id
+        - localNumber
+        - x
+        - y
+    Entry:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UuidV7"
+        mediaId:
+          $ref: "#/components/schemas/UuidV7"
+        authorId:
+          $ref: "#/components/schemas/UuidV7"
+        author:
+          $ref: "#/components/schemas/EntryAuthor"
+        text:
+          type: string
+        markers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Marker"
+        createdAt:
+          $ref: "#/components/schemas/IsoDateTime"
+        serverReceivedAt:
+          $ref: "#/components/schemas/IsoDateTime"
+        retractedAt:
+          allOf:
+            - $ref: "#/components/schemas/IsoDateTime"
+          nullable: true
+      required:
+        - id
+        - mediaId
+        - authorId
+        - author
+        - text
+        - markers
+        - createdAt
+        - serverReceivedAt
+        - retractedAt
+    EntryAuthor:
+      type: object
+      properties:
+        userId:
+          $ref: "#/components/schemas/UuidV7"
+        displayName:
+          type: string
+        shortTag:
+          type: string
+        color:
+          type: string
+        role:
+          type: string
+          enum:
+            - owner
+            - contributor
+      required:
+        - userId
+        - displayName
+        - shortTag
+        - color
+        - role
+    EntryListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Entry"
+      required:
+        - items
+    HydratedSyncChange:
+      type: object
+      properties:
+        seq:
+          type: integer
+          minimum: 0
+        apartmentId:
+          $ref: "#/components/schemas/UuidV7"
+        entityType:
+          type: string
+        entityId:
+          type: string
+        op:
+          type: string
+        createdAt:
+          $ref: "#/components/schemas/IsoDateTime"
+        payload:
+          $ref: "#/components/schemas/SyncChangePayload"
+      required:
+        - seq
+        - apartmentId
+        - entityType
+        - entityId
+        - op
+        - createdAt
+        - payload
+    InitMediaUploadRequest:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+            - photo
+            - video
+        source:
+          type: string
+          enum:
+            - camera
+            - import
+        sha256:
+          type: string
+          minLength: 1
+        capturedAt:
+          $ref: "#/components/schemas/IsoDateTime"
+        capturedTz:
+          type: string
+          minLength: 1
+          maxLength: 64
+        capturedAtFromImport:
+          type: boolean
+        width:
+          type: integer
+          minimum: 1
+        height:
+          type: integer
+          minimum: 1
+        bytes:
+          type: integer
+          minimum: 1
+        lat:
+          type: number
+        lng:
+          type: number
+        accuracyM:
+          type: number
+        locationSource:
+          type: string
+          enum:
+            - device
+            - exif
+      required:
+        - kind
+        - source
+        - sha256
+        - capturedAt
+        - capturedTz
+        - width
+        - height
+        - bytes
+    InitMediaUploadResponse:
+      type: object
+      properties:
+        media:
+          $ref: "#/components/schemas/Media"
+        upload:
+          $ref: "#/components/schemas/PresignedUrl"
+      required:
+        - media
+        - upload
+    IsoDateTime:
+      type: string
+      format: date-time
+      example: 2026-11-18T12:00:00.000Z
+    JoinApartmentRequest:
+      type: object
+      properties:
+        inviteCode:
+          type: string
+          minLength: 1
+          maxLength: 64
+      required:
+        - inviteCode
+    JpegCompressionConfig:
+      type: object
+      properties:
+        maxDimensionPx:
+          type: integer
+          minimum: 320
+        quality:
+          type: number
+          minimum: 0.1
+          maximum: 1
+        maxBytes:
+          type: integer
+          minimum: 102400
+      required:
+        - maxDimensionPx
+        - quality
+        - maxBytes
+    Marker:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UuidV7"
+        entryId:
+          $ref: "#/components/schemas/UuidV7"
+        mediaId:
+          $ref: "#/components/schemas/UuidV7"
+        number:
+          type: integer
+          minimum: 1
+        x:
+          type: number
+          minimum: 0
+          maximum: 1
+        y:
+          type: number
+          minimum: 0
+          maximum: 1
+      required:
+        - id
+        - entryId
+        - mediaId
+        - number
+        - x
+        - y
+    Media:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UuidV7"
+        apartmentId:
+          $ref: "#/components/schemas/UuidV7"
+        authorId:
+          $ref: "#/components/schemas/UuidV7"
+        kind:
+          type: string
+          enum:
+            - photo
+            - video
+        source:
+          type: string
+          enum:
+            - camera
+            - import
+        uploadStatus:
+          type: string
+          enum:
+            - pending
+            - uploaded
+        sha256:
+          type: string
+        capturedAt:
+          $ref: "#/components/schemas/IsoDateTime"
+        capturedTz:
+          type: string
+        capturedAtFromImport:
+          type: boolean
+        serverReceivedAt:
+          allOf:
+            - $ref: "#/components/schemas/IsoDateTime"
+          nullable: true
+        width:
+          type: integer
+        height:
+          type: integer
+        bytes:
+          type: integer
+        deletedAt:
+          allOf:
+            - $ref: "#/components/schemas/IsoDateTime"
+          nullable: true
+        deletedBy:
+          allOf:
+            - $ref: "#/components/schemas/UuidV7"
+          nullable: true
+      required:
+        - id
+        - apartmentId
+        - authorId
+        - kind
+        - source
+        - uploadStatus
+        - sha256
+        - capturedAt
+        - capturedTz
+        - capturedAtFromImport
+        - serverReceivedAt
+        - width
+        - height
+        - bytes
+        - deletedAt
+        - deletedBy
+    MediaAuthorSummary:
+      type: object
+      properties:
+        userId:
+          $ref: "#/components/schemas/UuidV7"
+        displayName:
+          type: string
+        shortTag:
+          type: string
+        color:
+          type: string
+        role:
+          $ref: "#/components/schemas/ApartmentRole"
+      required:
+        - userId
+        - displayName
+        - shortTag
+        - color
+        - role
+    MediaTimelineResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/MediaWithAuthor"
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - items
+        - nextCursor
+        - hasMore
+    MediaWithAuthor:
+      allOf:
+        - $ref: "#/components/schemas/Media"
+        - type: object
+          properties:
+            author:
+              $ref: "#/components/schemas/MediaAuthorSummary"
+          required:
+            - author
+    MyApartmentSyncSummary:
+      type: object
+      properties:
+        apartment:
+          $ref: "#/components/schemas/Apartment"
+        role:
+          $ref: "#/components/schemas/ApartmentRole"
+        headSeq:
+          type: integer
+          minimum: 0
+        confirmedMediaCount:
+          type: integer
+          minimum: 0
+        latestMediaCapturedAt:
+          allOf:
+            - $ref: "#/components/schemas/IsoDateTime"
+          nullable: true
+      required:
+        - apartment
+        - role
+        - headSeq
+        - confirmedMediaCount
+        - latestMediaCapturedAt
+    MyApartmentsSyncResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/MyApartmentSyncSummary"
+      required:
+        - items
+    PresignedUrl:
+      type: object
+      nullable: true
+      properties:
+        url:
+          type: string
+        expiresAt:
+          $ref: "#/components/schemas/IsoDateTime"
+      required:
+        - url
+        - expiresAt
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          minLength: 1
+        title:
+          type: string
+          minLength: 1
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+          minLength: 1
+        code:
+          type: string
+          minLength: 1
+        requestId:
+          type: string
+          minLength: 1
+        details:
+          type: object
+          additionalProperties: true
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - code
+        - requestId
+    PublicAppConfig:
+      type: object
+      properties:
+        minSupportedAppVersion:
+          type: string
+          pattern: ^\d+\.\d+\.\d+(?:-[0-9A-Za-z-.]+)?$
+        cloudMediaQuotaPerApartment:
+          type: integer
+          minimum: 1
+        jpegCompression:
+          $ref: "#/components/schemas/JpegCompressionConfig"
+      required:
+        - minSupportedAppVersion
+        - cloudMediaQuotaPerApartment
+        - jpegCompression
+    SyncActorSummary:
+      type: object
+      properties:
+        userId:
+          $ref: "#/components/schemas/UuidV7"
+        displayName:
+          type: string
+        shortTag:
+          type: string
+        color:
+          type: string
+        role:
+          $ref: "#/components/schemas/ApartmentRole"
+      required:
+        - userId
+        - displayName
+        - shortTag
+        - color
+        - role
+    SyncChangePayload:
+      oneOf:
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - apartment
+            apartment:
+              $ref: "#/components/schemas/Apartment"
+          required:
+            - kind
+            - apartment
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - member
+            member:
+              $ref: "#/components/schemas/SyncMemberSnapshot"
+          required:
+            - kind
+            - member
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - media
+            media:
+              $ref: "#/components/schemas/SyncMediaSnapshot"
+          required:
+            - kind
+            - media
+        - type: object
+          properties:
+            kind:
+              type: string
+              enum:
+                - entry
+            entry:
+              $ref: "#/components/schemas/SyncEntrySnapshot"
+          required:
+            - kind
+            - entry
+      nullable: true
+    SyncChangesResponse:
+      type: object
+      properties:
+        changes:
+          type: array
+          items:
+            $ref: "#/components/schemas/HydratedSyncChange"
+        nextSeq:
+          type: integer
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - changes
+        - nextSeq
+        - hasMore
+    SyncEntrySnapshot:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UuidV7"
+        mediaId:
+          $ref: "#/components/schemas/UuidV7"
+        authorId:
+          $ref: "#/components/schemas/UuidV7"
+        text:
+          type: string
+        markers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Marker"
+        createdAt:
+          $ref: "#/components/schemas/IsoDateTime"
+        serverReceivedAt:
+          $ref: "#/components/schemas/IsoDateTime"
+        retractedAt:
+          allOf:
+            - $ref: "#/components/schemas/IsoDateTime"
+          nullable: true
+        author:
+          $ref: "#/components/schemas/SyncActorSummary"
+      required:
+        - id
+        - mediaId
+        - authorId
+        - text
+        - markers
+        - createdAt
+        - serverReceivedAt
+        - retractedAt
+        - author
+    SyncMediaSnapshot:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UuidV7"
+        apartmentId:
+          $ref: "#/components/schemas/UuidV7"
+        authorId:
+          $ref: "#/components/schemas/UuidV7"
+        kind:
+          type: string
+          enum:
+            - photo
+            - video
+        source:
+          type: string
+          enum:
+            - camera
+            - import
+        uploadStatus:
+          type: string
+          enum:
+            - pending
+            - uploaded
+        sha256:
+          type: string
+        capturedAt:
+          $ref: "#/components/schemas/IsoDateTime"
+        capturedTz:
+          type: string
+        capturedAtFromImport:
+          type: boolean
+        serverReceivedAt:
+          allOf:
+            - $ref: "#/components/schemas/IsoDateTime"
+          nullable: true
+        width:
+          type: integer
+        height:
+          type: integer
+        bytes:
+          type: integer
+        deletedAt:
+          allOf:
+            - $ref: "#/components/schemas/IsoDateTime"
+          nullable: true
+        deletedBy:
+          allOf:
+            - $ref: "#/components/schemas/UuidV7"
+          nullable: true
+        author:
+          $ref: "#/components/schemas/SyncActorSummary"
+      required:
+        - id
+        - apartmentId
+        - authorId
+        - kind
+        - source
+        - uploadStatus
+        - sha256
+        - capturedAt
+        - capturedTz
+        - capturedAtFromImport
+        - serverReceivedAt
+        - width
+        - height
+        - bytes
+        - deletedAt
+        - deletedBy
+        - author
+    SyncMemberSnapshot:
+      allOf:
+        - $ref: "#/components/schemas/SyncActorSummary"
+        - type: object
+          properties:
+            joinedAt:
+              $ref: "#/components/schemas/IsoDateTime"
+            leftAt:
+              allOf:
+                - $ref: "#/components/schemas/IsoDateTime"
+              nullable: true
+          required:
+            - joinedAt
+            - leftAt
+    UpdateApartmentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        street:
+          type: string
+          minLength: 1
+          maxLength: 120
+        city:
+          type: string
+          minLength: 1
+          maxLength: 80
+    UpdateProfileRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 80
+      required:
+        - displayName
+    UpsertApartmentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        street:
+          type: string
+          minLength: 1
+          maxLength: 120
+        city:
+          type: string
+          minLength: 1
+          maxLength: 80
+      required:
+        - name
+        - street
+        - city
+    UserProfile:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UuidV7"
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        shortTag:
+          type: string
+          minLength: 4
+          maxLength: 4
+        color:
+          type: string
+          pattern: ^#[0-9A-Fa-f]{6}$
+        createdAt:
+          $ref: "#/components/schemas/IsoDateTime"
+      required:
+        - id
+        - displayName
+        - shortTag
+        - color
+        - createdAt
+    UuidV7:
+      type: string
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      example: 01933e2a-7b40-7000-8000-000000000001
+  parameters: {}
+paths:
+  /v1/apartments:
+    get:
+      operationId: listApartments
+      tags:
+        - Apartments
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Active apartments for current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApartmentListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/join:
+    post:
+      operationId: joinApartmentByCode
+      tags:
+        - Membership
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinApartmentRequest"
+      responses:
+        "200":
+          description: Joined apartment as contributor (or idempotently replayed active membership)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Apartment"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Revoked contributor cannot re-join until invite code is rotated
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Invite code not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "422":
+          description: Invalid invite code format
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "429":
+          description: Invite code join rate limit exceeded
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}:
+    put:
+      operationId: putApartment
+      tags:
+        - Apartments
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertApartmentRequest"
+      responses:
+        "200":
+          description: Created or idempotently replayed apartment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Apartment"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "409":
+          description: Invite code collision
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "422":
+          description: Invalid apartment fields
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+    get:
+      operationId: getApartment
+      tags:
+        - Apartments
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+      responses:
+        "200":
+          description: Apartment details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Apartment"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Apartment not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+    patch:
+      operationId: updateApartment
+      tags:
+        - Apartments
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateApartmentRequest"
+      responses:
+        "200":
+          description: Updated apartment details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Apartment"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Owner required
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Apartment not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "422":
+          description: Invalid apartment fields
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+    delete:
+      operationId: deleteOrLeaveApartment
+      tags:
+        - Apartments
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+      responses:
+        "204":
+          description: Apartment left, transferred, or deleted
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Apartment not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/changes:
+    get:
+      operationId: listApartmentChanges
+      tags:
+        - Sync
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+        - schema:
+            type: integer
+            nullable: true
+            minimum: 0
+          required: false
+          name: after
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Cursor-paginated hydrated change_log feed for an apartment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncChangesResponse"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Apartment not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "422":
+          description: Invalid sync query parameters
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/history:
+    get:
+      operationId: listApartmentHistory
+      tags:
+        - Apartments
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+      responses:
+        "200":
+          description: Apartment metadata change history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApartmentHistoryResponse"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Apartment not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/invite-code/reset:
+    post:
+      operationId: resetApartmentInviteCode
+      tags:
+        - Apartments
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+      responses:
+        "200":
+          description: Apartment with regenerated invite code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Apartment"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Owner required
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Apartment not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "409":
+          description: Invite code collision
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/leave:
+    post:
+      operationId: leaveApartment
+      tags:
+        - Membership
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+      responses:
+        "204":
+          description: Contributor left apartment (owners use DELETE /apartments/{apartmentId})
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Apartment not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "409":
+          description: Owner cannot leave directly without transfer/delete
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/media:
+    get:
+      operationId: listApartmentMedia
+      tags:
+        - Media
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+        - schema:
+            type: string
+            minLength: 1
+          required: false
+          name: after
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+          required: false
+          name: limit
+          in: query
+      responses:
+        "200":
+          description: Cursor-paginated media timeline for apartment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaTimelineResponse"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Apartment not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "422":
+          description: Invalid pagination cursor
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/media/{mediaId}:
+    get:
+      operationId: getMedia
+      tags:
+        - Media
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: mediaId
+          in: path
+      responses:
+        "200":
+          description: Media details with author summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaWithAuthor"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Media not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+    delete:
+      operationId: softDeleteMedia
+      tags:
+        - Media
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: mediaId
+          in: path
+      responses:
+        "200":
+          description: Soft-deleted media tombstone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Media"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Author required
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Media not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "409":
+          description: Media pending upload cannot be soft-deleted
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/media/{mediaId}/confirm:
+    post:
+      operationId: confirmMediaUpload
+      tags:
+        - Media
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: mediaId
+          in: path
+      responses:
+        "200":
+          description: Uploaded media checksum verified and confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Media"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access or author required
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Media not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "409":
+          description: Object not uploaded or already deleted
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "422":
+          description: Uploaded SHA-256 or byte size mismatch
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/media/{mediaId}/download-url:
+    get:
+      operationId: getMediaDownloadUrl
+      tags:
+        - Media
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: mediaId
+          in: path
+      responses:
+        "200":
+          description: Short-lived signed download URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PresignedUrl"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Media not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "409":
+          description: Media pending upload or soft-deleted
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/media/{mediaId}/entries:
+    get:
+      operationId: listMediaEntries
+      tags:
+        - Entries
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: mediaId
+          in: path
+      responses:
+        "200":
+          description: Ordered timeline entries for a media item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntryListResponse"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/media/{mediaId}/entries/{entryId}:
+    put:
+      operationId: putMediaEntry
+      tags:
+        - Entries
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: mediaId
+          in: path
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: entryId
+          in: path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEntryRequest"
+      responses:
+        "200":
+          description: Created or idempotently replayed verified entry with server marker numbers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entry"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "409":
+          description: Entry conflict or target media not ready
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "422":
+          description: Invalid entry or marker data
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+    delete:
+      operationId: retractMediaEntry
+      tags:
+        - Entries
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: mediaId
+          in: path
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: entryId
+          in: path
+      responses:
+        "200":
+          description: Retracted entry tombstone with redacted text and empty markers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entry"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/media/{mediaId}/init:
+    post:
+      operationId: initMediaUpload
+      tags:
+        - Media
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: mediaId
+          in: path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InitMediaUploadRequest"
+      responses:
+        "200":
+          description: Pending media slot reserved and upload URL issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InitMediaUploadResponse"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Apartment not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "409":
+          description: Media ID conflict or deleted
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "422":
+          description: Quota exceeded, video disabled, or invalid metadata
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/members:
+    get:
+      operationId: listApartmentMembers
+      tags:
+        - Membership
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+      responses:
+        "200":
+          description: Members of the apartment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApartmentMemberListResponse"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Access denied
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Apartment not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/apartments/{apartmentId}/members/{userId}:
+    delete:
+      operationId: revokeApartmentMember
+      tags:
+        - Membership
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: apartmentId
+          in: path
+        - schema:
+            $ref: "#/components/schemas/UuidV7"
+          required: true
+          name: userId
+          in: path
+      responses:
+        "204":
+          description: Contributor access revoked
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Owner required
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Apartment or active membership not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "409":
+          description: Cannot revoke apartment owner
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/config:
+    get:
+      operationId: getPublicConfig
+      tags:
+        - Config
+      responses:
+        "200":
+          description: Public client configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicAppConfig"
+  /v1/me:
+    get:
+      operationId: getMyProfile
+      tags:
+        - Identity
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Authenticated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Account has been deleted
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+    patch:
+      operationId: updateMyProfile
+      tags:
+        - Identity
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Invalid request payload
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Account has been deleted
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: User not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "422":
+          description: Invalid display name
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+    delete:
+      operationId: deleteMyAccount
+      tags:
+        - AccountDeletion
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteAccountRequest"
+      responses:
+        "204":
+          description: Account deleted, private data purged, and shared contributions anonymized
+        "400":
+          description: Invalid request payload
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Account has already been deleted
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "422":
+          description: Invalid Apple authorization code
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "502":
+          description: External auth cleanup failed
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /v1/me/apartments:
+    get:
+      operationId: listMyApartmentsSync
+      tags:
+        - Sync
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Active apartments with head change_log sequence and media counters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyApartmentsSyncResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "403":
+          description: Account deleted
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Unexpected internal error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"

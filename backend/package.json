@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && pnpm -r --if-present run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "pnpm -r --if-present run test"
+    "test": "pnpm -r --if-present run test",
+    "openapi:generate": "pnpm --filter @stanmieszkania/api run openapi:generate"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

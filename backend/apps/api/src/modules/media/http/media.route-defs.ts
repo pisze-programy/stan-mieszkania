@@ -25,6 +25,7 @@ const COMMON_AUTH_AND_SERVER_ERRORS = {
 } as const;
 
 export const initMediaUploadRoute = createRoute({
+  operationId: 'initMediaUpload',
   method: 'post',
   path: '/apartments/{apartmentId}/media/{mediaId}/init',
   tags: ['Media'],
@@ -57,6 +58,7 @@ export const initMediaUploadRoute = createRoute({
 });
 
 export const confirmMediaUploadRoute = createRoute({
+  operationId: 'confirmMediaUpload',
   method: 'post',
   path: '/apartments/{apartmentId}/media/{mediaId}/confirm',
   tags: ['Media'],
@@ -86,6 +88,7 @@ export const confirmMediaUploadRoute = createRoute({
 });
 
 export const listApartmentMediaRoute = createRoute({
+  operationId: 'listApartmentMedia',
   method: 'get',
   path: '/apartments/{apartmentId}/media',
   tags: ['Media'],
@@ -108,6 +111,7 @@ export const listApartmentMediaRoute = createRoute({
 });
 
 export const getMediaRoute = createRoute({
+  operationId: 'getMedia',
   method: 'get',
   path: '/apartments/{apartmentId}/media/{mediaId}',
   tags: ['Media'],
@@ -126,6 +130,7 @@ export const getMediaRoute = createRoute({
 });
 
 export const getMediaDownloadUrlRoute = createRoute({
+  operationId: 'getMediaDownloadUrl',
   method: 'get',
   path: '/apartments/{apartmentId}/media/{mediaId}/download-url',
   tags: ['Media'],
@@ -148,6 +153,7 @@ export const getMediaDownloadUrlRoute = createRoute({
 });
 
 export const deleteMediaRoute = createRoute({
+  operationId: 'softDeleteMedia',
   method: 'delete',
   path: '/apartments/{apartmentId}/media/{mediaId}',
   tags: ['Media'],

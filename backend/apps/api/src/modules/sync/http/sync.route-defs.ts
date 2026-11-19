@@ -20,6 +20,7 @@ const COMMON_AUTH_AND_SERVER_ERRORS = {
 } as const;
 
 export const getApartmentChangesRoute = createRoute({
+  operationId: 'listApartmentChanges',
   method: 'get',
   path: '/apartments/{apartmentId}/changes',
   tags: ['Sync'],
@@ -45,6 +46,7 @@ export const getApartmentChangesRoute = createRoute({
 });
 
 export const getMyApartmentsSyncRoute = createRoute({
+  operationId: 'listMyApartmentsSync',
   method: 'get',
   path: '/me/apartments',
   tags: ['Sync'],

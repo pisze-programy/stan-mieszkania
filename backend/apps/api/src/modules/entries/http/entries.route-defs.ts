@@ -26,6 +26,7 @@ const COMMON_ERRORS = {
 } as const;
 
 export const putEntryRoute = createRoute({
+  operationId: 'putMediaEntry',
   method: 'put',
   path: '/apartments/{apartmentId}/media/{mediaId}/entries/{entryId}',
   tags: ['Entries'],
@@ -55,6 +56,7 @@ export const putEntryRoute = createRoute({
 });
 
 export const listEntriesRoute = createRoute({
+  operationId: 'listMediaEntries',
   method: 'get',
   path: '/apartments/{apartmentId}/media/{mediaId}/entries',
   tags: ['Entries'],
@@ -70,6 +72,7 @@ export const listEntriesRoute = createRoute({
 });
 
 export const deleteEntryRoute = createRoute({
+  operationId: 'retractMediaEntry',
   method: 'delete',
   path: '/apartments/{apartmentId}/media/{mediaId}/entries/{entryId}',
   tags: ['Entries'],
