@@ -1,0 +1,123 @@
+import CoreLocation
+import Domain
+import Foundation
+
+@MainActor
+final class LiveLocationCaptureBridge: NSObject, CLLocationManagerDelegate {
+  static let shared = LiveLocationCaptureBridge()
+
+  private let manager: CLLocationManager
+  private var authorizationContinuation: CheckedContinuation<LocationAuthorizationStatus, Never>?
+  private var locationContinuation: CheckedContinuation<CaptureLocationMetadata?, Never>?
+  private var timeoutTask: Task<Void, Never>?
+
+  override init() {
+    self.manager = CLLocationManager()
+    super.init()
+    manager.delegate = self
+    manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+  }
+
+  nonisolated static func currentAuthorizationStatus() -> LocationAuthorizationStatus {
+    let raw = CLLocationManager().authorizationStatus
+    return mapAuthorizationStatus(raw)
+  }
+
+  func requestAuthorization() async -> LocationAuthorizationStatus {
+    let current = Self.mapAuthorizationStatus(manager.authorizationStatus)
+    guard current == .notDetermined else {
+      return current
+    }
+
+    return await withCheckedContinuation { continuation in
+      authorizationContinuation?.resume(returning: current)
+      authorizationContinuation = continuation
+      manager.requestWhenInUseAuthorization()
+    }
+  }
+
+  // Decision Q10: Optional GPS capture must time out quickly and never block camera capture.
+  func captureCurrentLocation(timeoutSeconds: Double) async -> CaptureLocationMetadata? {
+    let status = Self.mapAuthorizationStatus(manager.authorizationStatus)
+    guard status == .authorized else {
+      return nil
+    }
+
+    return await withCheckedContinuation { continuation in
+      finishLocationRequest(with: nil)
+      locationContinuation = continuation
+      timeoutTask = Task { [weak self] in
+        try? await Task.sleep(for: .seconds(timeoutSeconds))
+        self?.finishLocationRequest(with: nil)
+      }
+      manager.requestLocation()
+    }
+  }
+
+  nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+    let mapped = Self.mapAuthorizationStatus(manager.authorizationStatus)
+    Task { @MainActor [weak self] in
+      guard let self, mapped != .notDetermined else {
+        return
+      }
+      self.authorizationContinuation?.resume(returning: mapped)
+      self.authorizationContinuation = nil
+    }
+  }
+
+  nonisolated func locationManager(
+    _ manager: CLLocationManager,
+    didUpdateLocations locations: [CLLocation]
+  ) {
+    let metadata: CaptureLocationMetadata? = locations.last.map { location in
+      let accuracy = location.horizontalAccuracy >= 0 ? location.horizontalAccuracy : nil
+      return CaptureLocationMetadata(
+        lat: location.coordinate.latitude,
+        lng: location.coordinate.longitude,
+        accuracyM: accuracy,
+        locationSource: .device
+      )
+    }
+    Task { @MainActor [weak self] in
+      self?.finishLocationRequest(with: metadata)
+    }
+  }
+
+  nonisolated func locationManager(
+    _ manager: CLLocationManager,
+    didFailWithError error: any Error
+  ) {
+    Task { @MainActor [weak self] in
+      self?.finishLocationRequest(with: nil)
+    }
+  }
+
+  private func finishLocationRequest(with metadata: CaptureLocationMetadata?) {
+    timeoutTask?.cancel()
+    timeoutTask = nil
+    locationContinuation?.resume(returning: metadata)
+    locationContinuation = nil
+  }
+
+  private nonisolated static func mapAuthorizationStatus(
+    _ status: CLAuthorizationStatus
+  ) -> LocationAuthorizationStatus {
+    switch status {
+    case .notDetermined:
+      return .notDetermined
+    case .denied:
+      return .denied
+    case .restricted:
+      return .restricted
+    #if os(iOS)
+      case .authorizedWhenInUse, .authorizedAlways:
+        return .authorized
+    #else
+      case .authorizedAlways:
+        return .authorized
+    #endif
+    @unknown default:
+      return .denied
+    }
+  }
+}

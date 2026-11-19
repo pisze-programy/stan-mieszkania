@@ -1,11 +1,7 @@
 import Domain
 import Foundation
 
-public enum CaptureSource: String, Equatable, Hashable, Sendable, CaseIterable {
-  case camera
-  case photoLibrary
-  case files
-}
+public typealias CaptureSource = CaptureSourceKind
 
 public enum LeaveOrDeleteMode: Equatable, Sendable {
   case ownerDeleteOrLeave

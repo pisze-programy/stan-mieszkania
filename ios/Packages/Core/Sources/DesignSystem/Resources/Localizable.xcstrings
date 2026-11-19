@@ -1752,6 +1752,72 @@
           }
         }
       }
+    },
+    "capture.gps.sheet.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opcjonalna lokalizacja GPS"
+          }
+        }
+      }
+    },
+    "capture.gps.allow.cta": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zezwól"
+          }
+        }
+      }
+    },
+    "capture.gps.skip.cta": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontynuuj bez lokalizacji"
+          }
+        }
+      }
+    },
+    "capture.processing.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przetwarzanie zdjęć…"
+          }
+        }
+      }
+    },
+    "capture.camera.unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aparat jest niedostępny na tym urządzeniu."
+          }
+        }
+      }
+    },
+    "capture.import.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się wczytać wybranego zdjęcia."
+          }
+        }
+      }
     }
   }
 }
