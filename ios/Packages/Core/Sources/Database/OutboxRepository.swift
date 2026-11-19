@@ -12,7 +12,7 @@ struct OutboxEnqueueRequest<Payload: Encodable>: Sendable where Payload: Sendabl
 }
 
 public struct OutboxRepository: Sendable {
-  private let database: any DatabaseWriter
+  let database: any DatabaseWriter
 
   public init(database: any DatabaseWriter) {
     self.database = database

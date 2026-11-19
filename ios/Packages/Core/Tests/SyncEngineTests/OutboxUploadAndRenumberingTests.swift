@@ -41,6 +41,71 @@ struct OutboxUploadAndRenumberingTests {
     try assertMediaAndRenumberedEntrySynced(in: database)
   }
 
+  @Test("Persists server-trimmed confirmedEntry.text verbatim during entry confirmation")
+  func persistsServerTrimmedEntryTextVerbatim() async throws {
+    let database = try makeInMemoryDatabase()
+    try await seedConfirmedMediaWithUntrimmedEntry(in: database)
+
+    var apiClient = APIClient()
+    apiClient.putMediaEntry = { _ in
+      EntryItem(
+        id: SyncEngineTestFixtures.entryId,
+        mediaId: SyncEngineTestFixtures.mediaOneId,
+        authorId: SyncEngineTestFixtures.ownerId,
+        text: "Rysa z bialymi znakami",
+        createdAt: SyncEngineTestFixtures.baseDate,
+        serverReceivedAt: SyncEngineTestFixtures.confirmedDate
+      )
+    }
+
+    let actor = SyncEngineActor(
+      database: database,
+      apiClient: apiClient,
+      mediaStorage: MediaStorageClient(),
+      objectTransfer: ObjectTransferClient(),
+      clock: { SyncEngineTestFixtures.confirmedDate }
+    )
+    let report = await actor.processOutbox()
+    #expect(report.processedCount == 1)
+
+    let persisted = try await #require(
+      database.read {
+        try EntryRecord.where { $0.id.eq(SyncEngineTestFixtures.entryId) }.fetchOne($0)
+      }
+    )
+    #expect(persisted.text == "Rysa z bialymi znakami")
+  }
+
+  private func seedConfirmedMediaWithUntrimmedEntry(in database: any DatabaseWriter) async throws {
+    try await database.write { db in
+      let apt = ApartmentRecord(apartment: SyncEngineTestFixtures.makeApartment())
+      try ApartmentRecord.insert { apt }.execute(db)
+    }
+    let mediaStore = MediaMutationStore(database: database)
+    try mediaStore.saveLocalMedia(
+      SyncEngineTestFixtures.makeMediaItem(id: SyncEngineTestFixtures.mediaOneId),
+      queueForCloud: false,
+      now: SyncEngineTestFixtures.baseDate
+    )
+    try mediaStore.confirmMediaUploaded(
+      mediaId: SyncEngineTestFixtures.mediaOneId,
+      serverReceivedAt: SyncEngineTestFixtures.baseDate
+    )
+    let untrimmed = EntryItem(
+      id: SyncEngineTestFixtures.entryId,
+      mediaId: SyncEngineTestFixtures.mediaOneId,
+      authorId: SyncEngineTestFixtures.ownerId,
+      text: "   Rysa z bialymi znakami   ",
+      createdAt: SyncEngineTestFixtures.baseDate
+    )
+    try EntryMutationStore(database: database).createEntry(
+      untrimmed,
+      queueForCloud: true,
+      outboxId: SyncEngineTestFixtures.outboxEntryId,
+      now: SyncEngineTestFixtures.baseDate
+    )
+  }
+
   private func assertMediaAndRenumberedEntrySynced(in database: any DatabaseWriter) throws {
     let syncedMedia = try #require(
       database.read {

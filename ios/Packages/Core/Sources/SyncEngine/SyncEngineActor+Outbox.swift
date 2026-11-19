@@ -7,6 +7,7 @@ import SQLiteData
 enum OperationExecutionOutcome: Sendable {
   case succeeded
   case deferred
+  case dropped
 }
 
 extension SyncEngineActor {
@@ -90,8 +91,11 @@ extension SyncEngineActor {
         try outbox.markSucceeded(id: operation.id)
         return .processed
       case .deferred:
-        try outbox.resetInFlightToPending(now: clock())
+        try outbox.resetToPending(id: operation.id, now: clock())
         return .deferred
+      case .dropped:
+        try outbox.markSucceeded(id: operation.id)
+        return .skipped
       }
     } catch let problem as APIProblemError {
       return handleProblemError(problem, for: operation, outbox: outbox)
@@ -118,7 +122,7 @@ extension SyncEngineActor {
   ) -> OutboxStepOutcome {
     // Architecture A19: Pause outbox cleanly on 426 APP_UPDATE_REQUIRED without dropping queued ops.
     if problem.isUpdateRequired {
-      try? outbox.resetInFlightToPending(now: clock())
+      try? outbox.resetToPending(id: operation.id, now: clock())
       broadcaster.send(.forceUpdateRequired(minVersion: nil))
       return .pausedForForceUpdate
     }
@@ -172,12 +176,8 @@ extension SyncEngineActor {
     operations.sorted { lhs, rhs in
       let leftRank = causalRank(for: lhs.operationType)
       let rightRank = causalRank(for: rhs.operationType)
-      if leftRank != rightRank {
-        return leftRank < rightRank
-      }
-      if lhs.createdAt != rhs.createdAt {
-        return lhs.createdAt < rhs.createdAt
-      }
+      if leftRank != rightRank { return leftRank < rightRank }
+      if lhs.createdAt != rhs.createdAt { return lhs.createdAt < rhs.createdAt }
       return lhs.id < rhs.id
     }
   }

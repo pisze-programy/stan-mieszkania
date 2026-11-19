@@ -31,5 +31,6 @@ public enum DatabaseConstants: Sendable {
     public static let deleted: String = "deleted"
     public static let softDeleted: String = "soft_deleted"
     public static let retracted: String = "retracted"
+    public static let abandonedCleaned: String = "abandoned_cleaned"
   }
 }

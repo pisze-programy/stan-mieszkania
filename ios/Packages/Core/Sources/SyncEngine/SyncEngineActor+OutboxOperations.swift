@@ -118,61 +118,6 @@ extension SyncEngineActor {
     )
   }
 
-  private func executeCreateEntry(
-    _ operation: OutboxOperationRecord
-  ) async throws -> OperationExecutionOutcome {
-    let payload = try operation.decodePayload(CreateEntryOutboxPayload.self)
-    guard
-      let mediaRecord = try await database.read({ db in
-        try MediaRecord.where { $0.id.eq(payload.mediaId) }.fetchOne(db)
-      })
-    else {
-      throw SyncEngineError.mediaNotFound(mediaId: payload.mediaId)
-    }
-
-    // Invariant 7: Entry uploads wait until target media has serverReceivedAt confirmed.
-    guard mediaRecord.isSynced else {
-      return .deferred
-    }
-
-    guard
-      let entryRecord = try await database.read({ db in
-        try EntryRecord.where { $0.id.eq(payload.entryId) }.fetchOne(db)
-      })
-    else {
-      throw SyncEngineError.entryNotFound(entryId: payload.entryId)
-    }
-
-    let localMarkers = try await database.read { db in
-      try MarkerRecord
-        .where { $0.entryId.eq(payload.entryId) }
-        .order { $0.number.asc() }
-        .fetchAll(db)
-    }
-    let draftMarkers = localMarkers.map {
-      DraftMarkerInput(id: $0.id, localNumber: $0.number, x: $0.x, y: $0.y)
-    }
-
-    let confirmedEntry = try await apiClient.putMediaEntry(
-      PutMediaEntryInput(
-        apartmentId: payload.apartmentId,
-        mediaId: payload.mediaId,
-        entryId: payload.entryId,
-        text: entryRecord.text,
-        createdAt: entryRecord.createdAt,
-        markers: draftMarkers
-      )
-    )
-
-    let entryStore = EntryMutationStore(database: database)
-    try entryStore.confirmEntrySynced(
-      entryId: payload.entryId,
-      serverReceivedAt: confirmedEntry.serverReceivedAt ?? clock(),
-      serverMarkers: confirmedEntry.markers
-    )
-    return .succeeded
-  }
-
   private func executeSoftDeleteMedia(_ operation: OutboxOperationRecord) async throws {
     let payload = try operation.decodePayload(SoftDeleteMediaOutboxPayload.self)
     _ = try await apiClient.softDeleteMedia(payload.apartmentId, payload.mediaId)

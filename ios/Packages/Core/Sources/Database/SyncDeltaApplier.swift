@@ -90,11 +90,17 @@ public struct SyncDeltaApplier: Sendable {
       try applyMediaSnapshot(media, in: db)
 
     case .entry(let entry):
-      try applyEntrySnapshot(entry, in: db)
+      try applyEntrySnapshot(entry, apartmentId: change.apartmentId, in: db)
     }
   }
 
   private func applyMediaSnapshot(_ media: HydratedSyncMedia, in db: Database) throws {
+    try upsertAuthorMember(
+      media.author,
+      apartmentId: media.apartmentId,
+      fallbackJoinedAt: media.capturedAt,
+      in: db
+    )
     let existing = try MediaRecord.where({ $0.id.eq(media.id) }).fetchOne(db)
     let derivedState: MediaSyncState
     if media.deletedAt != nil {
@@ -131,7 +137,17 @@ public struct SyncDeltaApplier: Sendable {
     try MediaRecord.upsert { record }.execute(db)
   }
 
-  private func applyEntrySnapshot(_ entry: HydratedSyncEntry, in db: Database) throws {
+  private func applyEntrySnapshot(
+    _ entry: HydratedSyncEntry,
+    apartmentId: String,
+    in db: Database
+  ) throws {
+    try upsertAuthorMember(
+      entry.author,
+      apartmentId: apartmentId,
+      fallbackJoinedAt: entry.createdAt,
+      in: db
+    )
     // Decision S2-3: Retracted entries mask text and remove markers locally as well.
     let maskedText = entry.retractedAt != nil ? DatabaseConstants.retractedEntryText : entry.text
     let record = EntryRecord(

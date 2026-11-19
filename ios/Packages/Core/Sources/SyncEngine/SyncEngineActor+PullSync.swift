@@ -31,6 +31,10 @@ extension SyncEngineActor {
       }
     }
 
+    let activeIds = Set(summaries.map(\.apartment.id))
+    let apartmentStore = ApartmentMutationStore(database: database)
+    try apartmentStore.pruneRevokedApartments(keepingActiveApartmentIds: activeIds)
+
     var totalApplied = 0
     for summary in summaries {
       let localSeq = try applier.fetchLastSeq(apartmentId: summary.apartment.id)

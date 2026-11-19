@@ -31,7 +31,7 @@ public struct ApartmentMutationStore: Sendable {
     let newValue: String
   }
 
-  private let database: any DatabaseWriter
+  let database: any DatabaseWriter
 
   public init(database: any DatabaseWriter) {
     self.database = database
