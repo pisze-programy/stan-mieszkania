@@ -6,8 +6,6 @@
 	<string>$(API_BASE_URL)</string>
 	<key>AUTH_MODE</key>
 	<string>$(AUTH_MODE)</string>
-	<key>FIREBASE_WEB_API_KEY</key>
-	<string>$(FIREBASE_WEB_API_KEY)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -24,6 +22,8 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>FIREBASE_WEB_API_KEY</key>
+	<string>$(FIREBASE_WEB_API_KEY)</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
