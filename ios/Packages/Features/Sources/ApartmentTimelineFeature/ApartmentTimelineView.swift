@@ -59,9 +59,6 @@ public struct ApartmentTimelineView: View {
     .task {
       await store.send(.task).finish()
     }
-    .onDisappear {
-      store.send(.viewDisappeared)
-    }
     .overlay(alignment: .top) {
       toastOverlay
     }
@@ -101,6 +98,7 @@ public struct ApartmentTimelineView: View {
         set: { if !$0 { store.send(.leaveConfirmationDismissed) } }
       ),
       isConfirming: store.isLeavingOrDeleting,
+      onDismiss: { store.send(.leaveConfirmationDidDismiss) },
       content: { store.leaveOrDeleteConfirmationContent },
       onConfirm: { store.send(.leaveOrDeleteConfirmed) }
     )

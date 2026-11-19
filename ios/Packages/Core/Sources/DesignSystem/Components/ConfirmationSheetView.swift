@@ -111,20 +111,67 @@ public struct ConfirmationSheetView: View {
   }
 }
 
+private struct ConfirmationSheetModifier: ViewModifier {
+  @Binding var isPresented: Bool
+  let isConfirming: Bool
+  let contentProvider: () -> ConfirmationSheetContent
+  let onConfirm: () -> Void
+  let onDismiss: (() -> Void)?
+
+  @State private var cachedContent: ConfirmationSheetContent?
+
+  func body(content: Content) -> some View {
+    content
+      .onChange(of: isPresented) { _, presented in
+        if presented {
+          cachedContent = contentProvider()
+        }
+      }
+      .sheet(
+        isPresented: $isPresented,
+        onDismiss: {
+          cachedContent = nil
+          onDismiss?()
+        },
+        content: {
+          let activeContent = isPresented ? contentProvider() : (cachedContent ?? contentProvider())
+          ConfirmationSheetView(
+            content: activeContent,
+            isConfirming: isConfirming,
+            onConfirm: onConfirm,
+            onCancel: { isPresented = false }
+          )
+          .onAppear {
+            if isPresented {
+              cachedContent = activeContent
+            }
+          }
+          .onChange(of: activeContent) { _, updated in
+            if isPresented {
+              cachedContent = updated
+            }
+          }
+        }
+      )
+  }
+}
+
 extension View {
   public func confirmationSheet(
     isPresented: Binding<Bool>,
     isConfirming: Bool = false,
+    onDismiss: (() -> Void)? = nil,
     content: @escaping () -> ConfirmationSheetContent,
     onConfirm: @escaping () -> Void
   ) -> some View {
-    sheet(isPresented: isPresented) {
-      ConfirmationSheetView(
-        content: content(),
+    modifier(
+      ConfirmationSheetModifier(
+        isPresented: isPresented,
         isConfirming: isConfirming,
+        contentProvider: content,
         onConfirm: onConfirm,
-        onCancel: { isPresented.wrappedValue = false }
+        onDismiss: onDismiss
       )
-    }
+    )
   }
 }

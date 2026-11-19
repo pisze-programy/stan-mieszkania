@@ -16,8 +16,9 @@ extension MediaDetailFeature {
     case .metadataDismissed:
       state.isMetadataSheetPresented = false
       return .none
-    case .mediaDeleteTapped, .mediaDeleteConfirmationDismissed, .mediaDeleteConfirmed,
-      .mediaHardDeleteSucceeded, .mediaSoftDeleteSucceeded, .mediaDeleteFailed:
+    case .mediaDeleteTapped, .mediaDeleteConfirmationDismissed, .mediaDeleteSheetDidDismiss,
+      .mediaDeleteConfirmed, .mediaHardDeleteSucceeded, .mediaSoftDeleteSucceeded,
+      .mediaDeleteFailed:
       return handleMediaDeleteAction(&state, action: action)
     default:
       return .none
@@ -111,10 +112,11 @@ extension MediaDetailFeature {
     case .mediaDeleteConfirmationDismissed:
       state.mediaDeleteConfirmation = nil
       return .none
-    case .mediaDeleteConfirmed:
-      return confirmMediaDelete(&state)
-    case .mediaHardDeleteSucceeded:
-      state.mediaDeleteConfirmation = nil
+    case .mediaDeleteSheetDidDismiss:
+      guard state.pendingHardDeleteDismiss else {
+        return .none
+      }
+      state.pendingHardDeleteDismiss = false
       return .merge(
         .cancel(id: CancelID.syncEvents),
         .run { _ in
@@ -122,6 +124,12 @@ extension MediaDetailFeature {
         },
         .send(.delegate(.didDeleteLocalMedia(mediaId: state.mediaId)))
       )
+    case .mediaDeleteConfirmed:
+      return confirmMediaDelete(&state)
+    case .mediaHardDeleteSucceeded:
+      state.mediaDeleteConfirmation = nil
+      state.pendingHardDeleteDismiss = true
+      return .none
     case .mediaSoftDeleteSucceeded(let snapshot):
       state.mediaDeleteConfirmation = nil
       state.composer = nil

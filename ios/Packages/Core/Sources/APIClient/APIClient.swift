@@ -52,7 +52,7 @@ public struct APIClient: Sendable {
 
   public static func live(
     serverURL: URL,
-    transport: any ClientTransport = URLSessionTransport(),
+    transport: (any ClientTransport)? = nil,
     appVersion: String = APIClientConstants.defaultAppVersion,
     tokenProvider: @escaping @Sendable () async -> String?,
     requestIdGenerator: @escaping @Sendable () -> String = UUIDv7.generateNow
@@ -62,14 +62,24 @@ public struct APIClient: Sendable {
       appVersion: appVersion,
       requestIdGenerator: requestIdGenerator
     )
+    let resolvedTransport = transport ?? makeDefaultTransport()
     let generatedClient = Client(
       serverURL: serverURL,
       configuration: .init(dateTranscoder: FlexibleISO8601DateTranscoder()),
-      transport: transport,
+      transport: resolvedTransport,
       middlewares: [middleware]
     )
     let executor = LiveAPIClientExecutor(client: generatedClient)
     return makeClient(executor: executor)
+  }
+
+  private static func makeDefaultTransport() -> URLSessionTransport {
+    let configuration = URLSessionConfiguration.default
+    configuration.timeoutIntervalForRequest = APIClientConstants.requestTimeoutSeconds
+    configuration.timeoutIntervalForResource = APIClientConstants.resourceTimeoutSeconds
+    return URLSessionTransport(
+      configuration: .init(session: URLSession(configuration: configuration))
+    )
   }
 
   private static func run<T: Sendable>(_ op: () async throws -> T) async throws -> T {

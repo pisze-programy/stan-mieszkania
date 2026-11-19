@@ -13,9 +13,6 @@ extension ApartmentTimelineFeature {
       state.now = now
       state.quotaLimit = appConfigClient.loadCachedOrDefault().cloudMediaQuotaPerApartment
       return .merge(startSync(&state), listenToSyncEvents())
-    case .viewDisappeared:
-      state.isSyncing = false
-      return .cancel(id: CancelID.sync)
     case .pulledToRefresh:
       state.now = now
       return startSync(&state)
@@ -94,6 +91,9 @@ extension ApartmentTimelineFeature {
         )
         await send(.syncCompleted(updated))
       } catch {
+        guard !Task.isCancelled else {
+          return
+        }
         await send(.syncFailed(mapError(error)))
       }
     }

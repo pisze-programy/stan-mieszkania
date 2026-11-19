@@ -12,8 +12,8 @@ extension ApartmentTimelineFeature {
       return handleEditAction(&state, action: action)
     case .historyMenuTapped, .historySheetDismissed, .historyLoaded, .historyFailed:
       return handleHistoryAction(&state, action: action)
-    case .leaveOrDeleteMenuTapped, .leaveConfirmationDismissed, .leaveOrDeleteConfirmed,
-      .leaveOrDeleteSucceeded, .leaveOrDeleteFailed:
+    case .leaveOrDeleteMenuTapped, .leaveConfirmationDismissed, .leaveConfirmationDidDismiss,
+      .leaveOrDeleteConfirmed, .leaveOrDeleteSucceeded, .leaveOrDeleteFailed:
       return handleLeaveOrDeleteAction(&state, action: action)
     default:
       return .none
@@ -81,20 +81,30 @@ extension ApartmentTimelineFeature {
       }
       state.leaveConfirmationMode = nil
       return .none
-    case .leaveOrDeleteConfirmed:
-      return confirmLeaveOrDelete(&state)
-    case .leaveOrDeleteSucceeded:
-      state.isLeavingOrDeleting = false
-      state.leaveConfirmationMode = nil
+    case .leaveConfirmationDidDismiss:
+      guard state.pendingLeaveOrDeleteSuccess else {
+        return .none
+      }
+      state.pendingLeaveOrDeleteSuccess = false
       return .merge(
+        .cancel(id: CancelID.sync),
         .cancel(id: CancelID.syncEvents),
+        .cancel(id: CancelID.quotaNoticeDismiss),
         .run { _ in
           await haptics.actionSucceeded()
         },
         .send(.delegate(.didLeaveOrDeleteApartment))
       )
+    case .leaveOrDeleteConfirmed:
+      return confirmLeaveOrDelete(&state)
+    case .leaveOrDeleteSucceeded:
+      state.isLeavingOrDeleting = false
+      state.pendingLeaveOrDeleteSuccess = true
+      state.leaveConfirmationMode = nil
+      return .none
     case .leaveOrDeleteFailed(let message):
       state.isLeavingOrDeleting = false
+      state.pendingLeaveOrDeleteSuccess = false
       state.leaveConfirmationMode = nil
       state.errorMessage = message
       return .run { _ in

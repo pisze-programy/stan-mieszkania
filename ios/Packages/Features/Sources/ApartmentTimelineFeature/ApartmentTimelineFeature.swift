@@ -31,6 +31,7 @@ public struct ApartmentTimelineFeature: Sendable {
     public var historySheet: ApartmentHistorySheetState?
     public var leaveConfirmationMode: LeaveOrDeleteMode?
     public var isLeavingOrDeleting: Bool
+    public var pendingLeaveOrDeleteSuccess: Bool
     public var now: Date?
 
     public var callerRole: MemberRole { apartment?.role ?? .contributor }
@@ -62,6 +63,7 @@ public struct ApartmentTimelineFeature: Sendable {
       historySheet: ApartmentHistorySheetState? = nil,
       leaveConfirmationMode: LeaveOrDeleteMode? = nil,
       isLeavingOrDeleting: Bool = false,
+      pendingLeaveOrDeleteSuccess: Bool = false,
       now: Date? = nil
     ) {
       self.apartmentId = apartmentId
@@ -83,13 +85,13 @@ public struct ApartmentTimelineFeature: Sendable {
       self.historySheet = historySheet
       self.leaveConfirmationMode = leaveConfirmationMode
       self.isLeavingOrDeleting = isLeavingOrDeleting
+      self.pendingLeaveOrDeleteSuccess = pendingLeaveOrDeleteSuccess
       self.now = now
     }
   }
 
   public enum Action: Equatable, Sendable {
     case task
-    case viewDisappeared
     case pulledToRefresh
     case reloadLocalState
     case localSnapshotLoaded(ApartmentTimelineSnapshot)
@@ -118,6 +120,7 @@ public struct ApartmentTimelineFeature: Sendable {
     case historyFailed(String)
     case leaveOrDeleteMenuTapped
     case leaveConfirmationDismissed
+    case leaveConfirmationDidDismiss
     case leaveOrDeleteConfirmed
     case leaveOrDeleteSucceeded
     case leaveOrDeleteFailed(String)
@@ -155,7 +158,7 @@ public struct ApartmentTimelineFeature: Sendable {
   public var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
-      case .task, .viewDisappeared, .pulledToRefresh, .reloadLocalState, .localSnapshotLoaded,
+      case .task, .pulledToRefresh, .reloadLocalState, .localSnapshotLoaded,
         .syncCompleted, .syncFailed, .syncEventReceived, .syncAllLocalTapped,
         .syncAllLocalCompleted, .syncAllLocalFailed:
         return handleSyncAction(&state, action: action)
@@ -182,8 +185,8 @@ public struct ApartmentTimelineFeature: Sendable {
       case .editMenuTapped, .editSheetDismissed, .editNameChanged, .editStreetChanged,
         .editCityChanged, .editSubmitted, .editSucceeded, .editFailed, .historyMenuTapped,
         .historySheetDismissed, .historyLoaded, .historyFailed, .leaveOrDeleteMenuTapped,
-        .leaveConfirmationDismissed, .leaveOrDeleteConfirmed, .leaveOrDeleteSucceeded,
-        .leaveOrDeleteFailed:
+        .leaveConfirmationDismissed, .leaveConfirmationDidDismiss, .leaveOrDeleteConfirmed,
+        .leaveOrDeleteSucceeded, .leaveOrDeleteFailed:
         return handleManagementAction(&state, action: action)
       case .delegate:
         return .none

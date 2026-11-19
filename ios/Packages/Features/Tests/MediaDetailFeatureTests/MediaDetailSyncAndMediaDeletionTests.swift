@@ -27,7 +27,11 @@ struct MediaDetailSyncAndMediaDeletionTests {
 
     await store.send(.mediaDeleteTapped) { $0.mediaDeleteConfirmation = .hardDeleteLocal }
     await store.send(.mediaDeleteConfirmed)
-    await store.receive(.mediaHardDeleteSucceeded) { $0.mediaDeleteConfirmation = nil }
+    await store.receive(.mediaHardDeleteSucceeded) {
+      $0.mediaDeleteConfirmation = nil
+      $0.pendingHardDeleteDismiss = true
+    }
+    await store.send(.mediaDeleteSheetDidDismiss) { $0.pendingHardDeleteDismiss = false }
     await store.receive(.delegate(.didDeleteLocalMedia(mediaId: MediaDetailTestFixtures.mediaId)))
 
     #expect(deletedFiles.value == [MediaDetailTestFixtures.mediaId])

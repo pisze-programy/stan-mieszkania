@@ -93,9 +93,11 @@ extension AppFeature {
   ) -> Effect<Action> {
     switch delegate {
     case .didSelectMedia(let mediaId):
-      guard case .apartmentTimeline(let timelineState) = state.path[id: id] else {
+      guard case .apartmentTimeline(var timelineState) = state.path[id: id] else {
         return .none
       }
+      timelineState.isSyncing = false
+      state.path[id: id] = .apartmentTimeline(timelineState)
       state.path.append(
         .mediaDetail(
           MediaDetailFeature.State(

@@ -27,6 +27,7 @@ public struct MediaDetailFeature: Sendable {
     public var composer: EntryComposerState?
     public var isMetadataSheetPresented: Bool
     public var mediaDeleteConfirmation: MediaDeleteConfirmationMode?
+    public var pendingHardDeleteDismiss: Bool
     public var entryDeleteConfirmation: EntryDeleteConfirmation?
     public var errorMessage: String?
     public var quotaNoticeMessage: String?
@@ -50,6 +51,7 @@ public struct MediaDetailFeature: Sendable {
       composer: EntryComposerState? = nil,
       isMetadataSheetPresented: Bool = false,
       mediaDeleteConfirmation: MediaDeleteConfirmationMode? = nil,
+      pendingHardDeleteDismiss: Bool = false,
       entryDeleteConfirmation: EntryDeleteConfirmation? = nil,
       errorMessage: String? = nil,
       quotaNoticeMessage: String? = nil,
@@ -72,6 +74,7 @@ public struct MediaDetailFeature: Sendable {
       self.composer = composer
       self.isMetadataSheetPresented = isMetadataSheetPresented
       self.mediaDeleteConfirmation = mediaDeleteConfirmation
+      self.pendingHardDeleteDismiss = pendingHardDeleteDismiss
       self.entryDeleteConfirmation = entryDeleteConfirmation
       self.errorMessage = errorMessage
       self.quotaNoticeMessage = quotaNoticeMessage
@@ -113,6 +116,7 @@ public struct MediaDetailFeature: Sendable {
     case metadataDismissed
     case mediaDeleteTapped
     case mediaDeleteConfirmationDismissed
+    case mediaDeleteSheetDidDismiss
     case mediaDeleteConfirmed
     case mediaHardDeleteSucceeded
     case mediaSoftDeleteSucceeded(MediaDetailSnapshot)
@@ -153,8 +157,9 @@ public struct MediaDetailFeature: Sendable {
         return handleComposerAction(&state, action: action)
       case .entryDeleteTapped, .entryDeleteConfirmationDismissed, .entryDeleteConfirmed,
         .entryDeleteSucceeded, .entryDeleteFailed, .metadataTapped, .metadataDismissed,
-        .mediaDeleteTapped, .mediaDeleteConfirmationDismissed, .mediaDeleteConfirmed,
-        .mediaHardDeleteSucceeded, .mediaSoftDeleteSucceeded, .mediaDeleteFailed:
+        .mediaDeleteTapped, .mediaDeleteConfirmationDismissed, .mediaDeleteSheetDidDismiss,
+        .mediaDeleteConfirmed, .mediaHardDeleteSucceeded, .mediaSoftDeleteSucceeded,
+        .mediaDeleteFailed:
         return handleMutationAction(&state, action: action)
       case .delegate:
         return .none

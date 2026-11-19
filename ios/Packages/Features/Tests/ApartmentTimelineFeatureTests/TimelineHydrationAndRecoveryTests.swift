@@ -15,22 +15,18 @@ struct TimelineHydrationAndRecoveryTests {
   private static let expectedSyncCalls = 2
 
   @MainActor
-  @Test("viewDisappeared resets isSyncing and cancels in-flight sync so re-appear syncs again")
-  func viewDisappearedResetsSyncStateAndAllowsRestart() async throws {
+  @Test("Re-appearing task cancels in-flight sync and recovers isSyncing without viewDisappeared")
+  func reappearingTaskCancelsInFlightSyncAndRecovers() async throws {
     let database = try TimelineTestFixtures.seedTimelineDatabase()
     let snapshot = try ApartmentTimelineStore.fetchSnapshot(
-      apartmentId: TimelineTestFixtures.apartmentId,
-      from: database,
+      apartmentId: TimelineTestFixtures.apartmentId, from: database,
       now: TimelineTestFixtures.thursdayLaterDate,
-      calendar: TimelineTestFixtures.warsawCalendar,
-      timeZone: TimelineTestFixtures.warsawTimeZone
+      calendar: TimelineTestFixtures.warsawCalendar, timeZone: TimelineTestFixtures.warsawTimeZone
     )
     let syncCalls = LockIsolated(0)
     let firstSyncGate = AsyncStream<Void>.makeStream()
     let store = makeRecoveryStore(
-      database: database,
-      syncCalls: syncCalls,
-      firstSyncStream: firstSyncGate.stream
+      database: database, syncCalls: syncCalls, firstSyncStream: firstSyncGate.stream
     )
 
     let firstTask = await store.send(.task) {
@@ -47,14 +43,41 @@ struct TimelineHydrationAndRecoveryTests {
       $0.cloudMediaCount = TimelineTestFixtures.defaultCloudMediaCount
     }
 
-    await store.send(.viewDisappeared) { $0.isSyncing = false }
     firstSyncGate.continuation.finish()
     await firstTask.cancel()
 
-    await store.send(.task) { $0.isSyncing = true }
+    await store.send(.task)
     await store.receive(.localSnapshotLoaded(snapshot))
     await store.receive(.syncCompleted(snapshot)) { $0.isSyncing = false }
     #expect(syncCalls.value == Self.expectedSyncCalls)
+  }
+
+  @MainActor
+  @Test("Delete failure resets isLeavingOrDeleting, closes sheet, and surfaces error toast")
+  func leaveOrDeleteFailureResetsLoadingAndSurfacesError() async {
+    let errorHaptics = LockIsolated(0)
+    let store = TestStore(
+      initialState: ApartmentTimelineFeature.State(
+        apartmentId: TimelineTestFixtures.apartmentId,
+        apartment: TimelineTestFixtures.makeApartment(role: .owner),
+        leaveConfirmationMode: .ownerDeleteOrLeave
+      )
+    ) {
+      ApartmentTimelineFeature()
+    } withDependencies: {
+      $0.apiClient.deleteOrLeaveApartment = { _ in throw URLError(.timedOut) }
+      $0.haptics.error = { errorHaptics.withValue { $0 += 1 } }
+    }
+
+    await store.send(.leaveOrDeleteConfirmed) { $0.isLeavingOrDeleting = true }
+    let expectedError = L10n.errorMessage(for: URLError(.timedOut))
+    await store.receive(.leaveOrDeleteFailed(expectedError)) {
+      $0.isLeavingOrDeleting = false
+      $0.leaveConfirmationMode = nil
+      $0.errorMessage = expectedError
+    }
+    await store.send(.leaveConfirmationDidDismiss)
+    #expect(!store.state.pendingLeaveOrDeleteSuccess && errorHaptics.value == 1)
   }
 
   @MainActor
@@ -76,10 +99,7 @@ struct TimelineHydrationAndRecoveryTests {
       $0.syncEngine.events = { AsyncStream { $0.finish() } }
       $0.syncEngine.processOutbox = {
         SyncOutboxReport(
-          processedCount: 0,
-          failedCount: 0,
-          deferredCount: 0,
-          pausedForForceUpdate: false
+          processedCount: 0, failedCount: 0, deferredCount: 0, pausedForForceUpdate: false
         )
       }
       $0.syncEngine.syncApartment = { _ in
@@ -121,29 +141,23 @@ struct TimelineHydrationAndRecoveryTests {
     let soloState = ApartmentTimelineFeature.State(
       apartmentId: TimelineTestFixtures.apartmentId,
       apartment: TimelineTestFixtures.makeApartment(role: .owner),
-      hasOtherMembers: false,
-      leaveConfirmationMode: .ownerDeleteOrLeave
+      hasOtherMembers: false, leaveConfirmationMode: .ownerDeleteOrLeave
     )
     let sharedOwnerState = ApartmentTimelineFeature.State(
       apartmentId: TimelineTestFixtures.apartmentId,
       apartment: TimelineTestFixtures.makeApartment(role: .owner),
-      hasOtherMembers: true,
-      leaveConfirmationMode: .ownerDeleteOrLeave
+      hasOtherMembers: true, leaveConfirmationMode: .ownerDeleteOrLeave
     )
     let contributorState = ApartmentTimelineFeature.State(
       apartmentId: TimelineTestFixtures.apartmentId,
       apartment: TimelineTestFixtures.makeApartment(role: .contributor),
-      hasOtherMembers: true,
-      leaveConfirmationMode: .contributorLeave
+      hasOtherMembers: true, leaveConfirmationMode: .contributorLeave
     )
-
     #expect(soloState.leaveOrDeleteMenuTitle == L10n.string("apartment.menu.delete"))
     #expect(sharedOwnerState.leaveOrDeleteMenuTitle == L10n.string("apartment.menu.leave"))
     #expect(contributorState.leaveOrDeleteMenuTitle == L10n.string("apartment.menu.leave"))
-    #expect(
-      soloState.leaveOrDeleteConfirmationContent.message
-        == L10n.format("apartment.delete.sheet.message", soloState.navigationTitle)
-    )
+    let expectedDeleteMsg = L10n.format("apartment.delete.sheet.message", soloState.navigationTitle)
+    #expect(soloState.leaveOrDeleteConfirmationContent.message == expectedDeleteMsg)
     #expect(
       sharedOwnerState.leaveOrDeleteConfirmationContent.message
         == L10n.string("apartment.leave.owner.message")
@@ -159,39 +173,25 @@ struct TimelineHydrationAndRecoveryTests {
     let aptStore = ApartmentMutationStore(database: database)
     try aptStore.saveLocalUser(TimelineTestFixtures.ownerUser)
     let apartment = TimelineTestFixtures.makeApartment(role: .owner, cloudMediaCount: 0)
+    let owner = TimelineTestFixtures.ownerUser
     let creator = ApartmentMember(
-      userId: TimelineTestFixtures.ownerUser.id,
-      displayName: TimelineTestFixtures.ownerUser.displayName,
-      shortTag: TimelineTestFixtures.ownerUser.shortTag,
-      color: TimelineTestFixtures.ownerUser.color,
-      role: .owner,
-      joinedAt: TimelineTestFixtures.wednesdayDate
+      userId: owner.id, displayName: owner.displayName, shortTag: owner.shortTag,
+      color: owner.color, role: .owner, joinedAt: TimelineTestFixtures.wednesdayDate
     )
     try aptStore.createApartment(
-      apartment,
-      creator: creator,
-      outboxId: TimelineTestFixtures.outboxId,
-      now: TimelineTestFixtures.wednesdayDate
+      apartment, creator: creator,
+      outboxId: TimelineTestFixtures.outboxId, now: TimelineTestFixtures.wednesdayDate
     )
     let media = MediaItem(
-      id: TimelineTestFixtures.mediaLocalId,
-      apartmentId: TimelineTestFixtures.apartmentId,
-      authorId: TimelineTestFixtures.ownerId,
-      kind: .photo,
-      source: .camera,
-      sha256: TimelineTestFixtures.sha256,
-      capturedAt: TimelineTestFixtures.thursdayDate,
-      capturedTz: "Europe/Warsaw",
-      capturedAtFromImport: false,
-      width: TimelineTestFixtures.width,
-      height: TimelineTestFixtures.height,
-      bytes: TimelineTestFixtures.bytes,
-      syncState: .localOnly
+      id: TimelineTestFixtures.mediaLocalId, apartmentId: TimelineTestFixtures.apartmentId,
+      authorId: TimelineTestFixtures.ownerId, kind: .photo, source: .camera,
+      sha256: TimelineTestFixtures.sha256, capturedAt: TimelineTestFixtures.thursdayDate,
+      capturedTz: "Europe/Warsaw", capturedAtFromImport: false,
+      width: TimelineTestFixtures.width, height: TimelineTestFixtures.height,
+      bytes: TimelineTestFixtures.bytes, syncState: .localOnly
     )
     try MediaMutationStore(database: database).saveLocalMedia(
-      media,
-      queueForCloud: false,
-      now: TimelineTestFixtures.thursdayDate
+      media, queueForCloud: false, now: TimelineTestFixtures.thursdayDate
     )
     return database
   }

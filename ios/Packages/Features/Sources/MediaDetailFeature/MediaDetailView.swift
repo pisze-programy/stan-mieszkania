@@ -115,6 +115,7 @@ public struct MediaDetailView: View {
         get: { store.mediaDeleteConfirmation != nil },
         set: { if !$0 { store.send(.mediaDeleteConfirmationDismissed) } }
       ),
+      onDismiss: { store.send(.mediaDeleteSheetDidDismiss) },
       content: { mediaDeleteConfirmationContent },
       onConfirm: { store.send(.mediaDeleteConfirmed) }
     )

@@ -47,8 +47,10 @@ struct TimelineLeaveAndDelegatesTests {
     await store.send(.leaveOrDeleteConfirmed) { $0.isLeavingOrDeleting = true }
     await store.receive(.leaveOrDeleteSucceeded) {
       $0.isLeavingOrDeleting = false
+      $0.pendingLeaveOrDeleteSuccess = true
       $0.leaveConfirmationMode = nil
     }
+    await store.send(.leaveConfirmationDidDismiss) { $0.pendingLeaveOrDeleteSuccess = false }
     await store.receive(\.delegate.didLeaveOrDeleteApartment)
 
     #expect(await recorder.deletedOrLeftOwnerIds == [TimelineTestFixtures.apartmentId])
@@ -93,8 +95,10 @@ struct TimelineLeaveAndDelegatesTests {
     await store.send(.leaveOrDeleteConfirmed) { $0.isLeavingOrDeleting = true }
     await store.receive(.leaveOrDeleteSucceeded) {
       $0.isLeavingOrDeleting = false
+      $0.pendingLeaveOrDeleteSuccess = true
       $0.leaveConfirmationMode = nil
     }
+    await store.send(.leaveConfirmationDidDismiss) { $0.pendingLeaveOrDeleteSuccess = false }
     await store.receive(\.delegate.didLeaveOrDeleteApartment)
 
     #expect(await recorder.leftContributorIds == [TimelineTestFixtures.apartmentId])
@@ -135,9 +139,7 @@ struct TimelineLeaveAndDelegatesTests {
         apartment: TimelineTestFixtures.makeApartment(role: .owner),
         isCaptureInProgress: true
       )
-    ) {
-      ApartmentTimelineFeature()
-    }
+    ) { ApartmentTimelineFeature() }
     await busyStore.send(.captureSourceSelected(.photoLibrary))
     #expect(L10n.string("capture.menu.video.disabled") == "Wideo — wkrótce")
   }
@@ -183,9 +185,7 @@ struct TimelineLeaveAndDelegatesTests {
         apartmentId: TimelineTestFixtures.apartmentId,
         apartment: TimelineTestFixtures.makeApartment(role: .owner)
       )
-    ) {
-      ApartmentTimelineFeature()
-    }
+    ) { ApartmentTimelineFeature() }
     _ = (
       ApartmentTimelineView(store: viewStore),
       ApartmentHistorySheetView(

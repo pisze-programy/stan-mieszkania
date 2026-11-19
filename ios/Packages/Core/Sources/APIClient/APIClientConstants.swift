@@ -8,6 +8,8 @@ public enum APIClientConstants: Sendable {
   public static let defaultBaseURLString: String = "https://api.stanmieszkania.pl"
   public static let defaultAppVersion: String = "1.0.0"
   public static let maxProblemBodyBytes: Int = 65_536
+  public static let requestTimeoutSeconds: TimeInterval = 30
+  public static let resourceTimeoutSeconds: TimeInterval = 60
   public static let upgradeRequiredStatusCode: Int = 426
   public static let httpStatusErrorCodePrefix: String = "HTTP_"
   public static let networkUnavailableErrorCode: String = "NETWORK_UNAVAILABLE"
