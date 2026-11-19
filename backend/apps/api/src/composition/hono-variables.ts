@@ -1,6 +1,10 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import type { Clock, IdGenerator, Logger } from '@stanmieszkania/shared';
 import type { AppConfig } from '../config/app-config';
+import type {
+  ApartmentCommandGateway,
+  ApartmentCoordinatorNamespaceLike,
+} from '../durable-objects/apartment-coordinator.types';
 import type { UserGuardNamespaceLike } from '../durable-objects/user-guard.types';
 import type { HttpContextVariables } from '../http/http-env';
 import type {
@@ -36,6 +40,7 @@ export interface AppBindings {
   readonly DB: D1Database;
   readonly MEDIA_BUCKET?: LocalR2BucketLike;
   readonly USER_GUARD?: UserGuardNamespaceLike;
+  readonly APARTMENT_COORDINATOR?: ApartmentCoordinatorNamespaceLike;
   readonly CLOUD_MEDIA_QUOTA_PER_APARTMENT?: string;
   readonly PRESIGN_PUT_TTL_SECONDS?: string;
   readonly PRESIGN_GET_TTL_SECONDS?: string;
@@ -63,6 +68,7 @@ export interface RequestContainer {
   readonly syncRepository: SyncRepository;
   readonly accountDeletionRepository: AccountDeletionRepository;
   readonly inviteRateLimiter: InviteCodeRateLimiterPort;
+  readonly apartmentGateway: ApartmentCommandGateway;
   readonly objectStorage: ObjectStoragePort;
   readonly mediaCleanup: MediaCleanupPort;
   readonly appleTokenRevoker: AppleTokenRevokerPort;

@@ -15,6 +15,7 @@ export interface AppConfig {
   readonly cloudMediaQuotaPerApartment: number;
   readonly presignPutTtlMs: number;
   readonly presignGetTtlMs: number;
+  readonly abandonedPendingUploadTtlMs: number;
   readonly inviteCodeRateLimitMaxAttempts: number;
   readonly inviteCodeRateLimitWindowMs: number;
   readonly jpegMaxDimensionPx: number;
@@ -46,6 +47,7 @@ export function safeParseAppConfig(rawEnv: unknown): Result<AppConfig, AppConfig
     cloudMediaQuotaPerApartment: vars.CLOUD_MEDIA_QUOTA_PER_APARTMENT,
     presignPutTtlMs: seconds(vars.PRESIGN_PUT_TTL_SECONDS),
     presignGetTtlMs: seconds(vars.PRESIGN_GET_TTL_SECONDS),
+    abandonedPendingUploadTtlMs: seconds(vars.ABANDONED_PENDING_UPLOAD_TTL_SECONDS),
     inviteCodeRateLimitMaxAttempts: vars.INVITE_CODE_RATE_LIMIT_MAX_ATTEMPTS,
     inviteCodeRateLimitWindowMs: seconds(vars.INVITE_CODE_RATE_LIMIT_WINDOW_SECONDS),
     jpegMaxDimensionPx: vars.JPEG_MAX_DIMENSION_PX,

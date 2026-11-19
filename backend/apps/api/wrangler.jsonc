@@ -25,12 +25,20 @@
         "name": "USER_GUARD",
         "class_name": "UserGuard",
       },
+      {
+        "name": "APARTMENT_COORDINATOR",
+        "class_name": "ApartmentCoordinator",
+      },
     ],
   },
   "migrations": [
     {
       "tag": "v1",
       "new_sqlite_classes": ["UserGuard"],
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["ApartmentCoordinator"],
     },
   ],
   "vars": {
@@ -70,12 +78,20 @@
             "name": "USER_GUARD",
             "class_name": "UserGuard",
           },
+          {
+            "name": "APARTMENT_COORDINATOR",
+            "class_name": "ApartmentCoordinator",
+          },
         ],
       },
       "migrations": [
         {
           "tag": "v1",
           "new_sqlite_classes": ["UserGuard"],
+        },
+        {
+          "tag": "v2",
+          "new_sqlite_classes": ["ApartmentCoordinator"],
         },
       ],
       "vars": {

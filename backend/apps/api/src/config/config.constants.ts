@@ -6,6 +6,8 @@ export const MIN_CLOUD_MEDIA_QUOTA = 1;
 export const DEFAULT_PRESIGN_PUT_TTL_SECONDS = toSeconds(minutes(15));
 export const DEFAULT_PRESIGN_GET_TTL_SECONDS = toSeconds(hours(1));
 export const MIN_PRESIGN_TTL_SECONDS = 60;
+export const DEFAULT_ABANDONED_PENDING_UPLOAD_TTL_SECONDS = toSeconds(hours(24));
+export const MIN_ABANDONED_PENDING_UPLOAD_TTL_SECONDS = 60;
 
 export const DEFAULT_INVITE_RATE_LIMIT_MAX_ATTEMPTS = 5;
 export const MIN_INVITE_RATE_LIMIT_MAX_ATTEMPTS = 1;

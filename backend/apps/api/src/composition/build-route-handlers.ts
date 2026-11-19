@@ -1,5 +1,6 @@
-import type { Clock, IdGenerator } from '@stanmieszkania/shared';
+import { err, type Clock, type IdGenerator } from '@stanmieszkania/shared';
 import type { AppConfig } from '../config/app-config';
+import type { ApartmentCommandGateway } from '../durable-objects/apartment-coordinator.types';
 import type { MediaCleanupPort } from '../modules/account-deletion';
 import {
   createCreateApartmentUseCase,
@@ -9,6 +10,7 @@ import {
   createListMyApartmentsUseCase,
   createResetInviteCodeUseCase,
   createUpdateApartmentUseCase,
+  normalizeInviteCode,
   type ApartmentRepository,
   type ApartmentRouteHandlers,
 } from '../modules/apartments';
@@ -34,10 +36,13 @@ import {
   type ObjectStoragePort,
 } from '../modules/media';
 import {
+  createAllowAllInviteRateLimiter,
   createJoinApartmentByCodeUseCase,
   createLeaveApartmentUseCase,
   createListApartmentMembersUseCase,
   createRevokeMemberAccessUseCase,
+  inviteCodeInvalidError,
+  inviteCodeNotFoundError,
   type InviteCodeRateLimiterPort,
   type MembershipRepository,
   type MembershipRouteHandlers,
@@ -59,6 +64,7 @@ export interface BuildModuleHandlersInput {
   readonly entryRepository: EntryRepository;
   readonly syncRepository: SyncRepository;
   readonly inviteRateLimiter: InviteCodeRateLimiterPort;
+  readonly apartmentGateway: ApartmentCommandGateway;
   readonly objectStorage: ObjectStoragePort;
   readonly mediaCleanup: MediaCleanupPort;
   readonly mediaBucket: LocalR2BucketLike | undefined;
@@ -73,78 +79,99 @@ export interface ModuleHandlersBundle {
   readonly localStorage: LocalStorageHandlers;
 }
 
-export function buildModuleRouteHandlers(input: BuildModuleHandlersInput): ModuleHandlersBundle {
-  const {
-    appConfig,
-    clock,
-    idGenerator,
-    apartmentRepository,
-    membershipRepository,
-    mediaRepository,
-    entryRepository,
-    syncRepository,
-    inviteRateLimiter,
-    objectStorage,
-    mediaCleanup,
-    mediaBucket,
-  } = input;
+function serialize<TCommand extends { readonly apartmentId: string }, TResult>(
+  gateway: ApartmentCommandGateway,
+  useCase: { execute(command: TCommand): Promise<TResult> },
+): { execute(command: TCommand): Promise<TResult> } {
+  return {
+    execute: (command) =>
+      gateway.runSerialized(command.apartmentId, () => useCase.execute(command)),
+  };
+}
+
+// Architecture A17 & 3.4: Route all per-apartment mutations through ApartmentCommandGateway; keep reads direct to D1.
+export function buildModuleRouteHandlers(i: BuildModuleHandlersInput): ModuleHandlersBundle {
+  const gw = i.apartmentGateway;
+  const joinInner = createJoinApartmentByCodeUseCase({
+    membershipRepository: i.membershipRepository,
+    inviteRateLimiter: createAllowAllInviteRateLimiter(),
+    clock: i.clock,
+  });
+  const initUploadInner = createInitMediaUploadUseCase({
+    mediaRepository: i.mediaRepository,
+    objectStorage: i.objectStorage,
+    clock: i.clock,
+    cloudMediaQuota: i.appConfig.cloudMediaQuotaPerApartment,
+    maxBytes: i.appConfig.jpegMaxBytes,
+    presignPutTtlMs: i.appConfig.presignPutTtlMs,
+  });
 
   return {
     apartments: {
-      createApartment: createCreateApartmentUseCase({ apartmentRepository, clock }),
-      listMyApartments: createListMyApartmentsUseCase({ apartmentRepository }),
-      getApartment: createGetApartmentUseCase({ apartmentRepository }),
-      updateApartment: createUpdateApartmentUseCase({ apartmentRepository, clock, idGenerator }),
-      resetInviteCode: createResetInviteCodeUseCase({ apartmentRepository, clock }),
-      deleteOrLeaveApartment: createDeleteOrLeaveApartmentUseCase({
-        apartmentRepository,
-        mediaCleanup,
-        clock,
-      }),
-      listApartmentChanges: createListApartmentChangesUseCase({ apartmentRepository }),
+      createApartment: serialize(gw, createCreateApartmentUseCase(i)),
+      listMyApartments: createListMyApartmentsUseCase(i),
+      getApartment: createGetApartmentUseCase(i),
+      updateApartment: serialize(gw, createUpdateApartmentUseCase(i)),
+      resetInviteCode: serialize(gw, createResetInviteCodeUseCase(i)),
+      deleteOrLeaveApartment: serialize(gw, createDeleteOrLeaveApartmentUseCase(i)),
+      listApartmentChanges: createListApartmentChangesUseCase(i),
     },
     membership: {
-      joinApartment: createJoinApartmentByCodeUseCase({
-        membershipRepository,
-        inviteRateLimiter,
-        clock,
-      }),
-      listMembers: createListApartmentMembersUseCase({ membershipRepository }),
-      revokeMember: createRevokeMemberAccessUseCase({ membershipRepository, clock }),
-      leaveApartment: createLeaveApartmentUseCase({ membershipRepository, clock }),
+      joinApartment: {
+        execute: async (cmd) => {
+          const rateLimit = await i.inviteRateLimiter.checkAndRecordJoinAttempt(cmd.userId);
+          if (!rateLimit.ok) return rateLimit;
+          const normalized = normalizeInviteCode(cmd.inviteCode);
+          if (!normalized.ok) return err(inviteCodeInvalidError(normalized.error.message));
+          const found = await i.membershipRepository.findApartmentByInviteCode(normalized.value);
+          if (!found.ok) return found;
+          if (found.value === null) return err(inviteCodeNotFoundError());
+          return gw.runSerialized(found.value.id, () => joinInner.execute(cmd));
+        },
+      },
+      listMembers: createListApartmentMembersUseCase(i),
+      revokeMember: serialize(gw, createRevokeMemberAccessUseCase(i)),
+      leaveApartment: serialize(gw, createLeaveApartmentUseCase(i)),
     },
     media: {
-      initUpload: createInitMediaUploadUseCase({
-        mediaRepository,
-        objectStorage,
-        clock,
-        cloudMediaQuota: appConfig.cloudMediaQuotaPerApartment,
-        maxBytes: appConfig.jpegMaxBytes,
-        presignPutTtlMs: appConfig.presignPutTtlMs,
-      }),
-      confirmUpload: createConfirmMediaUploadUseCase({ mediaRepository, objectStorage, clock }),
-      listMedia: createListApartmentMediaUseCase({ mediaRepository }),
-      getMedia: createGetMediaUseCase({ mediaRepository }),
+      initUpload: {
+        execute: async (cmd) => {
+          const result = await gw.runSerialized(cmd.apartmentId, () =>
+            initUploadInner.execute(cmd),
+          );
+          if (result.ok) {
+            await gw.schedulePendingUploadCleanup(
+              cmd.apartmentId,
+              i.clock.nowMs() + i.appConfig.abandonedPendingUploadTtlMs,
+              i.appConfig.abandonedPendingUploadTtlMs,
+            );
+          }
+          return result;
+        },
+      },
+      confirmUpload: serialize(gw, createConfirmMediaUploadUseCase(i)),
+      listMedia: createListApartmentMediaUseCase(i),
+      getMedia: createGetMediaUseCase(i),
       getDownloadUrl: createGetMediaDownloadUrlUseCase({
-        mediaRepository,
-        objectStorage,
-        presignGetTtlMs: appConfig.presignGetTtlMs,
+        mediaRepository: i.mediaRepository,
+        objectStorage: i.objectStorage,
+        presignGetTtlMs: i.appConfig.presignGetTtlMs,
       }),
-      softDelete: createSoftDeleteMediaUseCase({ mediaRepository, clock }),
+      softDelete: serialize(gw, createSoftDeleteMediaUseCase(i)),
     },
     entries: {
-      createEntry: createCreateEntryUseCase({ entryRepository, clock }),
-      listEntries: createListMediaEntriesUseCase({ entryRepository }),
-      retractEntry: createRetractEntryUseCase({ entryRepository, clock }),
+      createEntry: serialize(gw, createCreateEntryUseCase(i)),
+      listEntries: createListMediaEntriesUseCase(i),
+      retractEntry: serialize(gw, createRetractEntryUseCase(i)),
     },
     sync: {
-      listApartmentChanges: createListApartmentChangesFeedUseCase({ syncRepository }),
-      listMyApartmentsSync: createListMyApartmentsSyncUseCase({ syncRepository }),
+      listApartmentChanges: createListApartmentChangesFeedUseCase(i),
+      listMyApartmentsSync: createListMyApartmentsSyncUseCase(i),
     },
     localStorage: {
-      storageMode: appConfig.storageMode,
-      bucket: mediaBucket,
-      clock,
+      storageMode: i.appConfig.storageMode,
+      bucket: i.mediaBucket,
+      clock: i.clock,
       verifySignature: verifyLocalStorageSignature,
     },
   };

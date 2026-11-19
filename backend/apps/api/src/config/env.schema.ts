@@ -2,6 +2,7 @@ import type { D1Database, DurableObjectNamespace, R2Bucket } from '@cloudflare/w
 import { SEMVER_REGEX } from '@stanmieszkania/http-contracts';
 import { z } from 'zod';
 import {
+  DEFAULT_ABANDONED_PENDING_UPLOAD_TTL_SECONDS,
   DEFAULT_AUTH_MODE,
   DEFAULT_CLOUD_MEDIA_QUOTA,
   DEFAULT_INVITE_RATE_LIMIT_MAX_ATTEMPTS,
@@ -14,6 +15,7 @@ import {
   DEFAULT_PRESIGN_PUT_TTL_SECONDS,
   DEFAULT_STORAGE_MODE,
   MAX_JPEG_QUALITY,
+  MIN_ABANDONED_PENDING_UPLOAD_TTL_SECONDS,
   MIN_CLOUD_MEDIA_QUOTA,
   MIN_INVITE_RATE_LIMIT_MAX_ATTEMPTS,
   MIN_INVITE_RATE_LIMIT_WINDOW_SECONDS,
@@ -39,6 +41,11 @@ export const EnvVarsSchema = z.object({
     .int()
     .min(MIN_PRESIGN_TTL_SECONDS)
     .default(DEFAULT_PRESIGN_GET_TTL_SECONDS),
+  ABANDONED_PENDING_UPLOAD_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .min(MIN_ABANDONED_PENDING_UPLOAD_TTL_SECONDS)
+    .default(DEFAULT_ABANDONED_PENDING_UPLOAD_TTL_SECONDS),
   INVITE_CODE_RATE_LIMIT_MAX_ATTEMPTS: z.coerce
     .number()
     .int()
@@ -75,4 +82,5 @@ export interface WorkerRuntimeBindings {
   readonly DB: D1Database;
   readonly MEDIA_BUCKET?: R2Bucket;
   readonly USER_GUARD?: DurableObjectNamespace;
+  readonly APARTMENT_COORDINATOR?: DurableObjectNamespace;
 }

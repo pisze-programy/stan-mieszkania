@@ -73,6 +73,9 @@ export function createApp(options: CreateAppOptions = {}): OpenAPIHono<AppHonoEn
       db: c.env.DB,
       ...(c.env.MEDIA_BUCKET !== undefined ? { mediaBucket: c.env.MEDIA_BUCKET } : {}),
       ...(c.env.USER_GUARD !== undefined ? { userGuard: c.env.USER_GUARD } : {}),
+      ...(c.env.APARTMENT_COORDINATOR !== undefined
+        ? { apartmentCoordinator: c.env.APARTMENT_COORDINATOR }
+        : {}),
       appConfig,
       requestId,
       ...(options.overrides !== undefined ? { overrides: options.overrides } : {}),
