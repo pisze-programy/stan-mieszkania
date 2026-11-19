@@ -24,6 +24,26 @@ struct L10nTests {
 
     let apartmentsTitle = L10n.string("apartments.list.title")
     #expect(apartmentsTitle == "Mieszkania")
+
+    let ws2Keys = [
+      "common.close",
+      "date.today",
+      "date.yesterday",
+      "verified.info.title",
+      "verified.info.cloud.title",
+      "verified.info.cloud.detail",
+      "verified.info.server.title",
+      "verified.info.server.detail",
+      "verified.info.author.title",
+      "verified.info.author.detail",
+      "verified.info.footer",
+      "local.info.title",
+    ]
+    for key in ws2Keys {
+      let value = L10n.string(key)
+      #expect(!value.isEmpty)
+      #expect(value != key)
+    }
   }
 
   @Test("Formats Polish plural photo counts for one, few, and many")

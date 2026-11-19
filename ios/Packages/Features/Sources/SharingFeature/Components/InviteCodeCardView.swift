@@ -11,7 +11,7 @@ struct InviteCodeCardView: View {
   let onResetTapped: () -> Void
 
   var body: some View {
-    GlassCard(cornerRadius: CornerRadius.lg, padding: Spacing.md) {
+    SurfaceCard(cornerRadius: CornerRadius.card, padding: Spacing.md) {
       VStack(alignment: .leading, spacing: Spacing.md) {
         Text(L10n.string("sharing.code.label"))
           .font(Typography.subheadline)

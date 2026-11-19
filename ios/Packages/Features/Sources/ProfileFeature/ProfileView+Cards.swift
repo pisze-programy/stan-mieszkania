@@ -5,7 +5,7 @@ import SwiftUI
 
 extension ProfileView {
   var identityHeaderCard: some View {
-    GlassCard(cornerRadius: CornerRadius.lg, padding: Spacing.md) {
+    SurfaceCard(cornerRadius: CornerRadius.card, padding: Spacing.md) {
       HStack(spacing: Spacing.md) {
         AuthorAvatarView(
           displayName: store.user?.displayName ?? DomainConstants.fallbackUserDisplayPrefix,
@@ -27,7 +27,7 @@ extension ProfileView {
   }
 
   var displayNameCard: some View {
-    GlassCard(cornerRadius: CornerRadius.lg, padding: Spacing.md) {
+    SurfaceCard(cornerRadius: CornerRadius.card, padding: Spacing.md) {
       VStack(alignment: .leading, spacing: Spacing.sm) {
         Text(L10n.string("profile.name.label"))
           .font(Typography.subheadline)
@@ -62,7 +62,7 @@ extension ProfileView {
   }
 
   var themePickerCard: some View {
-    GlassCard(cornerRadius: CornerRadius.lg, padding: Spacing.md) {
+    SurfaceCard(cornerRadius: CornerRadius.card, padding: Spacing.md) {
       VStack(alignment: .leading, spacing: Spacing.sm) {
         Text(L10n.string("profile.theme.picker"))
           .font(Typography.subheadline)
@@ -85,7 +85,7 @@ extension ProfileView {
   }
 
   var accountActionsCard: some View {
-    GlassCard(cornerRadius: CornerRadius.lg, padding: Spacing.md) {
+    SurfaceCard(cornerRadius: CornerRadius.card, padding: Spacing.md) {
       VStack(spacing: Spacing.sm) {
         GlassActionButton(
           title: L10n.string("profile.sign.out"),
@@ -111,7 +111,7 @@ extension ProfileView {
   }
 
   func errorBanner(_ message: String) -> some View {
-    GlassCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
+    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
       HStack(spacing: Spacing.sm) {
         Image(systemName: "exclamationmark.triangle.fill")
           .foregroundStyle(.yellow)

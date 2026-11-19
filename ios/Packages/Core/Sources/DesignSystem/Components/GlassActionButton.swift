@@ -13,6 +13,7 @@ public struct GlassActionButton: View {
   private let isLoading: Bool
   private let isDisabled: Bool
   private let expandsHorizontally: Bool
+  private let controlSize: ControlSize
   private let action: () -> Void
 
   public init(
@@ -22,6 +23,7 @@ public struct GlassActionButton: View {
     isLoading: Bool = false,
     isDisabled: Bool = false,
     expandsHorizontally: Bool = true,
+    controlSize: ControlSize = .large,
     action: @escaping () -> Void
   ) {
     self.title = title
@@ -30,11 +32,13 @@ public struct GlassActionButton: View {
     self.isLoading = isLoading
     self.isDisabled = isDisabled
     self.expandsHorizontally = expandsHorizontally
+    self.controlSize = controlSize
     self.action = action
   }
 
   public var body: some View {
     buttonWithStyle
+      .controlSize(controlSize)
       .disabled(isDisabled || isLoading)
   }
 
@@ -56,18 +60,23 @@ public struct GlassActionButton: View {
 
   private var baseButton: some View {
     Button(action: action) {
-      HStack(spacing: Spacing.xs) {
+      ZStack {
+        HStack(spacing: Spacing.xs) {
+          if let systemImage {
+            Image(systemName: systemImage)
+          }
+          Text(title)
+            .font(Typography.callout.weight(.semibold))
+        }
+        .opacity(isLoading ? 0 : 1)
+
         if isLoading {
           ProgressView()
             .controlSize(.small)
-        } else if let systemImage {
-          Image(systemName: systemImage)
         }
-        Text(title)
-          .font(Typography.callout.weight(.semibold))
       }
       .frame(maxWidth: expandsHorizontally ? .infinity : nil)
-      .padding(.vertical, Spacing.xs)
+      .animation(Motion.fade, value: isLoading)
     }
   }
 }

@@ -5,6 +5,7 @@ import SwiftUI
 
 public struct MediaDetailView: View {
   @Bindable var store: StoreOf<MediaDetailFeature>
+  @State var isVerifiedInfoPresented = false
 
   public init(store: StoreOf<MediaDetailFeature>) {
     self.store = store
@@ -37,6 +38,7 @@ public struct MediaDetailView: View {
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
       }
+      .appCanvas()
       .onChange(of: store.scrollTargetEntryId) { _, targetId in
         guard let targetId else {
           return
@@ -65,6 +67,9 @@ public struct MediaDetailView: View {
         }
         .presentationDetents([.medium])
       }
+    }
+    .sheet(isPresented: $isVerifiedInfoPresented) {
+      VerifiedInfoSheetView()
     }
     .confirmationDialog(
       mediaDeleteTitle,

@@ -1,40 +1,73 @@
 import SwiftUI
 
 public enum VerifiedBadgeStyle: Sendable {
-  case compact
+  case seal
+  case inline
   case labeled
 }
 
 public struct VerifiedBadgeView: View {
-  private static let compactLabel: String = "V"
-  private static let badgeTintOpacity: Double = 0.16
+  private static let sealSize: CGFloat = 24
+  private static let labeledHorizontalPadding: CGFloat = 10
+  private static let labeledVerticalPadding: CGFloat = 5
+  private static let labeledTintOpacity: Double = 0.14
+  private static let minTapTargetSize: CGFloat = 44
 
   private let style: VerifiedBadgeStyle
+  private let onTap: (() -> Void)?
 
-  public init(style: VerifiedBadgeStyle = .compact) {
+  public init(
+    style: VerifiedBadgeStyle,
+    onTap: (() -> Void)? = nil
+  ) {
     self.style = style
+    self.onTap = onTap
   }
 
+  @ViewBuilder
   public var body: some View {
-    HStack(spacing: Spacing.xxs) {
-      Image(systemName: "checkmark.seal.fill")
-        .font(Typography.badge)
-      Text(labelText)
-        .font(Typography.badge)
+    if let onTap {
+      Button(action: onTap) {
+        badgeContent
+          .frame(minHeight: Self.minTapTargetSize)
+          .contentShape(.capsule)
+      }
+      .buttonStyle(.plain)
+      .accessibilityLabel(L10n.string("media.detail.status.verified"))
+    } else {
+      badgeContent
+        .accessibilityLabel(L10n.string("media.detail.status.verified"))
     }
-    .foregroundStyle(.green)
-    .padding(.horizontal, Spacing.xs)
-    .padding(.vertical, Spacing.xxs)
-    .background(.green.opacity(Self.badgeTintOpacity), in: .capsule)
-    .accessibilityLabel(L10n.string("media.detail.status.verified"))
   }
 
-  private var labelText: String {
+  @ViewBuilder
+  private var badgeContent: some View {
     switch style {
-    case .compact:
-      return Self.compactLabel
+    case .seal:
+      Image(systemName: "checkmark.seal.fill")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(.green)
+        .frame(width: Self.sealSize, height: Self.sealSize)
+        .glassEffect(.regular, in: .circle)
+    case .inline:
+      Image(systemName: "checkmark.seal.fill")
+        .font(.footnote)
+        .foregroundStyle(.green)
     case .labeled:
-      return L10n.string("media.detail.status.verified")
+      HStack(spacing: Spacing.xxs) {
+        Image(systemName: "checkmark.seal.fill")
+        Text(L10n.string("media.detail.status.verified"))
+        if onTap != nil {
+          Image(systemName: "info.circle")
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        }
+      }
+      .font(.footnote.weight(.semibold))
+      .foregroundStyle(.green)
+      .padding(.horizontal, Self.labeledHorizontalPadding)
+      .padding(.vertical, Self.labeledVerticalPadding)
+      .background(.green.opacity(Self.labeledTintOpacity), in: .capsule)
     }
   }
 }

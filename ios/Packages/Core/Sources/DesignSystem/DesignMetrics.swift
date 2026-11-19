@@ -27,4 +27,5 @@ public enum DesignMetrics: Sendable {
 
   public static let disabledOpacity: Double = 0.45
   public static let tombstoneOpacity: Double = 0.6
+  public static let stableSlotMinHeight: CGFloat = 20
 }

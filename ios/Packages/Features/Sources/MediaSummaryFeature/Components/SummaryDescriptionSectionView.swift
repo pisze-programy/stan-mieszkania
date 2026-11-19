@@ -32,10 +32,13 @@ struct SummaryDescriptionSectionView: View {
           .descriptionLineRangeMin...MediaSummaryConstants.descriptionLineRangeMax
       )
       .padding(Spacing.sm)
-      .glassEffect(.regular, in: .rect(cornerRadius: CornerRadius.md))
+      .background(
+        Surface.inset,
+        in: .rect(cornerRadius: CornerRadius.field, style: .continuous)
+      )
 
       if !description.isEmpty && !markers.isEmpty {
-        GlassCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
+        SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
           HighlightedEntryTextView(
             text: description,
             selectedMarkerNumber: selectedMarkerNumber,

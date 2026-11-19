@@ -22,6 +22,7 @@ extension ApartmentTimelineFeature {
   private func handleHistoryAction(_ state: inout State, action: Action) -> Effect<Action> {
     switch action {
     case .historyMenuTapped:
+      state.now = now
       let local = try? ApartmentTimelineStore.fetchLocalHistory(
         apartmentId: state.apartmentId,
         from: database

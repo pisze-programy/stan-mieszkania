@@ -9,7 +9,7 @@ struct LocationPermissionSheetView: View {
     VStack(spacing: Spacing.lg) {
       Spacer()
 
-      GlassCard(cornerRadius: CornerRadius.xl, padding: Spacing.lg) {
+      SurfaceCard(cornerRadius: CornerRadius.card, padding: Spacing.lg) {
         VStack(spacing: Spacing.md) {
           Image(systemName: "location.circle.fill")
             .font(.system(size: CaptureConstants.heroIconSize))

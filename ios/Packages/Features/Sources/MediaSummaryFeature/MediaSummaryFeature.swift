@@ -18,6 +18,7 @@ public struct MediaSummaryFeature: Sendable {
     public var isMarkerPlacementMode: Bool
     public var isSaving: Bool
     public var errorMessage: String?
+    public var now: Date?
 
     public var currentPage: MediaSummaryPageState? {
       guard pages.indices.contains(selectedIndex) else {
@@ -42,7 +43,8 @@ public struct MediaSummaryFeature: Sendable {
       selectedIndex: Int = 0,
       isMarkerPlacementMode: Bool = false,
       isSaving: Bool = false,
-      errorMessage: String? = nil
+      errorMessage: String? = nil,
+      now: Date? = nil
     ) {
       self.apartmentId = apartmentId
       self.origin = origin
@@ -53,10 +55,12 @@ public struct MediaSummaryFeature: Sendable {
       self.isMarkerPlacementMode = isMarkerPlacementMode
       self.isSaving = isSaving
       self.errorMessage = errorMessage
+      self.now = now
     }
   }
 
   public enum Action: Equatable, Sendable {
+    case task
     case pageSelected(Int)
     case toggleMarkerPlacementMode
     case markerAddedAt(x: Double, y: Double)
@@ -93,6 +97,9 @@ public struct MediaSummaryFeature: Sendable {
   public var body: some ReducerOf<Self> {
     Reduce { state, action in
       switch action {
+      case .task:
+        state.now = now
+        return .none
       case .pageSelected(let index):
         guard state.pages.indices.contains(index) else {
           return .none

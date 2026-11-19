@@ -7,6 +7,7 @@ public enum Motion: Sendable {
   private static let smoothDamping: Double = 0.88
   private static let gentleResponse: Double = 0.5
   private static let gentleDamping: Double = 0.92
+  private static let fadeDuration: Double = 0.2
 
   public static let snappy: Animation = .spring(
     response: snappyResponse,
@@ -20,4 +21,5 @@ public enum Motion: Sendable {
     response: gentleResponse,
     dampingFraction: gentleDamping
   )
+  public static let fade: Animation = .easeInOut(duration: fadeDuration)
 }

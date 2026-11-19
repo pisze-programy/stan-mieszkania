@@ -8,6 +8,7 @@ enum ApartmentTimelineStore {
   static func fetchSnapshot(
     apartmentId: String,
     from database: any DatabaseWriter,
+    now: Date,
     calendar: Calendar,
     timeZone: TimeZone
   ) throws -> ApartmentTimelineSnapshot {
@@ -18,7 +19,12 @@ enum ApartmentTimelineStore {
         .fetchOne(db)?
         .toDomain()
       let mediaItems = try fetchTimelineItems(apartmentId: apartmentId, in: db)
-      let sections = groupSections(items: mediaItems, calendar: calendar, timeZone: timeZone)
+      let sections = groupSections(
+        items: mediaItems,
+        now: now,
+        calendar: calendar,
+        timeZone: timeZone
+      )
       let localUnsyncedCount = mediaItems.count { item in
         item.media.serverReceivedAt == nil
           && item.media.syncState == .localOnly
@@ -114,6 +120,7 @@ enum ApartmentTimelineStore {
 
   private static func groupSections(
     items: [TimelineMediaItem],
+    now: Date,
     calendar: Calendar,
     timeZone: TimeZone
   ) -> [TimelineDaySection] {
@@ -131,6 +138,7 @@ enum ApartmentTimelineStore {
       if sectionTitles[dayKey] == nil {
         sectionTitles[dayKey] = PolishDateFormatters.formatTimelineDayHeader(
           item.media.capturedAt,
+          now: now,
           timeZone: timeZone
         )
       }

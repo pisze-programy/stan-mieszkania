@@ -92,10 +92,8 @@ extension ApartmentTimelineFeature {
           )
           _ = await syncEngine.processOutbox()
           let updated = try ApartmentTimelineStore.fetchSnapshot(
-            apartmentId: apartmentId,
-            from: database,
-            calendar: activeCalendar,
-            timeZone: activeTimeZone
+            apartmentId: apartmentId, from: database, now: currentTime,
+            calendar: activeCalendar, timeZone: activeTimeZone
           )
           await send(.editSucceeded(updated))
         } catch {

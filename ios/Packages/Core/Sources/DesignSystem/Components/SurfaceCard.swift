@@ -1,12 +1,12 @@
 import SwiftUI
 
-public struct GlassCard<Content: View>: View {
+public struct SurfaceCard<Content: View>: View {
   private let cornerRadius: CGFloat
   private let padding: CGFloat
   private let content: Content
 
   public init(
-    cornerRadius: CGFloat = CornerRadius.lg,
+    cornerRadius: CGFloat = CornerRadius.card,
     padding: CGFloat = Spacing.md,
     @ViewBuilder content: () -> Content
   ) {
@@ -18,6 +18,10 @@ public struct GlassCard<Content: View>: View {
   public var body: some View {
     content
       .padding(padding)
-      .glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(
+        Surface.card,
+        in: .rect(cornerRadius: cornerRadius, style: .continuous)
+      )
   }
 }

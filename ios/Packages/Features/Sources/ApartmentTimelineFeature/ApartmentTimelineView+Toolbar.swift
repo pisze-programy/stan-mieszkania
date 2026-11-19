@@ -20,6 +20,8 @@ extension ApartmentTimelineView {
           } else {
             Text(L10n.format("apartment.timeline.sync.all", store.localUnsyncedCount))
               .font(Typography.badge)
+              .monospacedDigit()
+              .contentTransition(.numericText())
           }
         }
         .disabled(store.isSyncingAllLocal)
@@ -91,10 +93,10 @@ extension ApartmentTimelineView {
     )
     .font(Typography.badge)
     .monospacedDigit()
+    .contentTransition(.numericText())
     .lineLimit(ApartmentTimelineConstants.quotaBadgeLineLimit)
     .padding(.horizontal, Spacing.xs)
     .padding(.vertical, Spacing.xxs)
-    .glassEffect(.regular, in: .capsule)
   }
 
   var leaveDialogTitle: String {

@@ -35,11 +35,11 @@ struct TimelineGroupingAndSyncTests {
     let snapshot = try fetchSnapshot(from: database)
 
     #expect(snapshot.sections.count == Self.twoCount)
-    #expect(snapshot.sections[0].title == "17 listopada, czwartek")
+    #expect(snapshot.sections[0].title == "17 listopada, Czwartek")
     #expect(snapshot.sections[0].items.count == Self.twoCount)
     #expect(snapshot.sections[0].items[0].id == TimelineTestFixtures.mediaLocalId)
     #expect(snapshot.sections[0].items[1].id == TimelineTestFixtures.mediaVerifiedId)
-    #expect(snapshot.sections[1].title == "16 listopada, środa")
+    #expect(snapshot.sections[1].title == "16 listopada, Środa")
     #expect(snapshot.sections[1].items.count == 1)
     #expect(snapshot.sections[1].items[0].media.isSoftDeleted)
     #expect(snapshot.localUnsyncedCount == 1)
@@ -55,6 +55,7 @@ struct TimelineGroupingAndSyncTests {
     let store = makeSyncStore(database: database, counter: counter)
 
     await store.send(.task) {
+      $0.now = TimelineTestFixtures.thursdayLaterDate
       $0.isSyncing = true
       $0.quotaLimit = ContractConstants.defaultCloudMediaQuotaPerApartment
     }
@@ -106,6 +107,7 @@ struct TimelineGroupingAndSyncTests {
     try ApartmentTimelineStore.fetchSnapshot(
       apartmentId: TimelineTestFixtures.apartmentId,
       from: db,
+      now: TimelineTestFixtures.thursdayLaterDate,
       calendar: TimelineTestFixtures.warsawCalendar,
       timeZone: TimelineTestFixtures.warsawTimeZone
     )
@@ -122,6 +124,7 @@ struct TimelineGroupingAndSyncTests {
       ApartmentTimelineFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.date.now = TimelineTestFixtures.thursdayLaterDate
       $0.calendar = TimelineTestFixtures.warsawCalendar
       $0.timeZone = TimelineTestFixtures.warsawTimeZone
       $0.appConfigClient.loadCachedOrDefault = { .fallbackDefaults }
@@ -156,6 +159,7 @@ struct TimelineGroupingAndSyncTests {
       ApartmentTimelineFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.date.now = TimelineTestFixtures.thursdayLaterDate
       $0.calendar = TimelineTestFixtures.warsawCalendar
       $0.timeZone = TimelineTestFixtures.warsawTimeZone
       $0.syncEngine.enqueueAllLocalMedia = { id in

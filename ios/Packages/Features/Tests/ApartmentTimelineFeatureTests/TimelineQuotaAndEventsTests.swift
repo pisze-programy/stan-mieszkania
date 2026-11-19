@@ -28,18 +28,16 @@ struct TimelineQuotaAndEventsTests {
     let warningHaptics = LockIsolated(0)
     let (stream, continuation) = AsyncStream.makeStream(of: SyncEvent.self)
     let snapshot = try ApartmentTimelineStore.fetchSnapshot(
-      apartmentId: TimelineTestFixtures.apartmentId,
-      from: database,
-      calendar: TimelineTestFixtures.warsawCalendar,
-      timeZone: TimelineTestFixtures.warsawTimeZone
+      apartmentId: TimelineTestFixtures.apartmentId, from: database,
+      now: TimelineTestFixtures.thursdayLaterDate,
+      calendar: TimelineTestFixtures.warsawCalendar, timeZone: TimelineTestFixtures.warsawTimeZone
     )
-    let store = makeStreamStore(
-      database: database,
-      stream: stream,
-      warningHaptics: warningHaptics
-    )
+    let store = makeStreamStore(database: database, stream: stream, warningHaptics: warningHaptics)
 
-    let taskEffect = await store.send(.task) { $0.isSyncing = true }
+    let taskEffect = await store.send(.task) {
+      $0.now = TimelineTestFixtures.thursdayLaterDate
+      $0.isSyncing = true
+    }
     await store.receive(.localSnapshotLoaded(snapshot)) {
       $0.apartment = snapshot.apartment
       $0.sections = snapshot.sections
@@ -49,8 +47,7 @@ struct TimelineQuotaAndEventsTests {
     await store.receive(.syncCompleted(snapshot)) { $0.isSyncing = false }
 
     let progressEvent = SyncEvent.uploadProgress(
-      mediaId: TimelineTestFixtures.mediaLocalId,
-      fractionCompleted: Self.halfProgress
+      mediaId: TimelineTestFixtures.mediaLocalId, fractionCompleted: Self.halfProgress
     )
     continuation.yield(progressEvent)
     await store.receive(.syncEventReceived(progressEvent)) {
@@ -58,15 +55,13 @@ struct TimelineQuotaAndEventsTests {
     }
 
     let otherQuota = SyncEvent.quotaExceeded(
-      apartmentId: TimelineTestFixtures.otherApartmentId,
-      mediaId: TimelineTestFixtures.mediaLocalId
+      apartmentId: TimelineTestFixtures.otherApartmentId, mediaId: TimelineTestFixtures.mediaLocalId
     )
     continuation.yield(otherQuota)
     await store.receive(.syncEventReceived(otherQuota))
 
     let apartmentQuota = SyncEvent.quotaExceeded(
-      apartmentId: TimelineTestFixtures.apartmentId,
-      mediaId: TimelineTestFixtures.mediaLocalId
+      apartmentId: TimelineTestFixtures.apartmentId, mediaId: TimelineTestFixtures.mediaLocalId
     )
     continuation.yield(apartmentQuota)
     await store.receive(.syncEventReceived(apartmentQuota)) {
@@ -93,6 +88,7 @@ struct TimelineQuotaAndEventsTests {
       ApartmentTimelineFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.date.now = TimelineTestFixtures.thursdayLaterDate
       $0.calendar = TimelineTestFixtures.warsawCalendar
       $0.timeZone = TimelineTestFixtures.warsawTimeZone
       $0.appConfigClient.loadCachedOrDefault = { .fallbackDefaults }

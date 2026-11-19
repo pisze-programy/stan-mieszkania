@@ -28,6 +28,7 @@ public struct ApartmentTimelineFeature: Sendable {
     public var historySheet: ApartmentHistorySheetState?
     public var leaveConfirmationMode: LeaveOrDeleteMode?
     public var isLeavingOrDeleting: Bool
+    public var now: Date?
 
     public var callerRole: MemberRole { apartment?.role ?? .contributor }
     public var isOwner: Bool { callerRole == .owner }
@@ -54,7 +55,8 @@ public struct ApartmentTimelineFeature: Sendable {
       editSheet: EditApartmentSheetState? = nil,
       historySheet: ApartmentHistorySheetState? = nil,
       leaveConfirmationMode: LeaveOrDeleteMode? = nil,
-      isLeavingOrDeleting: Bool = false
+      isLeavingOrDeleting: Bool = false,
+      now: Date? = nil
     ) {
       self.apartmentId = apartmentId
       self.apartment = apartment
@@ -72,6 +74,7 @@ public struct ApartmentTimelineFeature: Sendable {
       self.historySheet = historySheet
       self.leaveConfirmationMode = leaveConfirmationMode
       self.isLeavingOrDeleting = isLeavingOrDeleting
+      self.now = now
     }
   }
 

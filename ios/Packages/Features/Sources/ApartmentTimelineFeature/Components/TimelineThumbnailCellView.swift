@@ -45,7 +45,7 @@ struct TimelineThumbnailCellView: View {
           syncState: item.media.syncState,
           isVerified: item.media.isVerified,
           uploadProgress: uploadProgress,
-          compact: true
+          placement: .overPhoto
         )
         .padding(Spacing.xxs)
       }

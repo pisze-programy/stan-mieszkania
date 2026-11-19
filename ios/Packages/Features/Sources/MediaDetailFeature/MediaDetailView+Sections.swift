@@ -48,7 +48,8 @@ extension MediaDetailView {
           syncState: media.syncState,
           isVerified: media.isVerified,
           uploadProgress: store.uploadProgress,
-          compact: false
+          placement: .labeled,
+          onVerifiedTap: { isVerifiedInfoPresented = true }
         )
         Spacer()
         MediaSourceBadgeView(
@@ -83,6 +84,7 @@ extension MediaDetailView {
         ForEach(store.entries) { item in
           DetailEntryRowView(
             item: item,
+            referenceDate: store.now ?? Date(),
             selectedMarkerNumber: store.selectedMarkerNumber,
             canEditOrHardDelete: store.state.canEditOrHardDeleteEntry(item),
             canRetract: store.state.canRetractEntry(item),
@@ -101,7 +103,7 @@ extension MediaDetailView {
     tint: Color,
     onDismiss: @escaping () -> Void
   ) -> some View {
-    GlassCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
+    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
       HStack(spacing: Spacing.sm) {
         Image(systemName: icon).foregroundStyle(tint)
         Text(message).font(Typography.callout).frame(maxWidth: .infinity, alignment: .leading)

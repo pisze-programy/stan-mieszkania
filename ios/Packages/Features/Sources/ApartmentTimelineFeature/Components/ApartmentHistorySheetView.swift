@@ -4,6 +4,7 @@ import SwiftUI
 
 struct ApartmentHistorySheetView: View {
   let sheet: ApartmentHistorySheetState
+  let referenceDate: Date
   let onClose: () -> Void
 
   var body: some View {
@@ -49,7 +50,7 @@ struct ApartmentHistorySheetView: View {
         Text(fieldLabel(for: change.field))
           .font(Typography.cardTitle)
         Spacer()
-        Text(PolishDateFormatters.formatTimestamp(change.createdAt))
+        Text(PolishDateFormatters.formatHumanTimestamp(change.createdAt, now: referenceDate))
           .font(Typography.caption)
           .foregroundStyle(.secondary)
       }

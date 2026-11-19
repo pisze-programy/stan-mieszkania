@@ -5,6 +5,7 @@ import SwiftUI
 struct DetailMetadataSheetView: View {
   let media: MediaItem
   let onClose: () -> Void
+  @State private var isVerifiedInfoPresented = false
 
   // Decision Q10 & S2-12: Show source, capture/cloud timestamps, and SHA-256; never display GPS.
   var body: some View {
@@ -20,14 +21,15 @@ struct DetailMetadataSheetView: View {
             SyncStatusIndicatorView(
               syncState: media.syncState,
               isVerified: media.isVerified,
-              compact: false
+              placement: .labeled,
+              onVerifiedTap: { isVerifiedInfoPresented = true }
             )
           }
 
           Text(
             L10n.format(
               "media.detail.timestamp.captured",
-              PolishDateFormatters.formatTimestamp(media.capturedAt)
+              PolishDateFormatters.formatPreciseTimestamp(media.capturedAt)
             )
           )
           .font(Typography.callout)
@@ -36,7 +38,7 @@ struct DetailMetadataSheetView: View {
             Text(
               L10n.format(
                 "media.detail.timestamp.cloud",
-                PolishDateFormatters.formatTimestamp(serverReceivedAt)
+                PolishDateFormatters.formatPreciseTimestamp(serverReceivedAt)
               )
             )
             .font(Typography.callout)
@@ -54,6 +56,9 @@ struct DetailMetadataSheetView: View {
         ToolbarItem(placement: .cancellationAction) {
           Button(L10n.string("apartment.history.close.cta"), action: onClose)
         }
+      }
+      .sheet(isPresented: $isVerifiedInfoPresented) {
+        VerifiedInfoSheetView()
       }
     }
   }

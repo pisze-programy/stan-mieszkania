@@ -38,6 +38,7 @@ struct SummaryHeaderBarView: View {
       Text("\(selectedIndex + 1)/\(pageCount)")
         .font(Typography.badge)
         .monospacedDigit()
+        .contentTransition(.numericText())
 
       Button {
         onSelectPage(selectedIndex + 1)

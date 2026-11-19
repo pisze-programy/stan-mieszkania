@@ -64,6 +64,7 @@ public struct ApartmentTimelineView: View {
       .padding(.horizontal, Spacing.md)
       .padding(.vertical, Spacing.sm)
     }
+    .appCanvas()
     .refreshable {
       await store.send(.pulledToRefresh).finish()
     }
@@ -94,7 +95,10 @@ public struct ApartmentTimelineView: View {
         set: { if $0 == nil { store.send(.historySheetDismissed) } }
       )
     ) { sheet in
-      ApartmentHistorySheetView(sheet: sheet) {
+      ApartmentHistorySheetView(
+        sheet: sheet,
+        referenceDate: store.now ?? Date()
+      ) {
         store.send(.historySheetDismissed)
       }
     }
@@ -150,7 +154,7 @@ public struct ApartmentTimelineView: View {
     tint: Color,
     onDismiss: @escaping () -> Void
   ) -> some View {
-    GlassCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
+    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
       HStack(spacing: Spacing.sm) {
         Image(systemName: systemImage)
           .foregroundStyle(tint)

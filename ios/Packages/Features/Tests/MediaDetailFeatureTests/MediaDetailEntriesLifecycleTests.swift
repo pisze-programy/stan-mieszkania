@@ -98,7 +98,10 @@ struct MediaDetailEntriesLifecycleTests {
     let placeholder = L10n.format(
       "media.detail.entry.retracted",
       MediaDetailTestFixtures.ownerUser.displayName,
-      PolishDateFormatters.formatTimestamp(MediaDetailTestFixtures.laterDate)
+      PolishDateFormatters.formatHumanTimestamp(
+        MediaDetailTestFixtures.laterDate,
+        now: MediaDetailTestFixtures.laterDate
+      )
     )
     #expect(placeholder.hasPrefix("Wpis wycofany przez Jan Kowalski, "))
   }

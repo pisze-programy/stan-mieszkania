@@ -36,11 +36,14 @@ struct MediaDetailMarkersAndComposerTests {
       MediaDetailFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.date.now = MediaDetailTestFixtures.laterDate
       $0.mediaStorage.fileExists = { _ in true }
       $0.syncEngine.events = { AsyncStream { $0.finish() } }
     }
 
-    await store.send(.task)
+    await store.send(.task) {
+      $0.now = MediaDetailTestFixtures.laterDate
+    }
     await store.receive(.snapshotLoaded(snapshot)) {
       $0.media = snapshot.media
       $0.mediaAuthorName = snapshot.mediaAuthorName

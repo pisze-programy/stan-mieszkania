@@ -12,7 +12,7 @@ struct DeleteAccountImpactSheetView: View {
       VStack(spacing: Spacing.lg) {
         Spacer()
 
-        GlassCard(cornerRadius: CornerRadius.xl, padding: Spacing.lg) {
+        SurfaceCard(cornerRadius: CornerRadius.card, padding: Spacing.lg) {
           VStack(spacing: Spacing.md) {
             Image(systemName: "exclamationmark.shield.fill")
               .font(.system(size: Self.warningIconSize))

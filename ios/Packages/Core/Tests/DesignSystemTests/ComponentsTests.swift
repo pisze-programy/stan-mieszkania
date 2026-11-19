@@ -20,6 +20,9 @@ struct ComponentsTests {
     static let expectedTapNormalizedX = 0.25
     static let expectedTapNormalizedY = 0.75
     static let uploadProgress = 0.6
+    static let paletteWrapNumber = 9
+    static let paletteSecondWrapNumber = 10
+    static let paletteSecondIndex = 2
   }
 
   @Test("Builds AttributedString highlighting selected marker token and its clause")
@@ -34,8 +37,10 @@ struct ComponentsTests {
     )
     #expect(String(attributed.characters) == text)
 
-    let highlightedRuns = attributed.runs.filter { $0.backgroundColor != nil }
-    let highlightedText = highlightedRuns.map { String(attributed[$0.range].characters) }.joined()
+    let highlightedText = attributed.runs
+      .filter { $0.backgroundColor != nil }
+      .map { String(attributed[$0.range].characters) }
+      .joined()
     #expect(highlightedText == "[1] Rysa na szybie. ")
 
     let trailingText = "Rysa na drzwiach [1]"
@@ -83,27 +88,79 @@ struct ComponentsTests {
     )
     #expect(nx == Fixtures.expectedTapNormalizedX)
     #expect(ny == Fixtures.expectedTapNormalizedY)
-
-    let zeroMapped = MarkerOverlayItem.normalizedPoint(
-      for: CGPoint(x: Fixtures.tapX, y: Fixtures.tapY),
-      in: .zero
+    #expect(
+      MarkerOverlayItem.normalizedPoint(for: CGPoint(x: Fixtures.tapX, y: Fixtures.tapY), in: .zero)
+        == (0, 0)
     )
-    #expect(zeroMapped == (0, 0))
+  }
+
+  @Test("Cycles MarkerPalette hexes deterministically across marker numbers")
+  func markerPaletteCycles() {
+    #expect(MarkerPalette.hex(forMarkerNumber: 0) == MarkerPalette.hexes[0])
+    #expect(MarkerPalette.hex(forMarkerNumber: 1) == MarkerPalette.hexes[0])
+    #expect(
+      MarkerPalette.hex(forMarkerNumber: Fixtures.paletteWrapNumber) == MarkerPalette.hexes[0]
+    )
+    #expect(
+      MarkerPalette.hex(forMarkerNumber: Fixtures.paletteSecondWrapNumber)
+        == MarkerPalette.hex(forMarkerNumber: Fixtures.paletteSecondIndex)
+    )
   }
 
   @MainActor
-  @Test("Instantiates all Liquid Glass and badge components cleanly")
+  @Test("VerifiedBadgeView renders seal, inline, and labeled styles without V glyph")
+  func verifiedBadgeHasNoCompactVLabel() {
+    let seal = VerifiedBadgeView(style: .seal)
+    let inline = VerifiedBadgeView(style: .inline)
+    let labeled = VerifiedBadgeView(style: .labeled, onTap: {})
+
+    for badge in [seal, inline, labeled] {
+      let mirrorValues = Mirror(reflecting: badge).children.map { String(describing: $0.value) }
+      #expect(!mirrorValues.contains("V"))
+    }
+    #expect(!L10n.string("media.detail.status.verified").isEmpty)
+    #expect(!L10n.string("verified.info.title").isEmpty)
+  }
+
+  @MainActor
+  @Test("GlassActionButton preserves intrinsic width when loading toggles")
+  func glassActionButtonPreservesWidthWhileLoading() throws {
+    let idleButton = GlassActionButton(
+      title: "Do chmury",
+      systemImage: "icloud.and.arrow.up",
+      isLoading: false,
+      expandsHorizontally: false
+    ) {}
+    let loadingButton = GlassActionButton(
+      title: "Do chmury",
+      systemImage: "icloud.and.arrow.up",
+      isLoading: true,
+      expandsHorizontally: false
+    ) {}
+
+    let idleImage = try #require(ImageRenderer(content: idleButton).cgImage)
+    let loadingImage = try #require(ImageRenderer(content: loadingButton).cgImage)
+    #expect(idleImage.width == loadingImage.width)
+  }
+
+  @MainActor
+  @Test("Instantiates SurfaceCard, badges, ToastBanner, StableSlot, and VerifiedInfoSheetView")
   func instantiatesAllComponents() {
-    let card = GlassCard { Text("Karta") }
-    let primaryButton = GlassActionButton(title: "Do chmury", systemImage: "icloud.and.arrow.up") {}
-    let secondaryButton = GlassActionButton(title: "Lokalnie", variant: .secondary) {}
+    let card = SurfaceCard { Text("Karta") }
     let fab = GlassFloatingActionButton(accessibilityLabel: "Dodaj zdjęcie") {}
-    let verified = VerifiedBadgeView(style: .labeled)
+    let infoSheet = VerifiedInfoSheetView()
+    let stableSlot = StableSlot { Text("Skopiowano") }
+    let toast = ToastBanner(message: "Błąd sieci", style: .error, onDismiss: {})
     let uploading = SyncStatusIndicatorView(
       syncState: .uploading,
       isVerified: false,
       uploadProgress: Fixtures.uploadProgress,
-      compact: false
+      placement: .labeled
+    )
+    let queued = SyncStatusIndicatorView(
+      syncState: .queued,
+      isVerified: false,
+      placement: .overPhoto
     )
     let sourceBadge = MediaSourceBadgeView(source: .imported, capturedAtFromImport: true)
     let avatar = AuthorAvatarView(
@@ -133,16 +190,8 @@ struct ComponentsTests {
     )
 
     _ = (
-      card,
-      primaryButton,
-      secondaryButton,
-      fab,
-      verified,
-      uploading,
-      sourceBadge,
-      avatar,
-      overlay,
-      entryText,
+      card, fab, infoSheet, stableSlot, toast, uploading, queued,
+      sourceBadge, avatar, overlay, entryText,
     )
   }
 }

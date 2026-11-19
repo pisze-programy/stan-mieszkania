@@ -45,6 +45,7 @@ public struct SharingView: View {
       }
       .padding(Spacing.md)
     }
+    .appCanvas()
     .refreshable {
       await store.send(.refreshed).finish()
     }
@@ -102,7 +103,7 @@ public struct SharingView: View {
   }
 
   private var securityResetBanner: some View {
-    GlassCard(cornerRadius: CornerRadius.md, padding: Spacing.md) {
+    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.md) {
       VStack(alignment: .leading, spacing: Spacing.sm) {
         HStack(alignment: .top, spacing: Spacing.sm) {
           Image(systemName: "shield.lefthalf.filled.badge.checkmark")
@@ -129,7 +130,7 @@ public struct SharingView: View {
         .font(Typography.sectionHeader)
         .padding(.horizontal, Spacing.xxs)
 
-      GlassCard(cornerRadius: CornerRadius.lg, padding: Spacing.md) {
+      SurfaceCard(cornerRadius: CornerRadius.card, padding: Spacing.md) {
         VStack(spacing: Spacing.sm) {
           ForEach(members) { member in
             SharingMemberRowView(
@@ -148,7 +149,7 @@ public struct SharingView: View {
   }
 
   private func errorBanner(_ message: String) -> some View {
-    GlassCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
+    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
       HStack(spacing: Spacing.sm) {
         Image(systemName: "exclamationmark.triangle.fill")
           .foregroundStyle(.yellow)

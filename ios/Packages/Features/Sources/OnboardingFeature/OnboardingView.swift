@@ -33,13 +33,13 @@ public struct OnboardingView: View {
         }
 
         if let errorMessage = store.errorMessage {
-          GlassCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
+          SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
             HStack(spacing: Spacing.sm) {
               Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(.yellow)
               Text(errorMessage)
                 .font(Typography.callout)
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
               Button {
                 store.send(.dismissError)
@@ -47,7 +47,7 @@ public struct OnboardingView: View {
                 Image(systemName: "xmark")
               }
               .buttonStyle(.plain)
-              .foregroundStyle(.white)
+              .foregroundStyle(.secondary)
             }
           }
         }

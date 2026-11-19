@@ -188,8 +188,12 @@ struct TimelineLeaveAndDelegatesTests {
     }
     _ = (
       ApartmentTimelineView(store: viewStore),
-      ApartmentHistorySheetView(sheet: ApartmentHistorySheetState(), onClose: {}),
-      TimelineDayHeaderView(title: "17 listopada, czwartek"),
+      ApartmentHistorySheetView(
+        sheet: ApartmentHistorySheetState(),
+        referenceDate: TimelineTestFixtures.thursdayLaterDate,
+        onClose: {}
+      ),
+      TimelineDayHeaderView(title: "17 listopada, Czwartek"),
     )
   }
 }

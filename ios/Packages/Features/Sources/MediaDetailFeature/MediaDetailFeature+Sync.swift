@@ -8,6 +8,7 @@ extension MediaDetailFeature {
   func handleSyncAction(_ state: inout State, action: Action) -> Effect<Action> {
     switch action {
     case .task:
+      state.now = now
       return startInitialLoad(&state)
     case .snapshotLoaded(let snapshot):
       applySnapshot(snapshot, to: &state)

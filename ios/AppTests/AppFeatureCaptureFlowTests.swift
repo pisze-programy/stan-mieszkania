@@ -186,6 +186,7 @@ struct AppFeatureCaptureFlowTests {
       AppFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.date.now = AppFeatureTests.baseDate
       $0.calendar = Calendar(identifier: .gregorian)
       $0.timeZone = .gmt
       $0.syncEngine.events = { AsyncStream { $0.finish() } }

@@ -4,6 +4,7 @@ import SwiftUI
 
 struct DetailEntryRowView: View {
   let item: MediaDetailEntryItem
+  let referenceDate: Date
   let selectedMarkerNumber: Int?
   let canEditOrHardDelete: Bool
   let canRetract: Bool
@@ -18,7 +19,7 @@ struct DetailEntryRowView: View {
   }
 
   var body: some View {
-    GlassCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
+    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
       if let retractedAt = item.entry.retractedAt {
         retractedPlaceholder(retractedAt: retractedAt)
       } else {
@@ -53,7 +54,7 @@ struct DetailEntryRowView: View {
           .lineLimit(1)
         Spacer()
         if item.entry.isVerified {
-          VerifiedBadgeView(style: .compact)
+          VerifiedBadgeView(style: .inline)
         }
         actionMenu
       }
@@ -65,7 +66,7 @@ struct DetailEntryRowView: View {
       )
       .frame(maxWidth: .infinity, alignment: .leading)
 
-      Text(PolishDateFormatters.formatTimestamp(item.entry.createdAt))
+      Text(PolishDateFormatters.formatHumanTimestamp(item.entry.createdAt, now: referenceDate))
         .font(Typography.caption)
         .foregroundStyle(.secondary)
     }
@@ -100,7 +101,7 @@ struct DetailEntryRowView: View {
 
   private func retractedPlaceholder(retractedAt: Date) -> some View {
     // Decision S2-3: Retracted entries show an audit trail placeholder with author name and timestamp.
-    let formattedDate = PolishDateFormatters.formatTimestamp(retractedAt)
+    let formattedDate = PolishDateFormatters.formatHumanTimestamp(retractedAt, now: referenceDate)
     return Text(L10n.format("media.detail.entry.retracted", item.authorDisplayName, formattedDate))
       .font(Typography.callout)
       .italic()

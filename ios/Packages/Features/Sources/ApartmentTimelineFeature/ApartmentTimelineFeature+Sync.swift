@@ -10,14 +10,14 @@ extension ApartmentTimelineFeature {
   func handleSyncAction(_ state: inout State, action: Action) -> Effect<Action> {
     switch action {
     case .task:
+      state.now = now
       state.quotaLimit = appConfigClient.loadCachedOrDefault().cloudMediaQuotaPerApartment
-      return .merge(
-        startSync(&state),
-        listenToSyncEvents()
-      )
+      return .merge(startSync(&state), listenToSyncEvents())
     case .pulledToRefresh:
+      state.now = now
       return startSync(&state)
     case .reloadLocalState:
+      state.now = now
       return reloadLocalSnapshot(apartmentId: state.apartmentId)
     case .localSnapshotLoaded(let snapshot):
       applySnapshot(snapshot, to: &state)
@@ -46,15 +46,11 @@ extension ApartmentTimelineFeature {
     case .syncAllLocalCompleted(let snapshot):
       state.isSyncingAllLocal = false
       applySnapshot(snapshot, to: &state)
-      return .run { _ in
-        await haptics.actionSucceeded()
-      }
+      return .run { _ in await haptics.actionSucceeded() }
     case .syncAllLocalFailed(let message):
       state.isSyncingAllLocal = false
       state.errorMessage = message
-      return .run { _ in
-        await haptics.error()
-      }
+      return .run { _ in await haptics.error() }
     default:
       return .none
     }
@@ -74,15 +70,14 @@ extension ApartmentTimelineFeature {
     state.isSyncing = true
     state.errorMessage = nil
     let apartmentId = state.apartmentId
+    let currentTime = now
     let activeCalendar = calendar
     let activeTimeZone = timeZone
 
     return .run { send in
       if let snapshot = try? ApartmentTimelineStore.fetchSnapshot(
-        apartmentId: apartmentId,
-        from: database,
-        calendar: activeCalendar,
-        timeZone: activeTimeZone
+        apartmentId: apartmentId, from: database, now: currentTime,
+        calendar: activeCalendar, timeZone: activeTimeZone
       ) {
         await send(.localSnapshotLoaded(snapshot))
       }
@@ -91,10 +86,8 @@ extension ApartmentTimelineFeature {
         _ = await syncEngine.processOutbox()
         _ = try await syncEngine.syncApartment(apartmentId)
         let updated = try ApartmentTimelineStore.fetchSnapshot(
-          apartmentId: apartmentId,
-          from: database,
-          calendar: activeCalendar,
-          timeZone: activeTimeZone
+          apartmentId: apartmentId, from: database, now: currentTime,
+          calendar: activeCalendar, timeZone: activeTimeZone
         )
         await send(.syncCompleted(updated))
       } catch {
@@ -127,9 +120,7 @@ extension ApartmentTimelineFeature {
       state.quotaNoticeMessage = L10n.string("media.summary.quota.notice")
       return .merge(
         reloadLocalSnapshot(apartmentId: state.apartmentId),
-        .run { _ in
-          await haptics.warning()
-        }
+        .run { _ in await haptics.warning() }
       )
     case .apartmentSynced(let apartmentId, _):
       guard apartmentId == state.apartmentId else {
@@ -151,6 +142,7 @@ extension ApartmentTimelineFeature {
     state.isSyncingAllLocal = true
     state.errorMessage = nil
     let apartmentId = state.apartmentId
+    let currentTime = now
     let activeCalendar = calendar
     let activeTimeZone = timeZone
 
@@ -160,10 +152,8 @@ extension ApartmentTimelineFeature {
         _ = try await syncEngine.enqueueAllLocalMedia(apartmentId)
         _ = await syncEngine.processOutbox()
         let updated = try ApartmentTimelineStore.fetchSnapshot(
-          apartmentId: apartmentId,
-          from: database,
-          calendar: activeCalendar,
-          timeZone: activeTimeZone
+          apartmentId: apartmentId, from: database, now: currentTime,
+          calendar: activeCalendar, timeZone: activeTimeZone
         )
         await send(.syncAllLocalCompleted(updated))
       } catch {
@@ -173,14 +163,13 @@ extension ApartmentTimelineFeature {
   }
 
   func reloadLocalSnapshot(apartmentId: String) -> Effect<Action> {
+    let currentTime = now
     let activeCalendar = calendar
     let activeTimeZone = timeZone
     return .run { send in
       if let snapshot = try? ApartmentTimelineStore.fetchSnapshot(
-        apartmentId: apartmentId,
-        from: database,
-        calendar: activeCalendar,
-        timeZone: activeTimeZone
+        apartmentId: apartmentId, from: database, now: currentTime,
+        calendar: activeCalendar, timeZone: activeTimeZone
       ) {
         await send(.localSnapshotLoaded(snapshot))
       }

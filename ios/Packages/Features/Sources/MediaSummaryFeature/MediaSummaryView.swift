@@ -73,6 +73,10 @@ public struct MediaSummaryView: View {
         onSaveAndCaptureNext: { triggerSave(mode: .cloud, captureAnother: true) }
       )
     }
+    .appCanvas()
+    .task {
+      await store.send(.task).finish()
+    }
     .onChange(of: store.isSaving) { _, isSaving in
       if isSaving {
         isDescriptionFocused = false
@@ -150,7 +154,10 @@ public struct MediaSummaryView: View {
   }
 
   private func metadataRow(for page: MediaSummaryPageState) -> some View {
-    let formattedDate = PolishDateFormatters.formatTimestamp(page.draft.capturedAt)
+    let formattedDate = PolishDateFormatters.formatHumanTimestamp(
+      page.draft.capturedAt,
+      now: store.now ?? Date()
+    )
     return HStack(spacing: Spacing.sm) {
       Text(L10n.format("media.summary.timestamp.label", formattedDate))
         .font(Typography.footnote)
@@ -164,7 +171,7 @@ public struct MediaSummaryView: View {
   }
 
   private func errorBanner(_ message: String) -> some View {
-    GlassCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
+    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
       HStack(spacing: Spacing.sm) {
         Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
         Text(message).font(Typography.callout).frame(maxWidth: .infinity, alignment: .leading)

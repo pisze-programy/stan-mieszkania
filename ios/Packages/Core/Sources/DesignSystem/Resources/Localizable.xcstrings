@@ -2016,6 +2016,138 @@
           }
         }
       }
+    },
+    "common.close": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamknij"
+          }
+        }
+      }
+    },
+    "date.today": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dzisiaj"
+          }
+        }
+      }
+    },
+    "date.yesterday": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wczoraj"
+          }
+        }
+      }
+    },
+    "verified.info.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zdjęcie zweryfikowane"
+          }
+        }
+      }
+    },
+    "verified.info.cloud.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezpiecznie w chmurze"
+          }
+        }
+      }
+    },
+    "verified.info.cloud.detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zdjęcia nie da się potajemnie podmienić ani edytować."
+          }
+        }
+      }
+    },
+    "verified.info.server.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data z naszego serwera"
+          }
+        }
+      }
+    },
+    "verified.info.server.detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Czas zapisu nie pochodzi z telefonu, więc nikt nie może go cofnąć ani przestawić."
+          }
+        }
+      }
+    },
+    "verified.info.author.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiadomo, kto dodał"
+          }
+        }
+      }
+    },
+    "verified.info.author.detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Każde zdjęcie i wpis są podpisane przez autora."
+          }
+        }
+      }
+    },
+    "verified.info.footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dzięki temu najemca i właściciel mają wiarygodny dowód stanu mieszkania — np. przy rozliczaniu kaucji."
+          }
+        }
+      }
+    },
+    "local.info.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tylko na tym telefonie"
+          }
+        }
+      }
     }
   }
 }

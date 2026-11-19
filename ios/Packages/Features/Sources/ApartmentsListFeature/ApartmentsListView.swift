@@ -35,6 +35,7 @@ public struct ApartmentsListView: View {
       .padding(.horizontal, Spacing.md)
       .padding(.vertical, Spacing.sm)
     }
+    .appCanvas()
     .refreshable {
       await store.send(.pulledToRefresh).finish()
     }
@@ -119,7 +120,7 @@ public struct ApartmentsListView: View {
   }
 
   private func errorBanner(_ message: String) -> some View {
-    GlassCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
+    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
       HStack(spacing: Spacing.sm) {
         Image(systemName: "exclamationmark.triangle.fill")
           .foregroundStyle(.yellow)

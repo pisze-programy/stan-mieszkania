@@ -8,7 +8,7 @@ struct ApartmentCardView: View {
   let item: ApartmentListItem
 
   var body: some View {
-    GlassCard(cornerRadius: CornerRadius.lg, padding: Spacing.md) {
+    SurfaceCard(cornerRadius: CornerRadius.card, padding: Spacing.md) {
       VStack(alignment: .leading, spacing: Spacing.xs) {
         HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
           Text(item.apartment.name)

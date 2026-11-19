@@ -28,6 +28,7 @@ public struct MediaDetailFeature: Sendable {
     public var entryDeleteConfirmation: EntryDeleteConfirmation?
     public var errorMessage: String?
     public var quotaNoticeMessage: String?
+    public var now: Date?
 
     public init(
       apartmentId: String,
@@ -47,7 +48,8 @@ public struct MediaDetailFeature: Sendable {
       mediaDeleteConfirmation: MediaDeleteConfirmationMode? = nil,
       entryDeleteConfirmation: EntryDeleteConfirmation? = nil,
       errorMessage: String? = nil,
-      quotaNoticeMessage: String? = nil
+      quotaNoticeMessage: String? = nil,
+      now: Date? = nil
     ) {
       self.apartmentId = apartmentId
       self.mediaId = mediaId
@@ -67,6 +69,7 @@ public struct MediaDetailFeature: Sendable {
       self.entryDeleteConfirmation = entryDeleteConfirmation
       self.errorMessage = errorMessage
       self.quotaNoticeMessage = quotaNoticeMessage
+      self.now = now
     }
   }
 

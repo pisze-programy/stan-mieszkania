@@ -19,10 +19,7 @@ struct TimelineEditAndHistoryTests {
 
   private static let offlineHTTPStatus = 503
   private static let processedReport = SyncOutboxReport(
-    processedCount: 1,
-    failedCount: 0,
-    deferredCount: 0,
-    pausedForForceUpdate: false
+    processedCount: 1, failedCount: 0, deferredCount: 0, pausedForForceUpdate: false
   )
 
   @MainActor
@@ -56,12 +53,7 @@ struct TimelineEditAndHistoryTests {
     }
     await store.send(.editSubmitted) { $0.editSheet?.isSaving = true }
 
-    let updated = try ApartmentTimelineStore.fetchSnapshot(
-      apartmentId: TimelineTestFixtures.apartmentId,
-      from: database,
-      calendar: TimelineTestFixtures.warsawCalendar,
-      timeZone: TimelineTestFixtures.warsawTimeZone
-    )
+    let updated = try fetchSnapshot(from: database)
     await store.receive(.editSucceeded(updated)) {
       $0.editSheet = nil
       $0.apartment = updated.apartment
@@ -109,6 +101,7 @@ struct TimelineEditAndHistoryTests {
 
     let onlineStore = makeHistoryStore(database: database, remoteResult: .success([change]))
     await onlineStore.send(.historyMenuTapped) {
+      $0.now = TimelineTestFixtures.thursdayLaterDate
       $0.historySheet = ApartmentHistorySheetState(
         changes: [],
         authorNames: authors,
@@ -122,13 +115,12 @@ struct TimelineEditAndHistoryTests {
     await onlineStore.send(.historySheetDismissed) { $0.historySheet = nil }
 
     let offlineError = APIProblemError(
-      status: Self.offlineHTTPStatus,
-      code: .known(.internalError),
-      title: "Offline",
-      detail: "Offline"
+      status: Self.offlineHTTPStatus, code: .known(.internalError),
+      title: "Offline", detail: "Offline"
     )
     let offlineStore = makeHistoryStore(database: database, remoteResult: .failure(offlineError))
     await offlineStore.send(.historyMenuTapped) {
+      $0.now = TimelineTestFixtures.thursdayLaterDate
       $0.historySheet = ApartmentHistorySheetState(
         changes: [change],
         authorNames: authors,
@@ -142,6 +134,14 @@ struct TimelineEditAndHistoryTests {
     #expect(offlineStore.state.historySheet?.errorMessage == nil)
   }
 
+  private func fetchSnapshot(from db: any DatabaseWriter) throws -> ApartmentTimelineSnapshot {
+    try ApartmentTimelineStore.fetchSnapshot(
+      apartmentId: TimelineTestFixtures.apartmentId, from: db,
+      now: TimelineTestFixtures.thursdayLaterDate,
+      calendar: TimelineTestFixtures.warsawCalendar, timeZone: TimelineTestFixtures.warsawTimeZone
+    )
+  }
+
   @MainActor
   private func makeOwnerEditStore(
     database: any DatabaseWriter,
@@ -149,12 +149,7 @@ struct TimelineEditAndHistoryTests {
     successHaptics: LockIsolated<Int>,
     warningHaptics: LockIsolated<Int>
   ) throws -> TestStoreOf<ApartmentTimelineFeature> {
-    let snapshot = try ApartmentTimelineStore.fetchSnapshot(
-      apartmentId: TimelineTestFixtures.apartmentId,
-      from: database,
-      calendar: TimelineTestFixtures.warsawCalendar,
-      timeZone: TimelineTestFixtures.warsawTimeZone
-    )
+    let snapshot = try fetchSnapshot(from: database)
     return TestStore(
       initialState: ApartmentTimelineFeature.State(
         apartmentId: TimelineTestFixtures.apartmentId,
@@ -194,6 +189,7 @@ struct TimelineEditAndHistoryTests {
       ApartmentTimelineFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.date.now = TimelineTestFixtures.thursdayLaterDate
       $0.apiClient.listApartmentHistory = { _ in try remoteResult.get() }
     }
   }

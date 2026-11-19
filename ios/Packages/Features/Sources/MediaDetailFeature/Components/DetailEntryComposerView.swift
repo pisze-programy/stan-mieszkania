@@ -13,7 +13,7 @@ struct DetailEntryComposerView: View {
   let onCancel: () -> Void
 
   var body: some View {
-    GlassCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
+    SurfaceCard(cornerRadius: CornerRadius.md, padding: Spacing.sm) {
       VStack(alignment: .leading, spacing: Spacing.xs) {
         HStack {
           Button(action: onToggleMarkerMode) {
@@ -51,7 +51,10 @@ struct DetailEntryComposerView: View {
         )
         .lineLimit(MediaDetailConstants.composerLineMin...MediaDetailConstants.composerLineMax)
         .padding(Spacing.xs)
-        .glassEffect(.regular, in: .rect(cornerRadius: CornerRadius.sm))
+        .background(
+          Surface.inset,
+          in: .rect(cornerRadius: CornerRadius.field, style: .continuous)
+        )
 
         if let errorMessage = composer.errorMessage {
           Text(errorMessage)

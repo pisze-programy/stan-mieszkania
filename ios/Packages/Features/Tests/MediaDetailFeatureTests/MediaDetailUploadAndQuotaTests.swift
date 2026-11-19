@@ -32,7 +32,9 @@ struct MediaDetailUploadAndQuotaTests {
       warningHaptics: warningHaptics
     )
 
-    let taskEffect = await store.send(.task)
+    let taskEffect = await store.send(.task) {
+      $0.now = MediaDetailTestFixtures.laterDate
+    }
     await store.receive(.snapshotLoaded(snapshot)) {
       $0.media = snapshot.media
       $0.mediaAuthorName = snapshot.mediaAuthorName
@@ -84,6 +86,7 @@ struct MediaDetailUploadAndQuotaTests {
       MediaDetailFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.date.now = MediaDetailTestFixtures.laterDate
       $0.mediaStorage.fileExists = { _ in true }
       $0.syncEngine.events = { stream }
       $0.syncEngine.enqueueMediaUpload = { id in

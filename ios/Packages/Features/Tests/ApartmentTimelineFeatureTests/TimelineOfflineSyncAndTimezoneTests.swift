@@ -25,6 +25,7 @@ struct TimelineOfflineSyncAndTimezoneTests {
     let expectedSnapshot = try ApartmentTimelineStore.fetchSnapshot(
       apartmentId: TimelineTestFixtures.apartmentId,
       from: database,
+      now: TimelineTestFixtures.thursdayLaterDate,
       calendar: TimelineTestFixtures.warsawCalendar,
       timeZone: TimelineTestFixtures.warsawTimeZone
     )
@@ -35,7 +36,10 @@ struct TimelineOfflineSyncAndTimezoneTests {
       outboxFlushed: outboxFlushed
     )
 
-    await store.send(.task) { $0.isSyncing = true }
+    await store.send(.task) {
+      $0.now = TimelineTestFixtures.thursdayLaterDate
+      $0.isSyncing = true
+    }
     await store.receive(.localSnapshotLoaded(expectedSnapshot)) {
       $0.apartment = expectedSnapshot.apartment
     }
@@ -81,13 +85,14 @@ struct TimelineOfflineSyncAndTimezoneTests {
     let snapshot = try ApartmentTimelineStore.fetchSnapshot(
       apartmentId: TimelineTestFixtures.apartmentId,
       from: database,
+      now: Self.midnightCrossDate,
       calendar: utcCalendar,
       timeZone: TimelineTestFixtures.warsawTimeZone
     )
 
     #expect(snapshot.sections.count == 1)
     #expect(snapshot.sections[0].dayKey == "2022-11-17")
-    #expect(snapshot.sections[0].title == "17 listopada, czwartek")
+    #expect(snapshot.sections[0].title == "17 listopada, Czwartek")
   }
 
   @MainActor
@@ -98,6 +103,7 @@ struct TimelineOfflineSyncAndTimezoneTests {
     let expectedSnapshot = try ApartmentTimelineStore.fetchSnapshot(
       apartmentId: TimelineTestFixtures.apartmentId,
       from: database,
+      now: TimelineTestFixtures.thursdayLaterDate,
       calendar: TimelineTestFixtures.warsawCalendar,
       timeZone: TimelineTestFixtures.warsawTimeZone
     )
@@ -110,11 +116,14 @@ struct TimelineOfflineSyncAndTimezoneTests {
       ApartmentTimelineFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.date.now = TimelineTestFixtures.thursdayLaterDate
       $0.calendar = TimelineTestFixtures.warsawCalendar
       $0.timeZone = TimelineTestFixtures.warsawTimeZone
     }
 
-    await store.send(.reloadLocalState)
+    await store.send(.reloadLocalState) {
+      $0.now = TimelineTestFixtures.thursdayLaterDate
+    }
     await store.receive(.localSnapshotLoaded(expectedSnapshot)) {
       $0.apartment = expectedSnapshot.apartment
     }
@@ -155,6 +164,7 @@ struct TimelineOfflineSyncAndTimezoneTests {
       ApartmentTimelineFeature()
     } withDependencies: {
       $0.defaultDatabase = database
+      $0.date.now = TimelineTestFixtures.thursdayLaterDate
       $0.calendar = TimelineTestFixtures.warsawCalendar
       $0.timeZone = TimelineTestFixtures.warsawTimeZone
       $0.appConfigClient.loadCachedOrDefault = { .fallbackDefaults }
