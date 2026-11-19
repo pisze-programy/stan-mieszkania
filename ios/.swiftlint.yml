@@ -1,0 +1,39 @@
+excluded:
+  - .build
+  - DerivedData
+  - Packages/Core/.build
+  - Packages/Features/.build
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - fatal_error_message
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - no_magic_numbers
+  - yoda_condition
+
+force_cast: error
+force_try: error
+force_unwrapping: error
+implicitly_unwrapped_optional: error
+
+file_length:
+  warning: 200
+  error: 200
+  ignore_comment_only_lines: false
+
+no_magic_numbers:
+  severity: error
+  allowed_numbers:
+    - 0
+    - 1
+  test_parent_classes:
+    - QuickSpec
+    - XCTestCase
+
+trailing_comma:
+  mandatory_comma: true
+
+identifier_name:
+  min_length: 1
