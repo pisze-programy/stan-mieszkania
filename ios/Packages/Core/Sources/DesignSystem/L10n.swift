@@ -1,0 +1,137 @@
+import Domain
+import Foundation
+
+public let designSystemBundle: Bundle = .module
+
+public enum L10n: Sendable {
+  public static let polishLocale: Locale = Locale(identifier: "pl_PL")
+
+  private static let photoCountKey: String = "apartments.card.photo.count"
+  private static let errorKeyPrefix: String = "error."
+  private static let unknownErrorKey: String = "error.UNKNOWN"
+  private static let missingSentinel: String = "__L10N_MISSING__"
+  private static let xcstringsName: String = "Localizable"
+  private static let xcstringsExtension: String = "xcstrings"
+
+  private static let decimalTen: Int = 10
+  private static let decimalHundred: Int = 100
+  private static let fewRemainderMin: Int = 2
+  private static let fewRemainderMax: Int = 4
+  private static let teenExceptionMin: Int = 12
+  private static let teenExceptionMax: Int = 14
+
+  private static let catalogFallback: StringCatalog? = loadCatalogFallback()
+
+  public static func string(_ key: String) -> String {
+    let bundleValue = designSystemBundle.localizedString(
+      forKey: key,
+      value: missingSentinel,
+      table: nil
+    )
+    if bundleValue != missingSentinel {
+      return bundleValue
+    }
+    return catalogFallback?.strings[key]?.localizations?.pl?.stringUnit?.value ?? key
+  }
+
+  public static func format(_ key: String, _ arguments: CVarArg...) -> String {
+    let formatString = string(key)
+    return String(format: formatString, locale: polishLocale, arguments: arguments)
+  }
+
+  public static func photoCount(_ count: Int) -> String {
+    let bundleValue = designSystemBundle.localizedString(
+      forKey: photoCountKey,
+      value: missingSentinel,
+      table: nil
+    )
+    if bundleValue != missingSentinel {
+      return String(format: bundleValue, locale: polishLocale, count)
+    }
+
+    if let plural = catalogFallback?.strings[photoCountKey]?.localizations?.pl?.variations?.plural {
+      let pattern = selectPolishPlural(count: count, forms: plural) ?? photoCountKey
+      return String(format: pattern, locale: polishLocale, count)
+    }
+    return photoCountKey
+  }
+
+  public static func errorMessage(for code: ServerErrorCode) -> String {
+    switch code {
+    case .known(let domainCode):
+      return string("\(errorKeyPrefix)\(domainCode.rawValue)")
+    case .unknown:
+      return string(unknownErrorKey)
+    }
+  }
+
+  public static func errorMessage(for code: DomainErrorCode) -> String {
+    errorMessage(for: .known(code))
+  }
+
+  private static func selectPolishPlural(count: Int, forms: PluralVariations) -> String? {
+    let absolute = abs(count)
+    if absolute == 1 {
+      return forms.one?.stringUnit?.value ?? forms.other?.stringUnit?.value
+    }
+
+    let mod10 = absolute % decimalTen
+    let mod100 = absolute % decimalHundred
+    let isFew =
+      mod10 >= fewRemainderMin && mod10 <= fewRemainderMax
+      && (mod100 < teenExceptionMin || mod100 > teenExceptionMax)
+    if isFew {
+      return forms.few?.stringUnit?.value ?? forms.other?.stringUnit?.value
+    }
+    return forms.many?.stringUnit?.value ?? forms.other?.stringUnit?.value
+  }
+
+  private static func loadCatalogFallback() -> StringCatalog? {
+    guard
+      let url = designSystemBundle.url(
+        forResource: xcstringsName,
+        withExtension: xcstringsExtension
+      ),
+      let data = try? Data(contentsOf: url)
+    else {
+      return nil
+    }
+    return try? JSONDecoder().decode(StringCatalog.self, from: data)
+  }
+
+  private struct StringCatalog: Decodable, Sendable {
+    let strings: [String: CatalogEntry]
+  }
+
+  private struct CatalogEntry: Decodable, Sendable {
+    let localizations: CatalogLocalizations?
+  }
+
+  private struct CatalogLocalizations: Decodable, Sendable {
+    let pl: PolishLocalization?
+  }
+
+  private struct PolishLocalization: Decodable, Sendable {
+    let stringUnit: StringUnit?
+    let variations: CatalogVariations?
+  }
+
+  private struct CatalogVariations: Decodable, Sendable {
+    let plural: PluralVariations?
+  }
+
+  private struct PluralVariations: Decodable, Sendable {
+    let one: PluralForm?
+    let few: PluralForm?
+    let many: PluralForm?
+    let other: PluralForm?
+  }
+
+  private struct PluralForm: Decodable, Sendable {
+    let stringUnit: StringUnit?
+  }
+
+  private struct StringUnit: Decodable, Sendable {
+    let value: String
+  }
+}
