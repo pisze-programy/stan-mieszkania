@@ -33,24 +33,15 @@ Install these tools on macOS before you build or test the system:
 pnpm --dir backend install
 ```
 
-3. Copy the example environment file for local development:
+3. Start the local Cloudflare Worker on `http://127.0.0.1:8788`:
 
 ```bash
-cp backend/apps/api/.dev.vars.example backend/apps/api/.dev.vars
+pnpm --dir backend dev
 ```
 
-4. Apply all D1 SQL migrations to the local database:
-
-```bash
-pnpm --dir backend --filter @stanmieszkania/api exec wrangler d1 migrations apply stanmieszkania-local --local
-```
-
-5. Start the local Cloudflare Worker on `http://127.0.0.1:8787`:
-
-```bash
-pnpm --dir backend --filter @stanmieszkania/api exec wrangler dev --local --port 8787
-```
-
+The `dev` command creates `backend/apps/api/.dev.vars` from `backend/apps/api/.dev.vars.example` if the file does not exist.
+It then applies local D1 migrations (`wrangler d1 migrations apply DB --local --force`) and starts `wrangler dev --local --ip 127.0.0.1 --port 8788`.
+Set the `PORT` environment variable before `pnpm --dir backend dev` to use a different local port.
 The default `wrangler.jsonc` configuration sets `AUTH_MODE=local` and `STORAGE_MODE=local`.
 In local mode, the API accepts `Authorization: Bearer dev:<uid>:<displayName>` tokens and stores media objects in local R2 storage.
 
@@ -61,7 +52,7 @@ In local mode, the API accepts `Authorization: Bearer dev:<uid>:<displayName>` t
 3. Choose an iOS Simulator destination.
 4. Press **Run** (`Cmd+R`).
 
-The `Debug` configuration (`ios/App/Config/Debug.xcconfig`) sets `AUTH_MODE=local` and `API_BASE_URL=http://127.0.0.1:8787`.
+The `Debug` configuration (`ios/App/Config/Debug.xcconfig`) sets `AUTH_MODE=local` and `API_BASE_URL=http://127.0.0.1:8788`.
 Use the local sign-in screen in the iOS app to switch between landlord and tenant test accounts without Apple or Firebase credentials.
 
 If you edit `ios/project.yml`, regenerate the Xcode project:

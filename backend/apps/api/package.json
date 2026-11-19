@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "tsx scripts/dev-local.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "openapi:generate": "tsx scripts/generate-openapi.ts",

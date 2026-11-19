@@ -124,7 +124,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         description: 'Production API',
       },
       {
-        url: 'http://localhost:8787',
+        url: 'http://localhost:8788',
         description: 'Local Wrangler dev server',
       },
     ],
