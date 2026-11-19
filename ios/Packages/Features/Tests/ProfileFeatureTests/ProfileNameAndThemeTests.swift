@@ -1,0 +1,150 @@
+import APIClient
+import ComposableArchitecture
+import Database
+import DesignSystem
+import Domain
+import Foundation
+import SQLiteData
+import Testing
+
+@testable import ProfileFeature
+
+@Suite("ProfileFeature Name, Refresh, and Theme Tests")
+struct ProfileNameAndThemeTests {
+  @MainActor
+  @Test("Task loads local profile and theme then refreshes from API")
+  func taskLoadsLocalAndRemoteProfile() async throws {
+    let database = try ProfileTestFixtures.makeSeededDatabase()
+
+    let store = TestStore(initialState: ProfileFeature.State()) {
+      ProfileFeature()
+    } withDependencies: {
+      $0.defaultDatabase = database
+      $0.themePreference = ThemePreferenceClient(load: { .light }, save: { _ in })
+      $0.apiClient.getMyProfile = { ProfileTestFixtures.updatedUser }
+    }
+
+    await store.send(.task) {
+      $0.isLoading = true
+    }
+    await store.receive(.localProfileLoaded(ProfileTestFixtures.initialUser, theme: .light)) {
+      $0.user = ProfileTestFixtures.initialUser
+      $0.displayNameInput = ProfileTestFixtures.initialUser.displayName
+      $0.selectedTheme = .light
+    }
+    await store.receive(.remoteProfileLoaded(ProfileTestFixtures.updatedUser)) {
+      $0.isLoading = false
+      $0.user = ProfileTestFixtures.updatedUser
+      $0.displayNameInput = ProfileTestFixtures.updatedUser.displayName
+    }
+
+    let memberName = try await database.read { db in
+      try MemberRecord.where { $0.userId.eq(ProfileTestFixtures.userId) }.fetchOne(db)?.displayName
+    }
+    #expect(memberName == ProfileTestFixtures.updatedUser.displayName)
+  }
+
+  @MainActor
+  @Test("Invalid display name fails validation locally with warning haptic")
+  func invalidDisplayNameShowsValidationError() async {
+    let warningCount = LockIsolated(0)
+    let apiCalls = LockIsolated(0)
+
+    let store = TestStore(
+      initialState: ProfileFeature.State(
+        user: ProfileTestFixtures.initialUser,
+        displayNameInput: "   "
+      )
+    ) {
+      ProfileFeature()
+    } withDependencies: {
+      $0.apiClient.updateMyProfile = { _ in
+        apiCalls.withValue { $0 += 1 }
+        return ProfileTestFixtures.updatedUser
+      }
+      $0.haptics.warning = {
+        warningCount.withValue { $0 += 1 }
+      }
+    }
+
+    await store.send(.saveDisplayNameTapped) {
+      $0.errorMessage = L10n.errorMessage(for: .displayNameInvalid)
+    }
+
+    #expect(apiCalls.value == 0)
+    #expect(warningCount.value == 1)
+  }
+
+  @MainActor
+  @Test("Valid display name update persists locally and fires success haptic")
+  func saveDisplayNameUpdatesLocalUserAndMembers() async throws {
+    let database = try ProfileTestFixtures.makeSeededDatabase()
+    let submittedName = LockIsolated<String?>(nil)
+    let successHaptics = LockIsolated(0)
+
+    let store = TestStore(
+      initialState: ProfileFeature.State(user: ProfileTestFixtures.initialUser)
+    ) {
+      ProfileFeature()
+    } withDependencies: {
+      $0.defaultDatabase = database
+      $0.apiClient.updateMyProfile = { name in
+        submittedName.setValue(name)
+        return ProfileTestFixtures.updatedUser
+      }
+      $0.haptics.actionSucceeded = {
+        successHaptics.withValue { $0 += 1 }
+      }
+    }
+
+    await store.send(.displayNameChanged("  Anna Nowak  ")) {
+      $0.displayNameInput = "  Anna Nowak  "
+    }
+    await store.send(.saveDisplayNameTapped) {
+      $0.isSavingName = true
+    }
+    await store.receive(.saveDisplayNameSucceeded(ProfileTestFixtures.updatedUser)) {
+      $0.isSavingName = false
+      $0.user = ProfileTestFixtures.updatedUser
+      $0.displayNameInput = ProfileTestFixtures.updatedUser.displayName
+      $0.showNameSavedFeedback = true
+    }
+
+    #expect(submittedName.value == "Anna Nowak")
+    #expect(successHaptics.value == 1)
+    let storedUser = try ProfileStore.fetchCurrentUser(from: database)
+    #expect(storedUser?.displayName == "Anna Nowak")
+  }
+
+  @MainActor
+  @Test("Theme switch persists preference and notifies delegate")
+  func themeSwitchPersistsAndNotifiesDelegate() async {
+    let savedThemes = LockIsolated<[AppThemePreference]>([])
+
+    let store = TestStore(initialState: ProfileFeature.State()) {
+      ProfileFeature()
+    } withDependencies: {
+      $0.themePreference = ThemePreferenceClient(
+        load: { .system },
+        save: { theme in savedThemes.withValue { $0.append(theme) } }
+      )
+    }
+
+    await store.send(.themeChanged(.dark)) {
+      $0.selectedTheme = .dark
+    }
+    await store.receive(\.delegate.didChangeTheme)
+
+    #expect(savedThemes.value == [.dark])
+  }
+
+  @MainActor
+  @Test("Profile views instantiate without crashing")
+  func viewsInstantiateCleanly() {
+    let store = Store(initialState: ProfileFeature.State(user: ProfileTestFixtures.initialUser)) {
+      ProfileFeature()
+    }
+    _ = ProfileView(store: store)
+    _ = DeleteAccountImpactSheetView(onContinueTapped: {}, onCancelTapped: {})
+  }
+}

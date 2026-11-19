@@ -1873,6 +1873,83 @@
           }
         }
       }
+    },
+    "profile.sign.out.confirm.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wylogować się?"
+          }
+        }
+      }
+    },
+    "profile.sign.out.confirm.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokalna pamięć podręczna zostanie wyczyszczona. Niesynchronizowane lokalne zdjęcia mogą zostać utracone."
+          }
+        }
+      }
+    },
+    "profile.delete.step1.continue": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rozumiem, kontynuuj"
+          }
+        }
+      }
+    },
+    "profile.delete.step2.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostateczne potwierdzenie"
+          }
+        }
+      }
+    },
+    "profile.delete.step2.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tej operacji nie można cofnąć. Czy na pewno chcesz trwale usunąć swoje konto?"
+          }
+        }
+      }
+    },
+    "profile.delete.step2.confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trwale usuń konto"
+          }
+        }
+      }
+    },
+    "profile.name.saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapisano nazwę wyświetlaną."
+          }
+        }
+      }
     }
   }
 }
