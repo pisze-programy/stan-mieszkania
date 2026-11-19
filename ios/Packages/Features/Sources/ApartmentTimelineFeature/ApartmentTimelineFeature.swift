@@ -5,6 +5,7 @@ import Database
 import DesignSystem
 import Domain
 import Foundation
+import MediaStorage
 import SyncEngine
 
 @Reducer
@@ -126,6 +127,7 @@ public struct ApartmentTimelineFeature: Sendable {
   @Dependency(\.defaultDatabase) var database
   @Dependency(\.apiClient) var apiClient
   @Dependency(\.syncEngine) var syncEngine
+  @Dependency(\.mediaStorage) var mediaStorage
   @Dependency(\.appConfigClient) var appConfigClient
   @Dependency(\.haptics) var haptics
   @Dependency(\.date.now) var now

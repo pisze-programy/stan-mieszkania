@@ -20,11 +20,13 @@ struct TimelineLeaveAndDelegatesTests {
   }
 
   @MainActor
-  @Test("Owner delete/leave calls deleteOrLeaveApartment, clears local cache, and emits delegate")
+  @Test(
+    "Owner delete/leave calls deleteOrLeaveApartment, clears local cache + JPEGs, emits delegate")
   func ownerDeleteOrLeaveApartment() async throws {
     let database = try TimelineTestFixtures.seedTimelineDatabase(role: .owner)
     let recorder = LeaveRecorder()
     let successHaptics = Mutex<Int>(0)
+    let deletedFiles = LockIsolated<[String]>([])
     let store = TestStore(
       initialState: ApartmentTimelineFeature.State(
         apartmentId: TimelineTestFixtures.apartmentId,
@@ -35,6 +37,7 @@ struct TimelineLeaveAndDelegatesTests {
     } withDependencies: {
       $0.defaultDatabase = database
       $0.apiClient.deleteOrLeaveApartment = { id in await recorder.recordOwnerDelete(id) }
+      $0.mediaStorage.deleteLocalFile = { id in deletedFiles.withValue { $0.append(id) } }
       $0.haptics.actionSucceeded = { successHaptics.withLock { $0 += 1 } }
     }
 
@@ -50,6 +53,13 @@ struct TimelineLeaveAndDelegatesTests {
 
     #expect(await recorder.deletedOrLeftOwnerIds == [TimelineTestFixtures.apartmentId])
     #expect(successHaptics.withLock { $0 } == 1)
+    #expect(
+      Set(deletedFiles.value) == [
+        TimelineTestFixtures.mediaLocalId,
+        TimelineTestFixtures.mediaVerifiedId,
+        TimelineTestFixtures.mediaTombstoneId,
+      ]
+    )
     let remaining = try await database.read { db in
       try ApartmentRecord.where { $0.id.eq(TimelineTestFixtures.apartmentId) }.fetchOne(db)
     }
@@ -57,11 +67,12 @@ struct TimelineLeaveAndDelegatesTests {
   }
 
   @MainActor
-  @Test("Contributor leave calls leaveApartment, clears local cache, and emits delegate")
+  @Test("Contributor leave calls leaveApartment, clears local cache + JPEGs, and emits delegate")
   func contributorLeaveApartment() async throws {
     let database = try TimelineTestFixtures.seedTimelineDatabase(role: .contributor)
     let recorder = LeaveRecorder()
     let successHaptics = Mutex<Int>(0)
+    let deletedFiles = LockIsolated<[String]>([])
     let store = TestStore(
       initialState: ApartmentTimelineFeature.State(
         apartmentId: TimelineTestFixtures.apartmentId,
@@ -72,6 +83,7 @@ struct TimelineLeaveAndDelegatesTests {
     } withDependencies: {
       $0.defaultDatabase = database
       $0.apiClient.leaveApartment = { id in await recorder.recordContributorLeave(id) }
+      $0.mediaStorage.deleteLocalFile = { id in deletedFiles.withValue { $0.append(id) } }
       $0.haptics.actionSucceeded = { successHaptics.withLock { $0 += 1 } }
     }
 
@@ -87,6 +99,13 @@ struct TimelineLeaveAndDelegatesTests {
 
     #expect(await recorder.leftContributorIds == [TimelineTestFixtures.apartmentId])
     #expect(successHaptics.withLock { $0 } == 1)
+    #expect(
+      Set(deletedFiles.value) == [
+        TimelineTestFixtures.mediaLocalId,
+        TimelineTestFixtures.mediaVerifiedId,
+        TimelineTestFixtures.mediaTombstoneId,
+      ]
+    )
   }
 
   @MainActor

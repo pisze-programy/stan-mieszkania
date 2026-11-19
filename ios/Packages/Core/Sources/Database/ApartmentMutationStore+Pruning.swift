@@ -3,11 +3,11 @@ import Foundation
 import SQLiteData
 
 extension ApartmentMutationStore {
-  // Invariant 8: Prune locally cached apartments where membership ended, keeping unsynced local creations.
+  // Invariant 8: Prune locally cached apartments where membership ended and return orphaned media IDs.
   @discardableResult
   public func pruneRevokedApartments(
     keepingActiveApartmentIds activeIds: Set<String>
-  ) throws -> Int {
+  ) throws -> [String] {
     try database.write { db in
       let localApartments =
         try ApartmentRecord
@@ -22,19 +22,24 @@ extension ApartmentMutationStore {
           .map(\.apartmentId)
       )
 
-      var prunedCount = 0
+      var deletedMediaIds: [String] = []
       for apartment in localApartments {
         if activeIds.contains(apartment.id) || pendingCreateIds.contains(apartment.id) {
           continue
         }
+        let mediaIds =
+          try MediaRecord
+          .where { $0.apartmentId.eq(apartment.id) }
+          .fetchAll(db)
+          .map(\.id)
+        deletedMediaIds.append(contentsOf: mediaIds)
         try OutboxRepository.deleteOperationsForApartment(in: db, apartmentId: apartment.id)
         try ApartmentRecord
           .where { $0.id.eq(apartment.id) }
           .delete()
           .execute(db)
-        prunedCount += 1
       }
-      return prunedCount
+      return deletedMediaIds
     }
   }
 }

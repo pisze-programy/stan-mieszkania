@@ -47,7 +47,10 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "Domain"
+      name: "Domain",
+      dependencies: [
+        .product(name: "Dependencies", package: "swift-dependencies")
+      ]
     ),
     .target(
       name: "DesignSystem",
@@ -117,7 +120,10 @@ let package = Package(
     ),
     .testTarget(
       name: "DomainTests",
-      dependencies: ["Domain"]
+      dependencies: [
+        "Domain",
+        .product(name: "Dependencies", package: "swift-dependencies"),
+      ]
     ),
     .testTarget(
       name: "DesignSystemTests",

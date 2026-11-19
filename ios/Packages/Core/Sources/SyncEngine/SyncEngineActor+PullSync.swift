@@ -33,7 +33,13 @@ extension SyncEngineActor {
 
     let activeIds = Set(summaries.map(\.apartment.id))
     let apartmentStore = ApartmentMutationStore(database: database)
-    try apartmentStore.pruneRevokedApartments(keepingActiveApartmentIds: activeIds)
+    let prunedMediaIds = try apartmentStore.pruneRevokedApartments(
+      keepingActiveApartmentIds: activeIds
+    )
+    // Invariant 8: Delete cached JPEG files on disk for revoked/departed apartments.
+    for mediaId in prunedMediaIds {
+      try? mediaStorage.deleteLocalFile(mediaId)
+    }
 
     var totalApplied = 0
     for summary in summaries {

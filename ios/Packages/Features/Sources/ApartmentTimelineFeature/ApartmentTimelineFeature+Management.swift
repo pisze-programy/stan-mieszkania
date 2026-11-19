@@ -115,10 +115,13 @@ extension ApartmentTimelineFeature {
         case .contributorLeave:
           try await apiClient.leaveApartment(apartmentId)
         }
-        try ApartmentTimelineStore.removeLocalApartment(
+        let deletedMediaIds = try ApartmentTimelineStore.removeLocalApartment(
           apartmentId: apartmentId,
           from: database
         )
+        for mediaId in deletedMediaIds {
+          try? mediaStorage.deleteLocalFile(mediaId)
+        }
         await send(.leaveOrDeleteSucceeded)
       } catch {
         await send(.leaveOrDeleteFailed(mapError(error)))

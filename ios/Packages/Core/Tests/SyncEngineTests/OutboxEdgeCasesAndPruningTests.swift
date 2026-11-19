@@ -1,5 +1,6 @@
 import APIClient
 import Database
+import Dependencies
 import Domain
 import Foundation
 import MediaStorage
@@ -11,12 +12,14 @@ import Testing
 struct OutboxEdgeCasesAndPruningTests {
   private static let localOnlyAptId = "01933e2a-7b40-7000-8000-000000000099"
   private static let revokedAptId = "01933e2a-7b40-7000-8000-000000000098"
+  private static let revokedMediaId = "01933e2a-7b40-7000-8000-000000000097"
   private static let entryOnDeletedId = "01933e2a-7b40-7000-8000-000000000039"
 
-  @Test("syncAllOnEntry prunes revoked apartments and keeps unsynced local apartment creations")
+  @Test("syncAllOnEntry prunes revoked apartments, deletes their JPEGs, and keeps local creations")
   func syncAllOnEntryPrunesRevokedApartmentsOnly() async throws {
     let database = try makeInMemoryDatabase()
     try await seedActiveRevokedAndLocalApartments(in: database)
+    let deletedFiles = LockIsolated<[String]>([])
 
     let activeSummary = APIMyApartmentSyncSummary(
       apartment: SyncEngineTestFixtures.makeApartment(),
@@ -27,11 +30,15 @@ struct OutboxEdgeCasesAndPruningTests {
     )
     var apiClient = APIClient()
     apiClient.listMyApartmentsSync = { [activeSummary] }
+    var mediaStorage = MediaStorageClient()
+    mediaStorage.deleteLocalFile = { mediaId in
+      deletedFiles.withValue { $0.append(mediaId) }
+    }
 
     let actor = SyncEngineActor(
       database: database,
       apiClient: apiClient,
-      mediaStorage: MediaStorageClient(),
+      mediaStorage: mediaStorage,
       objectTransfer: ObjectTransferClient(),
       clock: { SyncEngineTestFixtures.confirmedDate }
     )
@@ -41,6 +48,7 @@ struct OutboxEdgeCasesAndPruningTests {
     #expect(remainingIds == [SyncEngineTestFixtures.apartmentId, Self.localOnlyAptId])
     let remainingOps = try OutboxRepository(database: database).fetchAllOperations()
     #expect(remainingOps.map(\.id) == [SyncEngineTestFixtures.outboxEntryId])
+    #expect(deletedFiles.value == [Self.revokedMediaId])
   }
 
   @Test("Drops unachievable createEntry outbox ops for softDeleted and unqueued localOnly media")
@@ -81,9 +89,18 @@ struct OutboxEdgeCasesAndPruningTests {
       street: "Stara 1", city: "Krakow", role: .contributor,
       createdAt: SyncEngineTestFixtures.baseDate, updatedAt: SyncEngineTestFixtures.baseDate
     )
+    let revokedMedia = MediaItem(
+      id: Self.revokedMediaId, apartmentId: Self.revokedAptId,
+      authorId: SyncEngineTestFixtures.ownerId, kind: .photo, source: .camera,
+      sha256: String(repeating: "b", count: ContractConstants.sha256HexLength),
+      capturedAt: SyncEngineTestFixtures.baseDate,
+      capturedTz: "Europe/Warsaw", capturedAtFromImport: false, width: 1, height: 1, bytes: 1,
+      syncState: .verified, localFilePath: "/tmp/\(Self.revokedMediaId).jpg"
+    )
     try await database.write { db in
       let rec = ApartmentRecord(apartment: revoked)
       try ApartmentRecord.insert { rec }.execute(db)
+      try MediaRecord.insert { MediaRecord(item: revokedMedia) }.execute(db)
     }
     try aptStore.updateApartmentMetadata(
       ApartmentMetadataUpdate(

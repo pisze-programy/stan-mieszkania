@@ -1,3 +1,4 @@
+import Dependencies
 import Foundation
 import Testing
 
@@ -105,5 +106,14 @@ struct UUIDv7Tests {
 
     let closureGenerator = ClosureIDGenerator { Fixtures.stubbedId }
     #expect(closureGenerator.generate() == Fixtures.stubbedId)
+    #expect(UUIDv7.isValid(IDGeneratorKey.liveValue.generate()))
+    #expect(UUIDv7.isValid(IDGeneratorKey.previewValue.generate()))
+
+    withDependencies {
+      $0.idGenerator = closureGenerator
+    } operation: {
+      @Dependency(\.idGenerator) var idGenerator
+      #expect(idGenerator.generate() == Fixtures.stubbedId)
+    }
   }
 }

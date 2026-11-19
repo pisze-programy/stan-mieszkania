@@ -76,8 +76,9 @@ extension ApartmentTimelineFeature {
         await send(.localSnapshotLoaded(snapshot))
       }
       do {
-        _ = try await syncEngine.syncApartment(apartmentId)
+        // Decision Q6 & S2-8: Flush pending local apartment creations before pulling changes.
         _ = await syncEngine.processOutbox()
+        _ = try await syncEngine.syncApartment(apartmentId)
         let updated = try ApartmentTimelineStore.fetchSnapshot(
           apartmentId: apartmentId,
           from: database,

@@ -117,11 +117,16 @@ enum ApartmentTimelineStore {
     calendar: Calendar,
     timeZone: TimeZone
   ) -> [TimelineDaySection] {
+    var groupingCalendar = calendar
+    groupingCalendar.timeZone = timeZone
     var groupedItems: [String: [TimelineMediaItem]] = [:]
     var sectionTitles: [String: String] = [:]
 
     for item in items {
-      let dayKey = PolishDateFormatters.dayGroupingKey(item.media.capturedAt, calendar: calendar)
+      let dayKey = PolishDateFormatters.dayGroupingKey(
+        item.media.capturedAt,
+        calendar: groupingCalendar
+      )
       groupedItems[dayKey, default: []].append(item)
       if sectionTitles[dayKey] == nil {
         sectionTitles[dayKey] = PolishDateFormatters.formatTimelineDayHeader(

@@ -34,12 +34,18 @@ extension ApartmentTimelineStore {
     }
   }
 
+  @discardableResult
   static func removeLocalApartment(
     apartmentId: String,
     from database: any DatabaseWriter
-  ) throws {
-    // Invariant 8: Leaving or deleting removes local cached data and queued outbox operations.
+  ) throws -> [String] {
+    // Invariant 8: Leaving or deleting removes local cached data, outbox ops, and orphaned JPEGs.
     try database.write { db in
+      let mediaIds =
+        try MediaRecord
+        .where { $0.apartmentId.eq(apartmentId) }
+        .fetchAll(db)
+        .map(\.id)
       try OutboxOperationRecord
         .where { $0.apartmentId.eq(apartmentId) }
         .delete()
@@ -48,6 +54,7 @@ extension ApartmentTimelineStore {
         .where { $0.id.eq(apartmentId) }
         .delete()
         .execute(db)
+      return mediaIds
     }
   }
 
