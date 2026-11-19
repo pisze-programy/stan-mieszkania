@@ -14,7 +14,7 @@ import {
 } from '../../modules/media';
 import { MyApartmentsSyncResponseSchema } from '../../modules/sync';
 import { createD1TestHarness, type D1TestHarness } from '../d1-test-harness';
-import { exhaustCursorPages, jsonOf, putApartment, putEntry, uploadPhoto } from './e2e-actions';
+import { exhaustSyncChanges, jsonOf, putApartment, putEntry, uploadPhoto } from './e2e-actions';
 import { assertNoGpsFields, buildE2eEnv, createE2eClient, makeJpegBytes } from './e2e-client';
 
 const gpsRowSchema = z.object({
@@ -129,7 +129,7 @@ describe('E2E Handover & Dispute lifecycle (Miniflare D1 + R2 + ApartmentCoordin
       MyApartmentsSyncResponseSchema.parse(await jsonOf(c, '/v1/me/apartments', tenant)).items[0]
         ?.headSeq,
     ).toBeGreaterThan(0);
-    const initialFeed = await exhaustCursorPages(c, tenant, aptId, 0, 2);
+    const initialFeed = await exhaustSyncChanges(c, tenant, aptId, 0, 2);
     expect(initialFeed.pageCount).toBeGreaterThan(1);
     assertNoGpsFields(initialFeed.changes);
 
@@ -207,7 +207,7 @@ describe('E2E Handover & Dispute lifecycle (Miniflare D1 + R2 + ApartmentCoordin
     expect(tombstone?.deletedAt).not.toBeNull();
     expect(tombstone?.deletedBy).toBe(meFirst.id);
 
-    const deltaFeed = await exhaustCursorPages(c, tenant, aptId, initialFeed.lastSeq, 5);
+    const deltaFeed = await exhaustSyncChanges(c, tenant, aptId, initialFeed.lastSeq, 5);
     expect(
       deltaFeed.changes.some((ch) => ch.entityId === photo1Id && ch.op === 'soft_deleted'),
     ).toBe(true);

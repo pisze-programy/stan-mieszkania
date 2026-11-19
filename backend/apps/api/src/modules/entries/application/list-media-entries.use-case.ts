@@ -40,7 +40,12 @@ export function createListMediaEntriesUseCase(deps: ListMediaEntriesDeps): ListM
       if (!targetMedia.ok) {
         return targetMedia;
       }
-      if (targetMedia.value === null || targetMedia.value.apartmentId !== query.apartmentId) {
+      if (
+        targetMedia.value === null ||
+        targetMedia.value.apartmentId !== query.apartmentId ||
+        (targetMedia.value.uploadStatus === 'pending' &&
+          targetMedia.value.authorId !== query.actorUserId)
+      ) {
         return err(entryNotFoundError(query.mediaId));
       }
 

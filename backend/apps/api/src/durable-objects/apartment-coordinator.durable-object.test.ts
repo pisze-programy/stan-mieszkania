@@ -89,6 +89,14 @@ describe('ApartmentCoordinator Durable Object', () => {
       pendingCleanupAtMs: 200_000,
       abandonedPendingUploadTtlMs: 86_400_000,
     });
+
+    const releaseGate = await coordinator.acquireLock(10_000);
+    const concurrentSchedule = coordinator.schedulePendingCleanup('apt-1', 150_000, 86_400_000);
+    await Promise.resolve();
+    expect(storage.alarms).toEqual([500_000, 200_000, 200_000]);
+    expect(coordinator.releaseLock(releaseGate)).toBe(true);
+    await concurrentSchedule;
+    expect(storage.alarms).toEqual([500_000, 200_000, 200_000, 150_000]);
   });
 
   it('handles HTTP RPC endpoints and rejects malformed requests', async () => {

@@ -23,3 +23,4 @@ export const MEDIA_ABANDONED_CLEANED_OP = 'abandoned_cleaned';
 export const MEDIA_PENDING_OP = 'pending';
 export const MEDIA_ENTITY_TYPE = 'media';
 export const UPLOAD_STATUS_PENDING = 'pending';
+export const ABANDONED_CLEANUP_DELETE_MEDIA_INDEX = 4;

@@ -89,21 +89,16 @@ async function seedMedia(
 describe('ApartmentCoordinator DO alarm maintenance jobs (Miniflare D1 + R2 + DO)', () => {
   let harness: D1TestHarness | undefined;
   const ids = new SequentialUuidV7Generator();
-  const getH = (): D1TestHarness => {
-    if (harness === undefined) throw new Error('D1 test harness was not initialized');
-    return harness;
-  };
-
   beforeAll(async () => {
     harness = await createD1TestHarness();
   });
-
   afterAll(async () => {
     await harness?.dispose();
   });
 
   it('reclaims 24h-abandoned pending uploads while preserving fresh old-EXIF pending, confirmed, and soft-deleted media', async () => {
-    const h = getH();
+    if (harness === undefined) throw new Error('D1 test harness was not initialized');
+    const h = harness;
     const baseMs = Date.now() + 7 * 86_400_000;
     const apt = await createTestApartment(h, ids, new Date(baseMs).toISOString(), 'dev:alarm:Ewa');
 
@@ -115,6 +110,20 @@ describe('ApartmentCoordinator DO alarm maintenance jobs (Miniflare D1 + R2 + DO
     const softDeletedId = ids.nextId();
 
     const abandonedKey = await seedMedia(h, apt, abandonedId, 'pending', oldIso, null, '1', oldIso);
+    const abandonedEntryId = ids.nextId();
+    await h.db.batch([
+      h.db
+        .prepare(
+          'INSERT INTO entries (id, media_id, author_id, text, created_at, server_received_at) VALUES (?, ?, ?, ?, ?, ?)',
+        )
+        .bind(abandonedEntryId, abandonedId, apt.ownerId, 'Draft [1]', oldIso, oldIso),
+      h.db
+        .prepare(
+          'INSERT INTO markers (id, entry_id, media_id, number, x, y) VALUES (?, ?, ?, ?, ?, ?)',
+        )
+        .bind(ids.nextId(), abandonedEntryId, abandonedId, 1, 0.5, 0.5),
+      h.db.prepare('UPDATE apartments SET cloud_media_count = 4 WHERE id = ?').bind(apt.id),
+    ]);
     const freshKey = await seedMedia(
       h,
       apt,
@@ -127,10 +136,6 @@ describe('ApartmentCoordinator DO alarm maintenance jobs (Miniflare D1 + R2 + DO
     );
     const confirmedKey = await seedMedia(h, apt, confirmedId, 'confirmed', oldIso, null, '3');
     const softDeletedKey = await seedMedia(h, apt, softDeletedId, 'confirmed', oldIso, oldIso, '4');
-    await execute(
-      h.db,
-      createStatement('UPDATE apartments SET cloud_media_count = 4 WHERE id = ?', [apt.id]),
-    );
 
     const gateway = createDurableObjectApartmentCommandGateway(h.apartmentCoordinator);
     await gateway.schedulePendingUploadCleanup(apt.id, baseMs, 24 * 3_600_000);
@@ -172,7 +177,8 @@ describe('ApartmentCoordinator DO alarm maintenance jobs (Miniflare D1 + R2 + DO
   });
 
   it('hard-deletes expired 30-day orphaned apartments and removes all R2 objects on alarm execution', async () => {
-    const h = getH();
+    if (harness === undefined) throw new Error('D1 test harness was not initialized');
+    const h = harness;
     const createdMs = Date.now() + 7 * 86_400_000;
     const createdIso = new Date(createdMs).toISOString();
     const orphanAfterMs = createdMs + 30 * 86_400_000;

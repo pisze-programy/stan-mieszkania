@@ -14,13 +14,17 @@ import type {
   MaintenanceRunResult,
 } from './apartment-coordinator.types';
 
-interface ActiveLease {
-  readonly token: string;
-  readonly expiresAtMs: number;
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function defaultState(apartmentId: string): CoordinatorPersistedState {
+  return {
+    apartmentId,
+    orphanDeleteAfterMs: null,
+    pendingCleanupAtMs: null,
+    abandonedPendingUploadTtlMs: DEFAULT_ABANDONED_PENDING_UPLOAD_TTL_MS,
+  };
 }
 
 function jsonRes(
@@ -33,10 +37,6 @@ function jsonRes(
   });
 }
 
-function posNum(value: unknown, fallback: number): number {
-  return typeof value === 'number' && value > 0 ? value : fallback;
-}
-
 // Architecture A17: Per-apartment Durable Object serializes mutations via FIFO lease and executes alarm jobs.
 export class ApartmentCoordinator<
   TStatement extends CoordinatorD1PreparedStatementLike<TStatement> =
@@ -44,7 +44,7 @@ export class ApartmentCoordinator<
 > {
   private readonly ctx: ApartmentCoordinatorStateLike;
   private readonly env: ApartmentCoordinatorEnv<TStatement>;
-  private activeLease: ActiveLease | null = null;
+  private activeLease: { readonly token: string; readonly expiresAtMs: number } | null = null;
   private leaseCounter = 0;
   private readonly waiters: (() => void)[] = [];
 
@@ -77,14 +77,7 @@ export class ApartmentCoordinator<
   }
 
   async scheduleOrphanPurge(apartmentId: string, orphanDeleteAfterMs: number): Promise<void> {
-    const prev = await this.readState();
-    await this.saveAndSyncAlarm({
-      apartmentId,
-      orphanDeleteAfterMs,
-      pendingCleanupAtMs: prev?.pendingCleanupAtMs ?? null,
-      abandonedPendingUploadTtlMs:
-        prev?.abandonedPendingUploadTtlMs ?? DEFAULT_ABANDONED_PENDING_UPLOAD_TTL_MS,
-    });
+    await this.updateSchedule(apartmentId, (prev) => ({ ...prev, orphanDeleteAfterMs }));
   }
 
   async schedulePendingCleanup(
@@ -92,54 +85,35 @@ export class ApartmentCoordinator<
     runAtMs: number,
     ttlMs: number = DEFAULT_ABANDONED_PENDING_UPLOAD_TTL_MS,
   ): Promise<void> {
-    const prev = await this.readState();
-    const prevPending = prev?.pendingCleanupAtMs;
-    await this.saveAndSyncAlarm({
-      apartmentId,
-      orphanDeleteAfterMs: prev?.orphanDeleteAfterMs ?? null,
+    await this.updateSchedule(apartmentId, (prev) => ({
+      ...prev,
       pendingCleanupAtMs:
-        prevPending !== null && prevPending !== undefined
-          ? Math.min(prevPending, runAtMs)
-          : runAtMs,
+        prev.pendingCleanupAtMs !== null ? Math.min(prev.pendingCleanupAtMs, runAtMs) : runAtMs,
       abandonedPendingUploadTtlMs: ttlMs,
-    });
+    }));
   }
 
   async runMaintenance(
     nowMs: number = Date.now(),
     explicitApartmentId?: string,
   ): Promise<MaintenanceRunResult> {
-    const token = await this.acquireLock(DEFAULT_LEASE_TTL_MS, nowMs);
-    try {
-      const stored = await this.readState();
-      const state: CoordinatorPersistedState | undefined =
+    return this.withLock(async () => {
+      const stored = await this.ctx.storage.get<CoordinatorPersistedState>(
+        COORDINATOR_STATE_STORAGE_KEY,
+      );
+      const state =
         stored ??
-        (explicitApartmentId !== undefined
-          ? {
-              apartmentId: explicitApartmentId,
-              orphanDeleteAfterMs: null,
-              pendingCleanupAtMs: null,
-              abandonedPendingUploadTtlMs: DEFAULT_ABANDONED_PENDING_UPLOAD_TTL_MS,
-            }
-          : undefined);
-      if (state === undefined) {
+        (explicitApartmentId !== undefined ? defaultState(explicitApartmentId) : undefined);
+      if (state === undefined)
         return { apartmentPurged: false, cleanedPendingMediaCount: 0, nextAlarmMs: null };
-      }
-
       const result = await executeApartmentMaintenance(this.env, state, nowMs);
       if (result.apartmentPurged || result.nextAlarmMs === null) {
         await this.ctx.storage.delete(COORDINATOR_STATE_STORAGE_KEY);
       } else {
-        await this.ctx.storage.put(COORDINATOR_STATE_STORAGE_KEY, {
-          ...state,
-          pendingCleanupAtMs: result.nextAlarmMs,
-        });
-        await this.ctx.storage.setAlarm(result.nextAlarmMs);
+        await this.saveAndSyncAlarm({ ...state, pendingCleanupAtMs: result.nextAlarmMs });
       }
       return result;
-    } finally {
-      this.releaseLock(token);
-    }
+    }, nowMs);
   }
 
   async alarm(): Promise<void> {
@@ -155,30 +129,30 @@ export class ApartmentCoordinator<
     } catch {
       return jsonRes({ error: 'Invalid JSON' }, BAD_REQUEST);
     }
-    if (!isRecord(body)) return jsonRes({ error: 'Invalid payload' }, BAD_REQUEST);
-    return this.dispatchAction(new URL(request.url).pathname, body);
+    return isRecord(body)
+      ? this.dispatchAction(new URL(request.url).pathname, body)
+      : jsonRes({ error: 'Invalid payload' }, BAD_REQUEST);
   }
 
   private async dispatchAction(pathname: string, body: Record<string, unknown>): Promise<Response> {
     const { BAD_REQUEST, NOT_FOUND } = APARTMENT_COORDINATOR_HTTP_STATUS;
-    const {
-      LOCK_ACQUIRE,
-      LOCK_RELEASE,
-      SCHEDULE_ORPHAN_PURGE,
-      SCHEDULE_PENDING_CLEANUP,
-      RUN_ALARM,
-    } = APARTMENT_COORDINATOR_PATHS;
-    if (pathname === LOCK_ACQUIRE) {
-      const ttl = posNum(body['leaseTtlMs'], DEFAULT_LEASE_TTL_MS);
-      const now = typeof body['nowMs'] === 'number' ? body['nowMs'] : undefined;
-      return jsonRes({ leaseToken: await this.acquireLock(ttl, now) });
+    const paths = APARTMENT_COORDINATOR_PATHS;
+    const pos = (v: unknown, fb: number): number => (typeof v === 'number' && v > 0 ? v : fb);
+    const num = (v: unknown): number | undefined => (typeof v === 'number' ? v : undefined);
+    if (pathname === paths.LOCK_ACQUIRE) {
+      return jsonRes({
+        leaseToken: await this.acquireLock(
+          pos(body['leaseTtlMs'], DEFAULT_LEASE_TTL_MS),
+          num(body['nowMs']),
+        ),
+      });
     }
-    if (pathname === LOCK_RELEASE) {
+    if (pathname === paths.LOCK_RELEASE) {
       return typeof body['leaseToken'] === 'string'
         ? jsonRes({ released: this.releaseLock(body['leaseToken']) })
         : jsonRes({ error: 'Invalid leaseToken' }, BAD_REQUEST);
     }
-    if (pathname === SCHEDULE_ORPHAN_PURGE) {
+    if (pathname === paths.SCHEDULE_ORPHAN_PURGE) {
       if (
         typeof body['apartmentId'] !== 'string' ||
         typeof body['orphanDeleteAfterMs'] !== 'number'
@@ -188,24 +162,43 @@ export class ApartmentCoordinator<
       await this.scheduleOrphanPurge(body['apartmentId'], body['orphanDeleteAfterMs']);
       return jsonRes({ scheduled: true });
     }
-    if (pathname === SCHEDULE_PENDING_CLEANUP) {
+    if (pathname === paths.SCHEDULE_PENDING_CLEANUP) {
       if (typeof body['apartmentId'] !== 'string' || typeof body['runAtMs'] !== 'number') {
         return jsonRes({ error: 'Invalid payload' }, BAD_REQUEST);
       }
-      const ttl = posNum(body['ttlMs'], DEFAULT_ABANDONED_PENDING_UPLOAD_TTL_MS);
-      await this.schedulePendingCleanup(body['apartmentId'], body['runAtMs'], ttl);
+      await this.schedulePendingCleanup(
+        body['apartmentId'],
+        body['runAtMs'],
+        pos(body['ttlMs'], DEFAULT_ABANDONED_PENDING_UPLOAD_TTL_MS),
+      );
       return jsonRes({ scheduled: true });
     }
-    if (pathname === RUN_ALARM) {
-      const now = typeof body['nowMs'] === 'number' ? body['nowMs'] : undefined;
+    if (pathname === paths.RUN_ALARM) {
       const aptId = typeof body['apartmentId'] === 'string' ? body['apartmentId'] : undefined;
-      return jsonRes(await this.runMaintenance(now, aptId));
+      return jsonRes(await this.runMaintenance(num(body['nowMs']), aptId));
     }
     return jsonRes({ error: 'Not found' }, NOT_FOUND);
   }
 
-  private readState(): Promise<CoordinatorPersistedState | undefined> {
-    return this.ctx.storage.get<CoordinatorPersistedState>(COORDINATOR_STATE_STORAGE_KEY);
+  private async updateSchedule(
+    apartmentId: string,
+    mutate: (prev: CoordinatorPersistedState) => CoordinatorPersistedState,
+  ): Promise<void> {
+    await this.withLock(async () => {
+      const prev =
+        (await this.ctx.storage.get<CoordinatorPersistedState>(COORDINATOR_STATE_STORAGE_KEY)) ??
+        defaultState(apartmentId);
+      await this.saveAndSyncAlarm({ ...mutate(prev), apartmentId });
+    });
+  }
+
+  private async withLock<T>(operation: () => Promise<T>, nowMs?: number): Promise<T> {
+    const token = await this.acquireLock(DEFAULT_LEASE_TTL_MS, nowMs);
+    try {
+      return await operation();
+    } finally {
+      this.releaseLock(token);
+    }
   }
 
   private async saveAndSyncAlarm(state: CoordinatorPersistedState): Promise<void> {

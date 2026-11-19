@@ -1,4 +1,5 @@
 import {
+  ABANDONED_CLEANUP_DELETE_MEDIA_INDEX,
   MEDIA_ABANDONED_CLEANED_OP,
   MEDIA_ENTITY_TYPE,
   MEDIA_PENDING_OP,
@@ -53,6 +54,50 @@ function hardDeleteApartmentBatch<
   ];
 }
 
+function reclaimAbandonedPendingBatch<
+  TStatement extends CoordinatorD1PreparedStatementLike<TStatement>,
+>(
+  db: CoordinatorD1DatabaseLike<TStatement>,
+  apartmentId: string,
+  mediaId: string,
+  nowIso: string,
+): TStatement[] {
+  const pendingGuard =
+    'EXISTS (SELECT 1 FROM media WHERE id = ? AND apartment_id = ? AND upload_status = ? AND deleted_at IS NULL)';
+  return [
+    db
+      .prepare(
+        `UPDATE apartments SET cloud_media_count = CASE WHEN cloud_media_count > 0 THEN cloud_media_count - 1 ELSE 0 END, updated_at = ? WHERE id = ? AND deleted_at IS NULL AND ${pendingGuard}`,
+      )
+      .bind(nowIso, apartmentId, mediaId, apartmentId, UPLOAD_STATUS_PENDING),
+    db
+      .prepare(
+        `INSERT INTO change_log (apartment_id, entity_type, entity_id, op, created_at) SELECT ?, ?, ?, ?, ? WHERE ${pendingGuard}`,
+      )
+      .bind(
+        apartmentId,
+        MEDIA_ENTITY_TYPE,
+        mediaId,
+        MEDIA_ABANDONED_CLEANED_OP,
+        nowIso,
+        mediaId,
+        apartmentId,
+        UPLOAD_STATUS_PENDING,
+      ),
+    db
+      .prepare(`DELETE FROM markers WHERE media_id = ? AND ${pendingGuard}`)
+      .bind(mediaId, mediaId, apartmentId, UPLOAD_STATUS_PENDING),
+    db
+      .prepare(`DELETE FROM entries WHERE media_id = ? AND ${pendingGuard}`)
+      .bind(mediaId, mediaId, apartmentId, UPLOAD_STATUS_PENDING),
+    db
+      .prepare(
+        'DELETE FROM media WHERE id = ? AND apartment_id = ? AND upload_status = ? AND deleted_at IS NULL',
+      )
+      .bind(mediaId, apartmentId, UPLOAD_STATUS_PENDING),
+  ];
+}
+
 function computeNextAlarmMs(
   orphanDeleteAfter: string | null,
   earliestPendingAt: string | null,
@@ -74,7 +119,7 @@ function computeNextAlarmMs(
   return candidates.length === 0 ? null : Math.min(...candidates);
 }
 
-// Decision Q5 & A17: Purge expired 30-day orphaned apartments and reclaim abandoned pending upload slots.
+// Decision Q5 & A17: Purge expired 30-day orphaned apartments and reclaim abandoned pending upload slots atomically.
 export async function executeApartmentMaintenance<
   TStatement extends CoordinatorD1PreparedStatementLike<TStatement>,
 >(
@@ -126,7 +171,7 @@ export async function executeApartmentMaintenance<
   const nowIso = new Date(nowMs).toISOString();
   const abandonedResult = await db
     .prepare(
-      'SELECT m.id, m.r2_key FROM media m WHERE m.apartment_id = ? AND m.upload_status = ? AND m.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM entries e WHERE e.media_id = m.id) AND COALESCE((SELECT MIN(cl.created_at) FROM change_log cl WHERE cl.apartment_id = m.apartment_id AND cl.entity_type = ? AND cl.entity_id = m.id AND cl.op = ?), m.captured_at) <= ? ORDER BY m.id ASC',
+      'SELECT m.id, m.r2_key FROM media m WHERE m.apartment_id = ? AND m.upload_status = ? AND m.deleted_at IS NULL AND COALESCE((SELECT MIN(cl.created_at) FROM change_log cl WHERE cl.apartment_id = m.apartment_id AND cl.entity_type = ? AND cl.entity_id = m.id AND cl.op = ?), m.captured_at) <= ? ORDER BY m.id ASC',
     )
     .bind(state.apartmentId, UPLOAD_STATUS_PENDING, MEDIA_ENTITY_TYPE, MEDIA_PENDING_OP, cutoffIso)
     .all<AbandonedMediaRow>();
@@ -139,33 +184,17 @@ export async function executeApartmentMaintenance<
       continue;
     }
 
-    const deleted = await db
-      .prepare(
-        'DELETE FROM media WHERE id = ? AND upload_status = ? AND deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM entries WHERE media_id = ?)',
-      )
-      .bind(row.id, UPLOAD_STATUS_PENDING, row.id)
-      .run();
-
-    if (deleted.meta.changes === 1) {
-      await db.batch([
-        db
-          .prepare(
-            'UPDATE apartments SET cloud_media_count = CASE WHEN cloud_media_count > 0 THEN cloud_media_count - 1 ELSE 0 END, updated_at = ? WHERE id = ? AND deleted_at IS NULL',
-          )
-          .bind(nowIso, state.apartmentId),
-        db
-          .prepare(
-            'INSERT INTO change_log (apartment_id, entity_type, entity_id, op, created_at) VALUES (?, ?, ?, ?, ?)',
-          )
-          .bind(state.apartmentId, MEDIA_ENTITY_TYPE, row.id, MEDIA_ABANDONED_CLEANED_OP, nowIso),
-      ]);
+    const batchResults = await db.batch(
+      reclaimAbandonedPendingBatch(db, state.apartmentId, row.id, nowIso),
+    );
+    if ((batchResults[ABANDONED_CLEANUP_DELETE_MEDIA_INDEX]?.meta.changes ?? 0) === 1) {
       cleanedPendingMediaCount += 1;
     }
   }
 
   const remainingPending = await db
     .prepare(
-      'SELECT MIN(COALESCE((SELECT MIN(cl.created_at) FROM change_log cl WHERE cl.apartment_id = m.apartment_id AND cl.entity_type = ? AND cl.entity_id = m.id AND cl.op = ?), m.captured_at)) AS earliest_pending_at FROM media m WHERE m.apartment_id = ? AND m.upload_status = ? AND m.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM entries e WHERE e.media_id = m.id)',
+      'SELECT MIN(COALESCE((SELECT MIN(cl.created_at) FROM change_log cl WHERE cl.apartment_id = m.apartment_id AND cl.entity_type = ? AND cl.entity_id = m.id AND cl.op = ?), m.captured_at)) AS earliest_pending_at FROM media m WHERE m.apartment_id = ? AND m.upload_status = ? AND m.deleted_at IS NULL',
     )
     .bind(MEDIA_ENTITY_TYPE, MEDIA_PENDING_OP, state.apartmentId, UPLOAD_STATUS_PENDING)
     .all<EarliestPendingRow>();

@@ -119,7 +119,7 @@ describe('Entries application use cases', () => {
   });
 
   it('enforces membership, Invariant 7 pending-media ownership, and idempotent author-only retraction', async () => {
-    const { createEntry, retractEntry, clock } = setup();
+    const { createEntry, listEntries, retractEntry, clock } = setup();
 
     const outsider = await createEntry.execute({
       apartmentId: 'apt-1',
@@ -155,6 +155,21 @@ describe('Entries application use cases', () => {
       createdAt: '2026-11-18T14:00:00.000Z',
     });
     expect(isOk(ownerOnPending)).toBe(true);
+
+    const contribListPending = await listEntries.execute({
+      apartmentId: 'apt-1',
+      mediaId: 'm-pending',
+      actorUserId: 'contrib-1',
+    });
+    expect(isErr(contribListPending) && contribListPending.error.code).toBe(
+      ENTRY_ERROR_CODES.ENTRY_NOT_FOUND,
+    );
+    const ownerListPending = await listEntries.execute({
+      apartmentId: 'apt-1',
+      mediaId: 'm-pending',
+      actorUserId: 'owner-1',
+    });
+    expect(isOk(ownerListPending) && ownerListPending.value).toHaveLength(1);
 
     const wrongRetract = await retractEntry.execute({
       apartmentId: 'apt-1',

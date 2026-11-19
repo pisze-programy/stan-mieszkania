@@ -1,4 +1,5 @@
 import { HTTP_STATUS } from '@stanmieszkania/http-contracts';
+import { exhaustCursorPages } from '@stanmieszkania/shared';
 import { ApartmentDtoSchema, type ApartmentDto } from '../../modules/apartments';
 import { EntryDtoSchema, type EntryDto } from '../../modules/entries';
 import {
@@ -13,7 +14,6 @@ import { sha256Hex, type E2eClient } from './e2e-client';
 
 const DEFAULT_WIDTH_PX = 1200;
 const DEFAULT_HEIGHT_PX = 900;
-const MAX_SYNC_PAGES = 50;
 
 export interface UploadPhotoInput {
   readonly token: string;
@@ -158,20 +158,20 @@ export async function uploadPhoto(
   return { initDto, mediaDto: MediaDtoSchema.parse(await confirmRes.json()), sha256 };
 }
 
-export async function exhaustCursorPages(
+export async function exhaustSyncChanges(
   client: E2eClient,
   token: string,
   apartmentId: string,
   startAfterSeq: number,
   limit: number,
 ): Promise<ExhaustedSyncFeed> {
-  const allChanges: SyncChangesResponseDto['changes'] = [];
-  let cursor = startAfterSeq;
   let pageCount = 0;
+  let lastSeq = startAfterSeq;
 
-  for (let page = 0; page < MAX_SYNC_PAGES; page += 1) {
+  const changes = await exhaustCursorPages(async (cursor) => {
+    const afterSeq = cursor ?? startAfterSeq;
     const res = await client.request(
-      `/v1/apartments/${apartmentId}/changes?after=${String(cursor)}&limit=${String(limit)}`,
+      `/v1/apartments/${apartmentId}/changes?after=${String(afterSeq)}&limit=${String(limit)}`,
       { token },
     );
     if (res.status !== HTTP_STATUS.OK) {
@@ -179,13 +179,15 @@ export async function exhaustCursorPages(
     }
     const parsed = SyncChangesResponseSchema.parse(await res.json());
     pageCount += 1;
-    allChanges.push(...parsed.changes);
     if (parsed.nextSeq !== null) {
-      cursor = parsed.nextSeq;
+      lastSeq = parsed.nextSeq;
     }
-    if (!parsed.hasMore) {
-      return { changes: allChanges, lastSeq: cursor, pageCount };
-    }
-  }
-  throw new Error('Exceeded MAX_SYNC_PAGES while exhausting sync cursor pages');
+    return {
+      items: parsed.changes,
+      nextCursor: parsed.nextSeq,
+      hasMore: parsed.hasMore,
+    };
+  }, startAfterSeq);
+
+  return { changes, lastSeq, pageCount };
 }
